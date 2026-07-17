@@ -15,6 +15,14 @@ updates:
         dependency-type: "production"
       development-dependencies:
         dependency-type: "development"
+    ignore:
+      # apps/docs pins TypeScript 5.9: twoslash (pulled in by nextra via
+      # @shikijs/twoslash) only supports typescript ^5.5 || ^6. Ignores apply
+      # per dependency name across the whole workspace, so this also defers
+      # future catalog TS major bumps (e.g. 7 -> 8) — drop this rule when a
+      # TS major upgrade is wanted. Minor/patch updates are unaffected.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   # Keep the actions used by .github/workflows/*.yml current.
   - package-ecosystem: "github-actions"
     directory: "/"
