@@ -2,7 +2,7 @@
 	"id": "b3bfba9e-b14b-42b1-8bf9-147251317dc0",
 	"name": "Novel",
 	"description": "Novel reader.",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"permissions": {
 		"message": true
 	},
