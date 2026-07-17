@@ -3,7 +3,6 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import process from "node:process"
 import { fileURLToPath } from "node:url"
-import * as p from "@clack/prompts"
 
 const WORKSPACE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
@@ -66,51 +65,22 @@ function pluginNamesFromEnv() {
 		.filter((s) => s.length > 0)
 }
 
-async function selectPlugins(allPlugins) {
+function selectPlugins(allPlugins) {
 	const fromEnv = pluginNamesFromEnv()
-	if (fromEnv !== undefined) {
-		const selected = []
-		for (const name of fromEnv) {
-			const found = allPlugins.find((pl) => pl.name === name)
-			if (found) {
-				selected.push(found)
-			} else {
-				console.warn(`[dev] unknown plugin: ${name}`)
-			}
+	if (fromEnv === undefined) {
+		console.log("[dev] DEV_PLUGINS not set, starting without plugin watches.")
+		return []
+	}
+
+	const selected = []
+	for (const name of fromEnv) {
+		const found = allPlugins.find((pl) => pl.name === name)
+		if (found) {
+			selected.push(found)
+		} else {
+			console.warn(`[dev] unknown plugin: ${name}`)
 		}
-		return selected
 	}
-
-	if (!process.stdin.isTTY) {
-		console.log("[dev] non-TTY detected, starting without plugins.")
-		return []
-	}
-
-	p.intro("dev — start development services")
-
-	const result = await p.multiselect({
-		message: "Select plugins to develop (Esc to skip):",
-		options: allPlugins.map((pl) => ({
-			value: pl.name,
-			label: pl.label,
-			hint: pl.name,
-		})),
-		required: false,
-	})
-
-	if (p.isCancel(result)) {
-		p.outro("starting without plugins...")
-		return []
-	}
-
-	const selected = result.map((name) =>
-		allPlugins.find((pl) => pl.name === name),
-	)
-
-	p.outro(
-		`plugins: ${selected.length > 0 ? selected.map((s) => s.name).join(", ") : "none"}`,
-	)
-
 	return selected
 }
 
@@ -171,7 +141,7 @@ function showHelp() {
 		"  DEV_PLUGINS=gallery,manga pnpm dev",
 		"",
 		"Environment:",
-		"  DEV_PLUGINS          Comma-separated plugin names to develop.",
+		"  DEV_PLUGINS          Comma-separated plugin names to develop (no plugin watches when unset).",
 		"  STORAGE_ROOT         Storage root for the dev server.",
 		"  HOST                 Bind host for the dev server.",
 		"  APP_WEB_ROOT         Pre-built web assets directory.",
@@ -188,7 +158,7 @@ async function main() {
 	}
 
 	const allPlugins = discoverPlugins()
-	const selected = await selectPlugins(allPlugins)
+	const selected = selectPlugins(allPlugins)
 
 	const services = buildServices(selected)
 	const children = []

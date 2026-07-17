@@ -14,7 +14,7 @@ Privacy-first, self-hosted archiving app for personal media and documents (galle
 
 Prerequisites: Node.js 24 and pnpm via corepack (`corepack enable`; the version is pinned by the `packageManager` field), then `pnpm install`.
 
-- `pnpm dev` — start web + server + selected plugin watches. Set `DEV_PLUGINS=gallery,manga` to select plugins; when omitted on a TTY an interactive prompt appears.
+- `pnpm dev` — start web + server + selected plugin watches. Set `DEV_PLUGINS=gallery,manga` to select plugins; when omitted, no plugin watches start.
 - `pnpm test` / `pnpm lint` — run all tests / biome check + per-package `tsc --noEmit`. Both use Turborepo under the hood; repeat runs hit the local cache and are near-instant.
 - `pnpm format` — run biome check + format with write.
 - `pnpm build` — build all plugins, then the server (embeds web dist, plugin dists, migrations, assets).
