@@ -8,7 +8,7 @@ export const commentPlugin = buildServicePlugin({
 	createService: (app) =>
 		createCommentService({
 			db: app.db,
-			pluginRegistry: app.pluginLoader.getRegistry(),
+			getRegistry: () => app.pluginLoader.getRegistry(),
 		}),
 	dependencies: ["db-plugin"],
 })

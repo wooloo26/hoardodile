@@ -120,7 +120,7 @@ export function buildDomainRouter(services: RouterServices) {
 							const entries = await scanImportDirectory(
 								sourceDir,
 								input.contentPluginId,
-								registry,
+								services.pluginHooks,
 							)
 							return entries.map((e) => {
 								const entry = registry.getById(e.contentPluginId)
@@ -157,7 +157,7 @@ export function buildDomainRouter(services: RouterServices) {
 								{
 									service: services.resService,
 									uploads: services.resUploads,
-									pluginRegistry: services.pluginLoader.getRegistry(),
+									pluginHooks: services.pluginHooks,
 								},
 								{
 									sourceDir,

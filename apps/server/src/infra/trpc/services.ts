@@ -7,6 +7,7 @@ import type { ResCollectionService } from "src/domain/col/service.ts"
 import type { CommentService } from "src/domain/comment/service.ts"
 import type { DanmakuService } from "src/domain/danmaku/service.ts"
 import type { DocService } from "src/domain/doc/service.ts"
+import type { PluginHooks } from "src/domain/plugin/hooks.ts"
 import type { PluginLoader } from "src/domain/plugin/loader.ts"
 import type { PluginService } from "src/domain/plugin/service.ts"
 import type {
@@ -50,6 +51,7 @@ export interface RouterServices {
 	readonly cacheService: CacheService
 	readonly pluginService: PluginService
 	readonly pluginLoader: PluginLoader
+	readonly pluginHooks: PluginHooks
 	readonly sessions: SessionStore
 	/**
 	 * Absolute path to the local temp directory (`<storageRoot>/local/tmp`).

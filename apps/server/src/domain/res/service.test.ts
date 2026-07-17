@@ -13,6 +13,7 @@ import type {
 } from "@hoardodile/plugin-sdk-server"
 import { DomainError } from "@hoardodile/shared"
 import { eq } from "drizzle-orm"
+import { createPluginHooks } from "src/domain/plugin/hooks.ts"
 import { buildRegistry } from "src/domain/plugin/loader.ts"
 import {
 	getMetaBuildCalls,
@@ -191,6 +192,10 @@ function createTestRegistry() {
 	])
 }
 
+function createTestHooks() {
+	return createPluginHooks({ getRegistry: () => createTestRegistry() })
+}
+
 describe("resource service", () => {
 	let root: string
 	let dbh: DbHandles
@@ -206,7 +211,7 @@ describe("resource service", () => {
 		svc = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 		})
 	})
@@ -346,7 +351,7 @@ describe("resource service", () => {
 		const svcTs = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 			now: () => {
 				t += 1
@@ -530,7 +535,7 @@ describe("resource service", () => {
 		svc = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 		})
 		const r = await svc.create({ name: "legacy" })
@@ -604,7 +609,7 @@ describe("resource service", () => {
 			svc = createResourceService({
 				db: dbh.db,
 				paths,
-				pluginRegistry: createTestRegistry(),
+				pluginHooks: createTestHooks(),
 				readOnly: { current: false },
 			})
 
@@ -652,7 +657,7 @@ describe("resource service", () => {
 			svc = createResourceService({
 				db: dbh.db,
 				paths,
-				pluginRegistry: createTestRegistry(),
+				pluginHooks: createTestHooks(),
 				readOnly: { current: false },
 			})
 			dbh.db

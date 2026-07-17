@@ -129,7 +129,6 @@ async function cacheAdminPluginImpl(app: FastifyInstance): Promise<void> {
 				() => [] as never[],
 			)
 			const items: TrashItem[] = []
-			const pluginRegistry = app.pluginLoader.getRegistry()
 			for (const entry of entries) {
 				if (!entry.isDirectory()) continue
 				const parsed = parseTrashEntryName(entry.name)
@@ -150,7 +149,7 @@ async function cacheAdminPluginImpl(app: FastifyInstance): Promise<void> {
 				let filesList: readonly unknown[] | undefined
 				if (parsed.kind === "resource" && parsed.originalId !== undefined) {
 					const id = parsed.originalId
-					const deps = { paths: app.paths, pluginRegistry }
+					const deps = { paths: app.paths, pluginHooks: app.pluginHooks }
 					;[contentPluginId, fileStats, filesList] = await Promise.all([
 						detectPluginForTrash(deps, id).catch(() => undefined),
 						computeTrashedFileStats(deps, id).catch(() => undefined),

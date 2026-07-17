@@ -8,7 +8,7 @@ export const danmakuPlugin = buildServicePlugin({
 	createService: (app) =>
 		createDanmakuService({
 			db: app.db,
-			pluginRegistry: app.pluginLoader.getRegistry(),
+			getRegistry: () => app.pluginLoader.getRegistry(),
 		}),
 	dependencies: ["db-plugin"],
 })

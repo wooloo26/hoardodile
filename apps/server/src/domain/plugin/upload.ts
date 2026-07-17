@@ -4,7 +4,6 @@ import { mkdir, rename, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { pluginManifest as pluginManifestSchema } from "@hoardodile/schemas"
 import { invalid } from "@hoardodile/shared"
-import { extractZipInto } from "../res/archive.ts"
 
 export type PluginUploads = {
 	readonly installFromZip: (archive: NodeJS.ReadableStream) => Promise<string>
@@ -12,10 +11,19 @@ export type PluginUploads = {
 
 export type PluginUploadsDeps = {
 	readonly pluginsDir: string
+	/**
+	 * Zip extraction, injected by the assembly site so this module does
+	 * not depend on the res domain's archive utilities.
+	 */
+	readonly extractZip: (
+		source: NodeJS.ReadableStream,
+		destDir: string,
+		maxExtractedBytes: number,
+	) => Promise<void>
 }
 
 export function buildPluginUploads(deps: PluginUploadsDeps): PluginUploads {
-	const { pluginsDir } = deps
+	const { pluginsDir, extractZip } = deps
 
 	async function installFromZip(
 		archive: NodeJS.ReadableStream,
@@ -26,7 +34,7 @@ export function buildPluginUploads(deps: PluginUploadsDeps): PluginUploads {
 		try {
 			await mkdir(stagingDir, { recursive: true })
 
-			await extractZipInto(archive, stagingDir, Number.MAX_SAFE_INTEGER)
+			await extractZip(archive, stagingDir, Number.MAX_SAFE_INTEGER)
 
 			const manifestPath = join(stagingDir, "manifest.json")
 			if (!existsSync(manifestPath)) {

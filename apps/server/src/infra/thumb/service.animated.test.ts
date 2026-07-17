@@ -11,7 +11,7 @@ import {
 	type ResService,
 } from "src/domain/res/service.ts"
 import {
-	createTestRegistry,
+	createTestHooks,
 	TEST_BUILTIN_ID,
 } from "src/domain/res/test-registry.ts"
 import { seedResourceArtifact } from "src/domain/res/test-seed.ts"
@@ -75,7 +75,7 @@ describe("thumb service — animated area reduction", () => {
 		resources = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 		})
 	})

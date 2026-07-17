@@ -1,19 +1,11 @@
 import { randomUUID } from "node:crypto"
 import { createReadStream } from "node:fs"
 import { readdir, rm, stat } from "node:fs/promises"
-import {
-	basename,
-	dirname,
-	extname,
-	isAbsolute,
-	join,
-	normalize,
-	resolve,
-	sep,
-} from "node:path"
+import { basename, dirname, extname, join } from "node:path"
 import { Readable } from "node:stream"
 import type { PluginManifestId } from "@hoardodile/schemas"
-import type { PluginRegistry } from "src/domain/plugin/api-types.ts"
+import { createImportResourceAPI } from "src/domain/plugin/api.ts"
+import type { PluginHooks } from "src/domain/plugin/hooks.ts"
 import { packDirToStoredZip } from "./archive.ts"
 import type { ResService } from "./service.ts"
 import type { ResUploads } from "./upload.ts"
@@ -77,7 +69,7 @@ export type ImportLocalReport = {
 export type LocalImportDeps = {
 	readonly service: ResService
 	readonly uploads: ResUploads
-	readonly pluginRegistry: PluginRegistry
+	readonly pluginHooks: PluginHooks
 }
 
 type PendingItem = {
@@ -89,16 +81,6 @@ type PendingItem = {
 type ScannedImportEntry = {
 	readonly item: PendingItem
 	readonly contentPluginId: PluginManifestId
-}
-
-export function getDefaultPluginId(registry: PluginRegistry): PluginManifestId {
-	const builtin = registry.getBuiltin()
-	if (builtin === undefined) {
-		throw new Error(
-			"No builtin plugin in registry — cannot determine default plugin",
-		)
-	}
-	return builtin.id
 }
 
 /**
@@ -114,7 +96,7 @@ export async function importLocal(
 	const entries = await scanImportDirectory(
 		opts.sourceDir,
 		opts.contentPluginId,
-		deps.pluginRegistry,
+		deps.pluginHooks,
 	)
 
 	const warnings: string[] = []
@@ -181,124 +163,25 @@ export async function importLocal(
 export async function scanImportDirectory(
 	sourceDir: string,
 	contentPluginId: PluginManifestId | undefined,
-	registry: PluginRegistry,
+	pluginHooks: PluginHooks,
 ): Promise<readonly ScannedImportEntry[]> {
 	const items = await listShallowImportItems(sourceDir)
 	if (contentPluginId !== undefined) {
 		return items.map((item) => ({ item, contentPluginId }))
 	}
-	const builtinId = getDefaultPluginId(registry)
-	const detectors = registry
-		.getEnabled()
-		.filter((e) => !e.builtin)
-		.sort((a, b) => a.priority - b.priority)
+	const builtinId = pluginHooks.defaultPluginId()
 	const out: ScannedImportEntry[] = []
 	for (const item of items) {
 		if (item.kind === "file") {
 			out.push({ item, contentPluginId: builtinId })
 			continue
 		}
-		let matched = builtinId
-		for (const entry of detectors) {
-			const r = await entry.plugin.detect(createImportResourceAPI(item.absPath))
-			if (r.ok) {
-				matched = entry.id
-				break
-			}
-		}
+		const matched = await pluginHooks.detectForImportDir(
+			createImportResourceAPI(item.absPath),
+		)
 		out.push({ item, contentPluginId: matched })
 	}
 	return out
-}
-
-/**
- * Resolve a plugin-supplied relative path against an import directory,
- * rejecting attempts to escape the directory or use absolute paths.
- */
-function resolveSafeImportPath(dir: string, relPath: string): string {
-	if (relPath.length === 0) {
-		throw new Error("path is empty")
-	}
-	if (relPath.includes("\0")) {
-		throw new Error("path contains null byte")
-	}
-	if (isAbsolute(relPath)) {
-		throw new Error("absolute paths are not allowed")
-	}
-	const normalized = normalize(relPath)
-	if (normalized.startsWith("..") || normalized === "..") {
-		throw new Error("path escapes import directory")
-	}
-	const root = resolve(dir)
-	const candidate = resolve(root, normalized)
-	if (candidate !== root && !candidate.startsWith(root + sep)) {
-		throw new Error("path escapes import directory")
-	}
-	return candidate
-}
-
-/**
- * Create a minimal {@link ResourceAPI} backed by a raw filesystem
- * directory. Used during import to run detectors before resources exist.
- */
-export function createImportResourceAPI(
-	dir: string,
-): import("@hoardodile/plugin-sdk-server").ResourceAPI {
-	return {
-		logInfo() {},
-		logWarn() {},
-		logError() {},
-		async readFile(relPath) {
-			const safe = resolveSafeImportPath(dir, relPath)
-			const { readFile } = await import("node:fs/promises")
-			const buf = await readFile(safe)
-			return new Uint8Array(buf)
-		},
-		async listFiles() {
-			const out: string[] = []
-			async function collect(current: string, prefix: string) {
-				const entries = await readdir(join(dir, current), {
-					withFileTypes: true,
-				}).catch(() => [] as readonly never[])
-				for (const e of entries) {
-					if (e.name.startsWith(".")) continue
-					if (e.name.includes(".uploading-")) continue
-					const rel = prefix ? join(current, e.name) : e.name
-					if (e.isDirectory()) {
-						await collect(join(current, e.name), rel)
-					} else if (e.isFile()) {
-						out.push(rel)
-					}
-				}
-			}
-			await collect(".", "")
-			return out.sort((a, b) =>
-				a.localeCompare(b, undefined, {
-					sensitivity: "base",
-					numeric: true,
-				}),
-			)
-		},
-		async statFile(relPath) {
-			resolveSafeImportPath(dir, relPath)
-			return undefined
-		},
-		async probeImage() {
-			return undefined
-		},
-		async probeVideo() {
-			return undefined
-		},
-		async probeAudio() {
-			return undefined
-		},
-		async isAnimatedImage() {
-			return false
-		},
-		async setCover() {},
-		async clearCover() {},
-		async setLocalCover() {},
-	}
 }
 
 async function listShallowImportItems(

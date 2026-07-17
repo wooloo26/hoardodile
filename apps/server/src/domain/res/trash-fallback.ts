@@ -6,21 +6,20 @@ import type {
 	SerializedFileList,
 } from "@hoardodile/schemas"
 import { createPluginResourceAPI } from "src/domain/plugin/api.ts"
-import type { PluginRegistry } from "src/domain/plugin/api-types.ts"
+import type { PluginHooks } from "src/domain/plugin/hooks.ts"
 import {
 	probeAnimatedImage,
 	probeImage,
 	probeVideo,
 } from "src/infra/probes/probes.ts"
 import type { StoragePaths } from "src/infra/storage/paths.ts"
-import { createPluginOrchestrator } from "./plugin-orchestrator.ts"
 import type { SourceArtifactView, SourceViewDeps } from "./source-view.ts"
 import { buildSourceArtifactView } from "./source-view.ts"
 import { createZipCdCache } from "./zip-cd-cache.ts"
 
 export type TrashFallbackDeps = {
 	readonly paths: StoragePaths
-	readonly pluginRegistry: PluginRegistry
+	readonly pluginHooks: PluginHooks
 	readonly zipCdCache?: SourceViewDeps["zipCdCache"]
 }
 
@@ -82,12 +81,8 @@ export async function detectPluginForTrash(
 		probeVideo,
 		isAnimatedImage: probeAnimatedImage,
 	})
-	const orchestrator = createPluginOrchestrator({
-		pluginRegistry: deps.pluginRegistry,
-		buildResourceAPI: async () => api,
-	})
 	try {
-		return await orchestrator.detectFirstMatch(id, 0, undefined)
+		return await deps.pluginHooks.detectFirstMatch(api)
 	} catch {
 		return undefined
 	}
@@ -105,20 +100,14 @@ export async function buildTrashedFileList(
 		probeVideo,
 		isAnimatedImage: probeAnimatedImage,
 	})
-	const orchestrator = createPluginOrchestrator({
-		pluginRegistry: deps.pluginRegistry,
-		buildResourceAPI: async () => api,
-	})
 	let contentPluginId: PluginManifestId
 	try {
-		contentPluginId = await orchestrator.detectFirstMatch(id, 0, undefined)
+		contentPluginId = await deps.pluginHooks.detectFirstMatch(api)
 	} catch {
 		return undefined
 	}
-	const pluginResult = await orchestrator.buildFileList(
-		id,
-		0,
-		undefined,
+	const pluginResult = await deps.pluginHooks.buildFileList(
+		api,
 		contentPluginId,
 	)
 	if (pluginResult !== undefined) return pluginResult

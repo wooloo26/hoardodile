@@ -18,7 +18,11 @@ import { danmakus } from "./schema.ts"
 
 export type DanmakuServiceDeps = ClockDeps & {
 	readonly db: SqliteDb
-	readonly pluginRegistry?: PluginRegistry
+	/**
+	 * Live accessor for the current plugin registry — called per request so
+	 * a plugin rescan never leaves this service holding a stale registry.
+	 */
+	readonly getRegistry?: () => PluginRegistry
 }
 
 /**
@@ -35,7 +39,7 @@ export type DanmakuService = {
 }
 
 export function createDanmakuService(deps: DanmakuServiceDeps): DanmakuService {
-	const { db, pluginRegistry } = deps
+	const { db } = deps
 	const now = deps.now ?? Date.now
 	const newId = deps.newId ?? generateId
 	const guard = createCapabilityGuard()
@@ -63,7 +67,7 @@ export function createDanmakuService(deps: DanmakuServiceDeps): DanmakuService {
 			.where(eq(resources.id, input.anchor.resId))
 			.get()
 		if (resRow !== undefined && resRow.contentPluginId !== null) {
-			const pluginEntry = pluginRegistry?.getById(resRow.contentPluginId)
+			const pluginEntry = deps.getRegistry?.().getById(resRow.contentPluginId)
 			if (pluginEntry !== undefined) {
 				guard.require(pluginEntry.manifest, "danmaku")
 			}

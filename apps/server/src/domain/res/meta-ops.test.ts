@@ -14,11 +14,14 @@ vi.mock("src/infra/probes/probes.ts", () => ({
 }))
 
 import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
-import type { PluginRegistry } from "src/domain/plugin/api-types.ts"
 import { buildResMetaOps } from "./meta-ops.ts"
 import type { ResRow } from "./repo.ts"
 import type { SourceArtifactView } from "./source-view.ts"
-import { createTestRegistry, TEST_BUILTIN_ID } from "./test-registry.ts"
+import {
+	createTestHooks,
+	createTestRegistry,
+	TEST_BUILTIN_ID,
+} from "./test-registry.ts"
 
 function mockZipView(
 	overrides: Partial<SourceArtifactView> = {},
@@ -127,7 +130,7 @@ describe("buildResMetaOps cover meta", () => {
 		return buildResMetaOps({
 			repo: repo as never,
 			now: () => 1,
-			pluginRegistry: registry as PluginRegistry,
+			pluginHooks: createTestHooks(registry),
 			createResourceAPI: async () => api,
 			resolveSourceView: async () => view,
 			findCover: async () => undefined,
@@ -207,7 +210,7 @@ describe("buildResMetaOps cover meta", () => {
 		const ops = buildResMetaOps({
 			repo: repo as never,
 			now: () => 1,
-			pluginRegistry: registry as PluginRegistry,
+			pluginHooks: createTestHooks(registry),
 			createResourceAPI: async () => api,
 			resolveSourceView: async () => view,
 			findCover: async () => "/fake/.cover.jpg",

@@ -4,6 +4,7 @@ import type { PluginManifest, PluginManifestId } from "@hoardodile/schemas"
 import { pluginManifest as pluginManifestSchema } from "@hoardodile/schemas"
 import { eq } from "drizzle-orm"
 import type { SqliteDb } from "src/infra/db/connection.ts"
+import type { FoundPlugin, MissingPlugin } from "./api-types.ts"
 import { contentPlugins } from "./schema.ts"
 
 /**
@@ -19,26 +20,6 @@ const OFFICIAL_PLUGIN_PRIORITY: Record<string, number> = {
 
 function getDefaultPriority(pluginId: PluginManifestId): number {
 	return OFFICIAL_PLUGIN_PRIORITY[pluginId] ?? 100
-}
-
-export type FoundPlugin = {
-	readonly id: PluginManifestId
-	readonly manifest: PluginManifest
-	readonly diskPath: string
-	readonly source: "builtin" | "dev" | "disk"
-	readonly enabled: boolean
-	readonly priority: number
-	readonly pinned: boolean
-	readonly color: string
-}
-
-export type MissingPlugin = {
-	readonly id: PluginManifestId
-	readonly manifest: PluginManifest
-	readonly enabled: boolean
-	readonly priority: number
-	readonly pinned: boolean
-	readonly color: string
 }
 
 export type PluginDiscoveryDeps = {

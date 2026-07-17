@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginAsync } from "fastify"
 import fp from "fastify-plugin"
 import "src/infra/fastify-augment.ts"
+import { createPluginHooks } from "./hooks.ts"
 import { createPluginLoader } from "./loader.ts"
 import { createPluginSandbox, DEFAULT_SANDBOX_CONFIG } from "./sandbox/host.ts"
 import { createPluginService } from "./service.ts"
@@ -38,6 +39,12 @@ async function pluginDomainImpl(app: FastifyInstance): Promise<void> {
 	app.decorate(
 		"pluginService",
 		createPluginService({ db: app.db, loader, sandbox }),
+	)
+	// The hook facade reads the registry through a live accessor, so
+	// consumers never hold a stale registry across a rescan.
+	app.decorate(
+		"pluginHooks",
+		createPluginHooks({ getRegistry: () => loader.getRegistry() }),
 	)
 }
 

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createCharacterService } from "src/domain/char/service.ts"
 import { createResourceService } from "src/domain/res/service.ts"
-import { createTestRegistry } from "src/domain/res/test-registry.ts"
+import { createTestHooks } from "src/domain/res/test-registry.ts"
 import { openDb, schema } from "src/infra/db/connection.ts"
 import { createStoragePaths } from "src/infra/storage/paths.ts"
 import {
@@ -38,7 +38,7 @@ describe("cross-version data integrity", () => {
 		const resSvc = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 		})
 		const charSvc = createCharacterService({
@@ -91,7 +91,7 @@ describe("cross-version data integrity", () => {
 		const resSvc = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 		})
 		const charSvc = createCharacterService({
@@ -117,7 +117,7 @@ describe("cross-version data integrity", () => {
 		const resSvcV2 = createResourceService({
 			db: dbh.db,
 			paths,
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			readOnly: { current: false },
 		})
 		const charSvcV2 = createCharacterService({

@@ -17,6 +17,7 @@ import type {
 	PluginRegistry,
 	PluginRegistryEntry,
 } from "src/domain/plugin/api-types.ts"
+import { createPluginHooks, type PluginHooks } from "src/domain/plugin/hooks.ts"
 import { buildRegistry } from "src/domain/plugin/loader.ts"
 
 export const TEST_BUILTIN_ID = "665cfbdd-1db6-48f5-9d53-1008b8cb84c3"
@@ -150,4 +151,11 @@ export function createTestRegistry(): PluginRegistry {
 		plugin: createStubGalleryPlugin(),
 	}
 	return buildRegistry([entry])
+}
+
+/** PluginHooks facade backed by the builtin test registry. */
+export function createTestHooks(
+	registry: PluginRegistry = createTestRegistry(),
+): PluginHooks {
+	return createPluginHooks({ getRegistry: () => registry })
 }

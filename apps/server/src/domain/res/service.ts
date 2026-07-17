@@ -12,7 +12,7 @@ import type {
 import type { ListPageInput, ListPageResult } from "@hoardodile/shared"
 import { conflict, isDomainError } from "@hoardodile/shared"
 import { createPluginResourceAPI } from "src/domain/plugin/api.ts"
-import type { PluginRegistry } from "src/domain/plugin/api-types.ts"
+import type { PluginHooks } from "src/domain/plugin/hooks.ts"
 import type { SqliteDb } from "src/infra/db/connection.ts"
 import {
 	probeAnimatedImage,
@@ -32,7 +32,6 @@ import { formatTimestamp } from "src/lib/date.ts"
 import { buildResourceCoverOps } from "./cover-ops.ts"
 import { buildResourceFiles } from "./files.ts"
 import { buildResMetaOps } from "./meta-ops.ts"
-import { createPluginOrchestrator } from "./plugin-orchestrator.ts"
 import {
 	buildResourceRepository,
 	parseFileStats,
@@ -65,8 +64,8 @@ export type ResServiceDeps = ClockDeps & {
 	readonly uploads?: ResUploads
 	/** Process-wide zip central-directory cache. Created when omitted. */
 	readonly zipCdCache?: ZipCdCache
-	/** Plugin registry - required. Builtin plugin must be present. */
-	readonly pluginRegistry: PluginRegistry
+	/** Plugin hook facade - required. Builtin plugin must be registered. */
+	readonly pluginHooks: PluginHooks
 	/** Called when any meta is rebuilt and changed for a resource. */
 	readonly onMetaUpdated?: (
 		resourceId: string,
@@ -205,7 +204,7 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 			},
 			deps.readOnly,
 		)
-	const pluginRegistry = deps.pluginRegistry
+	const pluginHooks = deps.pluginHooks
 	const zipCdCache = deps.zipCdCache ?? createZipCdCache()
 	const viewDeps = { paths: deps.paths, zipCdCache }
 
@@ -239,11 +238,6 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		})
 	}
 
-	const orchestrator = createPluginOrchestrator({
-		pluginRegistry,
-		buildResourceAPI,
-	})
-
 	const cover = buildResourceCoverOps({
 		repo,
 		files,
@@ -253,7 +247,7 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 	const metaOps = buildResMetaOps({
 		repo,
 		now,
-		pluginRegistry,
+		pluginHooks,
 		createResourceAPI: async (resId, fileVersion) => {
 			const row = repo.findById(resId)
 			const stats = parseFileStats(row.fileStats)
@@ -562,12 +556,8 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		const row = repo.findById(id)
 		if (row.contentPluginId === null) return undefined
 		const stats = parseFileStats(row.fileStats)
-		return orchestrator.resolveLocalCoverSource(
-			id,
-			row.fileVersion,
-			stats,
-			row.contentPluginId,
-		)
+		const api = await buildResourceAPI(id, row.fileVersion, stats)
+		return pluginHooks.resolveLocalCoverSource(api, row.contentPluginId)
 	}
 
 	async function computeAndCacheFiles(id: string): Promise<SerializedFileList> {
@@ -583,10 +573,8 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 
 		// If the owning plugin provides buildFileList, delegate to it.
 		if (row.contentPluginId !== null) {
-			const pluginResult = await orchestrator.buildFileList(
-				id,
-				row.fileVersion,
-				stats,
+			const pluginResult = await pluginHooks.buildFileList(
+				api,
 				row.contentPluginId,
 			)
 			if (pluginResult !== undefined) {
@@ -683,11 +671,8 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 	async function detectAndAssignPlugin(id: string): Promise<void> {
 		const row = repo.findById(id)
 		const stats = parseFileStats(row.fileStats)
-		const matchedId = await orchestrator.detectFirstMatch(
-			id,
-			row.fileVersion,
-			stats,
-		)
+		const api = await buildResourceAPI(id, row.fileVersion, stats)
+		const matchedId = await pluginHooks.detectFirstMatch(api)
 		if (row.contentPluginId !== matchedId) {
 			repo.patch(id, { contentPluginId: matchedId })
 		}
@@ -702,12 +687,8 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		const row = repo.findById(id)
 		if (row.contentPluginId === null) return
 		const stats = parseFileStats(row.fileStats)
-		const validatedId = await orchestrator.revalidate(
-			id,
-			row.fileVersion,
-			stats,
-			row.contentPluginId,
-		)
+		const api = await buildResourceAPI(id, row.fileVersion, stats)
+		const validatedId = await pluginHooks.revalidate(api, row.contentPluginId)
 		if (validatedId !== row.contentPluginId) {
 			repo.patch(id, {
 				contentPluginId: validatedId,
@@ -732,12 +713,8 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 			return { ok: true, resource: rowToResource(row) }
 		}
 		const stats = parseFileStats(row.fileStats)
-		const result = await orchestrator.detectForPlugin(
-			id,
-			row.fileVersion,
-			stats,
-			next,
-		)
+		const api = await buildResourceAPI(id, row.fileVersion, stats)
+		const result = await pluginHooks.detectForPlugin(api, next)
 		if (!result.ok) {
 			return { ok: false, failure: result }
 		}
@@ -835,10 +812,7 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		drainMetaQueue: metaOps.drainQueue,
 		listFiles: listResourceFiles,
 		listTrashedFiles: async (id: string) =>
-			buildTrashedFileList(
-				{ paths: deps.paths, pluginRegistry, zipCdCache },
-				id,
-			),
+			buildTrashedFileList({ paths: deps.paths, pluginHooks, zipCdCache }, id),
 		listSourceRelativePaths,
 		resolveSourceView: async (id) => {
 			const row = repo.findById(id)

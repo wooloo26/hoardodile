@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createResourceService } from "src/domain/res/service.ts"
-import { createTestRegistry } from "src/domain/res/test-registry.ts"
+import { createTestHooks } from "src/domain/res/test-registry.ts"
 import { openDb } from "src/infra/db/connection.ts"
 import { createStoragePaths } from "src/infra/storage/paths.ts"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
@@ -35,7 +35,7 @@ describe("backup lifecycle across two hosts", () => {
 		const dbhA = openDb(dbFileA)
 		dbhA.runMigrations()
 		const svcA = createResourceService({
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			db: dbhA.db,
 			paths: pathsA,
 			readOnly: { current: false },
@@ -68,7 +68,7 @@ describe("backup lifecycle across two hosts", () => {
 		const dbhB0 = openDb(dbFileB)
 		dbhB0.runMigrations()
 		const svcB0 = createResourceService({
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			db: dbhB0.db,
 			paths: pathsB,
 			readOnly: { current: false },
@@ -91,7 +91,7 @@ describe("backup lifecycle across two hosts", () => {
 		const dbhB = openDb(dbFileB)
 		dbhB.runMigrations()
 		const svcB = createResourceService({
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 			db: dbhB.db,
 			paths: pathsB,
 			readOnly: { current: false },

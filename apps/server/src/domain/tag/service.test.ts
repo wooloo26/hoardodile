@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { DomainError } from "@hoardodile/shared"
 import { createCharacterService } from "src/domain/char/service.ts"
 import { createResourceService } from "src/domain/res/service.ts"
-import { createTestRegistry } from "src/domain/res/test-registry.ts"
+import { createTestHooks } from "src/domain/res/test-registry.ts"
 import { type DbHandles, openDb } from "src/infra/db/connection.ts"
 import { createStoragePaths } from "src/infra/storage/paths.ts"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
@@ -38,7 +38,7 @@ describe("tag service", () => {
 			db: dbh.db,
 			paths,
 			readOnly: { current: false },
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 		})
 		const r = await resSvc.create({ name: "test-resource" })
 		resId = r.id
@@ -255,7 +255,7 @@ describe("tag service", () => {
 			db: dbh.db,
 			paths: createStoragePaths({ root }),
 			readOnly: { current: false },
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 		})
 		const before = (await resSvc.detail(resId)).updatedAt
 		await new Promise((r) => setTimeout(r, 5))

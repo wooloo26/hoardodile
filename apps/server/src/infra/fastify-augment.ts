@@ -8,6 +8,7 @@ import type { ResCollectionService } from "src/domain/col/service.ts"
 import type { CommentService } from "src/domain/comment/service.ts"
 import type { DanmakuService } from "src/domain/danmaku/service.ts"
 import type { DocService } from "src/domain/doc/service.ts"
+import type { PluginHooks } from "src/domain/plugin/hooks.ts"
 import type { PluginLoader } from "src/domain/plugin/loader.ts"
 import type { PluginService } from "src/domain/plugin/service.ts"
 import type {
@@ -109,5 +110,6 @@ declare module "fastify" {
 		readonly versionService: VersionService
 		readonly pluginLoader: PluginLoader
 		readonly pluginService: PluginService
+		readonly pluginHooks: PluginHooks
 	}
 }

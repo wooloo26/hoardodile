@@ -17,8 +17,6 @@ async function resPluginImpl(app: FastifyInstance): Promise<void> {
 	)
 	app.decorate("resUploads", uploads)
 
-	const registry = app.pluginLoader.getRegistry()
-
 	app.decorate("registerUploadWarmCover", (fn: (id: string) => void) => {
 		uploadWarmCover = fn
 	})
@@ -30,7 +28,7 @@ async function resPluginImpl(app: FastifyInstance): Promise<void> {
 			paths: app.paths,
 			readOnly: app.runtimeRefs.readOnly,
 			uploads,
-			pluginRegistry: registry,
+			pluginHooks: app.pluginHooks,
 			onMetaUpdated: (id, types, meta) => {
 				app.sseBroadcaster.broadcast({
 					type: "resourceMetaUpdated",

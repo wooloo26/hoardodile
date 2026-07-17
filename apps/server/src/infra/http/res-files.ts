@@ -216,7 +216,7 @@ async function resFilesPluginImpl(app: FastifyInstance): Promise<void> {
 				const trashedView = await buildTrashedArtifactView(
 					{
 						paths: app.paths,
-						pluginRegistry: app.pluginLoader.getRegistry(),
+						pluginHooks: app.pluginHooks,
 					},
 					id,
 				)
@@ -292,7 +292,7 @@ async function resFilesPluginImpl(app: FastifyInstance): Promise<void> {
 				const trashedView = await buildTrashedArtifactView(
 					{
 						paths: app.paths,
-						pluginRegistry: app.pluginLoader.getRegistry(),
+						pluginHooks: app.pluginHooks,
 					},
 					id,
 				)

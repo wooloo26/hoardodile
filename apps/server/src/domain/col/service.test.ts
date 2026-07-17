@@ -5,7 +5,7 @@ import { DomainError } from "@hoardodile/shared"
 import { eq } from "drizzle-orm"
 import { resources } from "src/domain/res/schema.ts"
 import { createResourceService } from "src/domain/res/service.ts"
-import { createTestRegistry } from "src/domain/res/test-registry.ts"
+import { createTestHooks } from "src/domain/res/test-registry.ts"
 import { type DbHandles, openDb } from "src/infra/db/connection.ts"
 import { createStoragePaths } from "src/infra/storage/paths.ts"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
@@ -33,7 +33,7 @@ describe("resource collection service", () => {
 			db: dbh.db,
 			paths,
 			readOnly: { current: false },
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 		})
 		resA = (await resSvc.create({ name: "A" })).id
 		resB = (await resSvc.create({ name: "B" })).id
@@ -156,7 +156,7 @@ describe("resource collection service", () => {
 			db: dbh.db,
 			paths: createStoragePaths({ root }),
 			readOnly: { current: false },
-			pluginRegistry: createTestRegistry(),
+			pluginHooks: createTestHooks(),
 		})
 		const c = await svc.create({ name: "Set" })
 		const resBefore = (await resSvc.detail(resA)).updatedAt

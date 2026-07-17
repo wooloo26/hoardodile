@@ -26,7 +26,11 @@ import {
 
 export type CommentServiceDeps = ClockDeps & {
 	readonly db: SqliteDb
-	readonly pluginRegistry?: PluginRegistry
+	/**
+	 * Live accessor for the current plugin registry — called per request so
+	 * a plugin rescan never leaves this service holding a stale registry.
+	 */
+	readonly getRegistry?: () => PluginRegistry
 }
 
 export type CommentListResult = {
@@ -283,7 +287,7 @@ export function createCommentService(deps: CommentServiceDeps): CommentService {
 				.where(eq(resources.id, input.anchor.resId))
 				.get()
 			if (resRow !== undefined && resRow.contentPluginId !== null) {
-				const pluginEntry = deps.pluginRegistry?.getById(resRow.contentPluginId)
+				const pluginEntry = deps.getRegistry?.().getById(resRow.contentPluginId)
 				if (pluginEntry !== undefined) {
 					guard.require(pluginEntry.manifest, "message")
 				}

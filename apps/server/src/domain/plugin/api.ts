@@ -1,38 +1,38 @@
-import { extname } from "node:path"
+import { readdir } from "node:fs/promises"
+import { extname, isAbsolute, join, normalize, resolve, sep } from "node:path"
 import type { Readable } from "node:stream"
 import { IMAGE_EXTS } from "@hoardodile/consts/media-exts"
 import type {
 	AudioInfo,
 	ImageInfo,
-	Logger,
 	ResourceAPI,
 	VideoInfo,
 } from "@hoardodile/plugin-sdk-server"
-import type { PluginManifest } from "@hoardodile/schemas"
-import type { SourceArtifactView } from "src/domain/res/source-view.ts"
 
-/** Build a logger scoped to a plugin manifest. */
-export function createPluginLogger(manifest: PluginManifest): Logger {
-	return {
-		info(msg: string, data?: Record<string, unknown>) {
-			console.info(`[plugin:${manifest.id}] ${msg}`, data ?? "")
-		},
-		warn(msg: string, data?: Record<string, unknown>) {
-			console.warn(`[plugin:${manifest.id}] ${msg}`, data ?? "")
-		},
-		error(msg: string, data?: Record<string, unknown>) {
-			console.error(`[plugin:${manifest.id}] ${msg}`, data ?? "")
-		},
-	}
+/**
+ * Minimal structural view of a resource's source archive required by
+ * {@link createPluginResourceAPI}. `SourceArtifactView` from the res domain
+ * is a structural superset — declared here so the plugin domain never
+ * imports resource-storage internals.
+ */
+export type PluginSourceView = {
+	readonly listEntries: () => Promise<readonly string[]>
+	readonly readEntry: (relPath: string) => Promise<Buffer>
+	readonly openEntryStream: (
+		relPath: string,
+	) => Promise<{ readonly stream: Readable; readonly size: number }>
+	readonly resolveByteRange: (
+		relPath: string,
+	) => Promise<{ readonly size: number } | undefined>
 }
 
 /**
- * Construct a {@link ResourceAPI} on top of a {@link SourceArtifactView}.
+ * Construct a {@link ResourceAPI} on top of a {@link PluginSourceView}.
  * The view abstracts away the on-disk STORED `source.hoard` archive shape so
  * plugin code stays unaware of how source bytes are stored.
  */
 export type CreatePluginResourceAPIDeps = {
-	readonly view: SourceArtifactView
+	readonly view: PluginSourceView
 	readonly probeImage: (
 		source: string | Readable,
 	) => Promise<ImageInfo | undefined>
@@ -44,13 +44,12 @@ export type CreatePluginResourceAPIDeps = {
 		source: string | Readable,
 	) => Promise<AudioInfo | undefined>
 	readonly isAnimatedImage: (source: string | Readable) => Promise<boolean>
-	readonly log?: Logger
 }
 
 export function createPluginResourceAPI(
 	deps: CreatePluginResourceAPIDeps,
 ): ResourceAPI {
-	const { view, log = silentLogger() } = deps
+	const { view } = deps
 
 	async function readFileScoped(path: string): Promise<Uint8Array> {
 		const buf = await view.readEntry(path)
@@ -105,9 +104,9 @@ export function createPluginResourceAPI(
 	}
 
 	return {
-		logInfo: log.info.bind(log),
-		logWarn: log.warn.bind(log),
-		logError: log.error.bind(log),
+		logInfo() {},
+		logWarn() {},
+		logError() {},
 		listFiles: listFilesScoped,
 		readFile: readFileScoped,
 		statFile: statFileScoped,
@@ -121,6 +120,90 @@ export function createPluginResourceAPI(
 	}
 }
 
-function silentLogger(): Logger {
-	return { info() {}, warn() {}, error() {} }
+/**
+ * Create a minimal {@link ResourceAPI} backed by a raw filesystem
+ * directory. Used during import to run detectors before resources exist.
+ */
+export function createImportResourceAPI(dir: string): ResourceAPI {
+	return {
+		logInfo() {},
+		logWarn() {},
+		logError() {},
+		async readFile(relPath) {
+			const safe = resolveSafeImportPath(dir, relPath)
+			const { readFile } = await import("node:fs/promises")
+			const buf = await readFile(safe)
+			return new Uint8Array(buf)
+		},
+		async listFiles() {
+			const out: string[] = []
+			async function collect(current: string, prefix: string) {
+				const entries = await readdir(join(dir, current), {
+					withFileTypes: true,
+				}).catch(() => [] as readonly never[])
+				for (const e of entries) {
+					if (e.name.startsWith(".")) continue
+					if (e.name.includes(".uploading-")) continue
+					const rel = prefix ? join(current, e.name) : e.name
+					if (e.isDirectory()) {
+						await collect(join(current, e.name), rel)
+					} else if (e.isFile()) {
+						out.push(rel)
+					}
+				}
+			}
+			await collect(".", "")
+			return out.sort((a, b) =>
+				a.localeCompare(b, undefined, {
+					sensitivity: "base",
+					numeric: true,
+				}),
+			)
+		},
+		async statFile(relPath) {
+			resolveSafeImportPath(dir, relPath)
+			return undefined
+		},
+		async probeImage() {
+			return undefined
+		},
+		async probeVideo() {
+			return undefined
+		},
+		async probeAudio() {
+			return undefined
+		},
+		async isAnimatedImage() {
+			return false
+		},
+		async setCover() {},
+		async clearCover() {},
+		async setLocalCover() {},
+	}
+}
+
+/**
+ * Resolve a plugin-supplied relative path against an import directory,
+ * rejecting attempts to escape the directory or use absolute paths.
+ */
+export function resolveSafeImportPath(dir: string, relPath: string): string {
+	if (relPath.length === 0) {
+		throw new Error("path is empty")
+	}
+	if (relPath.includes("\0")) {
+		throw new Error("path contains null byte")
+	}
+	if (isAbsolute(relPath)) {
+		throw new Error("absolute paths are not allowed")
+	}
+	const normalized = normalize(relPath)
+	if (normalized.startsWith("..") || normalized === "..") {
+		throw new Error("path escapes import directory")
+	}
+	const root = resolve(dir)
+	const candidate = resolve(root, normalized)
+	if (candidate !== root && !candidate.startsWith(root + sep)) {
+		throw new Error("path escapes import directory")
+	}
+	return candidate
 }

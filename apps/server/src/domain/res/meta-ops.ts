@@ -13,8 +13,7 @@ import type {
 	ResourceMetaType,
 } from "@hoardodile/schemas"
 import sharp from "sharp"
-import type { PluginRegistry } from "src/domain/plugin/api-types.ts"
-import { createCapabilityGuard } from "src/domain/plugin/capability-guard.ts"
+import type { PluginHooks } from "src/domain/plugin/hooks.ts"
 import { createKeyedTaskQueue } from "src/infra/keyed-task-queue.ts"
 import { probeImageSource, probeVideo } from "src/infra/probes/probes.ts"
 import { fitInsideArea } from "src/infra/thumb/pipeline.ts"
@@ -31,7 +30,7 @@ import type { SourceArtifactView } from "./source-view.ts"
 export type ResMetaOpsDeps = {
 	readonly repo: ResRepository
 	readonly now: () => number
-	readonly pluginRegistry?: PluginRegistry
+	readonly pluginHooks?: PluginHooks
 	readonly createResourceAPI: (
 		resId: string,
 		fileVersion: number,
@@ -67,7 +66,7 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 	const {
 		repo,
 		now,
-		pluginRegistry,
+		pluginHooks,
 		createResourceAPI,
 		resolveSourceView,
 		findCover,
@@ -77,7 +76,6 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 	const fileStatsQueue = createKeyedTaskQueue()
 	const pluginMetaQueue = createKeyedTaskQueue()
 	const coverMetaQueue = createKeyedTaskQueue()
-	const guard = createCapabilityGuard()
 
 	// -- Unified patch + notify wrapper --
 
@@ -189,28 +187,20 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 		row: ResRow,
 		api: ResourceAPI,
 	): Promise<Record<string, string | null>> {
-		const entry = pluginRegistry?.getById(row.contentPluginId!)
+		if (pluginHooks === undefined || row.contentPluginId === null) return {}
+		const meta = await pluginHooks.runMetaHooks(api, row.contentPluginId)
 		const patch: Record<string, string | null> = {}
 
-		if (
-			entry !== undefined &&
-			guard.check(entry.manifest, "sourceMeta") &&
-			entry.plugin.sourceMeta !== undefined
-		) {
-			const meta = await entry.plugin.sourceMeta(api)
-			if (meta !== undefined) {
-				const nextJson = JSON.stringify(meta)
-				if (row.sourceMeta !== nextJson) patch.sourceMeta = nextJson
-			}
+		if (meta.sourceMeta !== undefined && meta.sourceMeta.value !== undefined) {
+			const nextJson = JSON.stringify(meta.sourceMeta.value)
+			if (row.sourceMeta !== nextJson) patch.sourceMeta = nextJson
 		}
 
-		if (
-			entry !== undefined &&
-			guard.check(entry.manifest, "searchMeta") &&
-			entry.plugin.searchMeta !== undefined
-		) {
-			const meta = await entry.plugin.searchMeta(api)
-			const nextJson = meta === undefined ? null : JSON.stringify(meta)
+		if (meta.searchMeta !== undefined) {
+			const nextJson =
+				meta.searchMeta.value === undefined
+					? null
+					: JSON.stringify(meta.searchMeta.value)
 			if (row.searchMeta !== nextJson) patch.searchMeta = nextJson
 		}
 
@@ -230,19 +220,17 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 		  }
 		| undefined
 	> {
-		const entry = pluginRegistry?.getById(row.contentPluginId!)
-		if (entry?.plugin.coverLocal === undefined || api === undefined) {
+		if (pluginHooks === undefined || row.contentPluginId === null) {
+			return undefined
+		}
+		if (api === undefined) {
 			return undefined
 		}
 
-		let sourceFile: string | undefined
-		try {
-			sourceFile = await entry.plugin.coverLocal(api)
-		} catch (err) {
-			console.warn(
-				`[meta-ops] coverLocal for ${id}: ${err instanceof Error ? err.message : String(err)}`,
-			)
-		}
+		const sourceFile = await pluginHooks.resolveLocalCoverSource(
+			api,
+			row.contentPluginId,
+		)
 		if (sourceFile === undefined) return undefined
 
 		const view = await resolveSourceView(id)
@@ -408,21 +396,19 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 		let kind: CoverKind = "image"
 		let source: string | undefined
 
-		if (sharedCoverPath === undefined && row.contentPluginId !== null) {
-			const entry = pluginRegistry?.getById(row.contentPluginId)
-			if (entry?.plugin.coverLocal !== undefined) {
-				const api = await createResourceAPI(id, row.fileVersion)
-				try {
-					source = await entry.plugin.coverLocal(api)
-				} catch (err) {
-					console.warn(
-						`[meta-ops] coverLocal for ${id}: ${err instanceof Error ? err.message : String(err)}`,
-					)
-				}
-				if (source !== undefined) {
-					const mediaKind = extToMediaType(extname(source))
-					if (mediaKind !== "audio") kind = mediaKind
-				}
+		if (
+			sharedCoverPath === undefined &&
+			row.contentPluginId !== null &&
+			pluginHooks !== undefined
+		) {
+			const api = await createResourceAPI(id, row.fileVersion)
+			source = await pluginHooks.resolveLocalCoverSource(
+				api,
+				row.contentPluginId,
+			)
+			if (source !== undefined) {
+				const mediaKind = extToMediaType(extname(source))
+				if (mediaKind !== "audio") kind = mediaKind
 			}
 		}
 

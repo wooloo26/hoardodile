@@ -3,10 +3,14 @@ import { rm } from "node:fs/promises"
 import { pipeline } from "node:stream/promises"
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from "fastify"
 import { buildPluginUploads } from "src/domain/plugin/upload.ts"
+import { extractZipInto } from "src/domain/res/archive.ts"
 import { sendJson } from "./utils.ts"
 
 async function pluginUploadPluginImpl(app: FastifyInstance): Promise<void> {
-	const uploads = buildPluginUploads({ pluginsDir: app.paths.local.plugins() })
+	const uploads = buildPluginUploads({
+		pluginsDir: app.paths.local.plugins(),
+		extractZip: extractZipInto,
+	})
 
 	app.post("/api/plugin-upload", async (req, reply) => {
 		if (!req.isMultipart()) {
