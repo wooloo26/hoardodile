@@ -4,7 +4,7 @@ export {
 	createWebPluginAPI,
 	StubPluginAPIProvider,
 } from "./fixtures.tsx"
-export { createPluginTranslation } from "./plugin-i18n.ts"
+export { createPluginTranslation } from "./i18n.ts"
 export {
 	createPluginRoot,
 	type PluginRootConfig,
