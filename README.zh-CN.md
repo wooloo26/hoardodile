@@ -5,9 +5,6 @@
 [![Release](https://img.shields.io/github/v/release/wooloo26/hoardodile)](https://github.com/wooloo26/hoardodile/releases)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
-[![Node.js >=24](https://img.shields.io/badge/node-%3E%3D24-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![pnpm](https://img.shields.io/badge/pnpm-11-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
-
 hoardodile 是一个隐私优先、自托管的个人媒体与文档归档工具。它按单用户设计，所有数据存放在你自己的机器上，并以不可变的版本化快照保存归档，方便你用任意文件同步工具在多台主机之间同步和迁移。
 
 ## 功能特性
