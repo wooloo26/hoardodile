@@ -1,0 +1,443 @@
+import type { PluginRequest } from "@hoardodile/plugin-sdk-web"
+import { describe, expect, it, vi } from "vitest"
+import { defineHandler } from "./handlers/registry"
+import { createHostMessageHandler } from "./hostMessageHandler"
+import { pluginMethods } from "./methods"
+
+vi.mock("./pluginIframeState", () => {
+	const iframes = new Map<Window, { pluginId: string; resId: string }>()
+	const subscriptions = new Map<Window, Set<string>>()
+
+	return {
+		getIframeBySource: (source: Window) => iframes.get(source),
+		addSubscription: (source: Window, key: string) => {
+			let keys = subscriptions.get(source)
+			if (keys === undefined) {
+				keys = new Set()
+				subscriptions.set(source, keys)
+			}
+			keys.add(key)
+		},
+		registerIframe(
+			source: Window,
+			record: { pluginId: string; resId: string },
+		) {
+			iframes.set(source, record)
+		},
+		unregisterIframe(source: Window) {
+			iframes.delete(source)
+			subscriptions.delete(source)
+		},
+	}
+})
+
+import { registerIframe, unregisterIframe } from "./iframe-pool"
+
+type FakeWindow = Window & { postMessage: (...args: unknown[]) => void }
+
+function fakeWindow(): FakeWindow {
+	const w = new EventTarget() as unknown as FakeWindow
+	w.postMessage = vi.fn() as unknown as (...args: unknown[]) => void
+	return w
+}
+
+function fakeMessageEvent(data: PluginRequest, source: Window): MessageEvent {
+	return new MessageEvent("message", { data, source, origin: "null" })
+}
+
+function buildHandlers() {
+	return [
+		defineHandler(
+			pluginMethods.readFile,
+			async (ctx) => new ArrayBuffer(4 + ctx.resId.length),
+		),
+		defineHandler(pluginMethods.listFiles, async () => [{ filename: "a.png" }]),
+		defineHandler(pluginMethods.listComments, async () => []),
+		defineHandler(pluginMethods.createComment, async () => ({
+			id: "c-1",
+			body: "ok",
+		})),
+		defineHandler(pluginMethods.listDanmaku, async () => []),
+		defineHandler(pluginMethods.createDanmaku, async () => ({
+			id: "d-1",
+			text: "hi",
+		})),
+		defineHandler(pluginMethods.setPref, async () => undefined),
+		defineHandler(pluginMethods.setCache, async () => undefined),
+		defineHandler(pluginMethods.getUploadUrl, async () => ({
+			uploadUrl: "https://example.com/upload",
+			fileId: "f-1",
+		})),
+		defineHandler(pluginMethods.notifyUploadComplete, async () => undefined),
+		defineHandler(pluginMethods.invalidate, async () => undefined),
+		defineHandler(pluginMethods.dialogConfirm, async () => true),
+		defineHandler(pluginMethods.dialogPrompt, async () => "input"),
+		defineHandler(pluginMethods.dialogAlert, async () => undefined),
+		defineHandler(pluginMethods.dialogOpenFile, async () => null),
+	] as const
+}
+
+describe("createHostMessageHandler", () => {
+	it("ignores messages from unregistered sources", () => {
+		const handler = createHostMessageHandler(buildHandlers())
+		const source = fakeWindow()
+		const event = fakeMessageEvent(
+			{ type: "request", id: 1, method: pluginMethods.listFiles },
+			source,
+		)
+
+		handler(event)
+
+		expect(source.postMessage).not.toHaveBeenCalled()
+	})
+
+	it("ignores messages with unknown type", () => {
+		const handler = createHostMessageHandler(buildHandlers())
+		const source = fakeWindow()
+		registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+		handler(
+			new MessageEvent("message", {
+				data: { type: "unknown", id: 1 },
+				source,
+				origin: "null",
+			}),
+		)
+
+		expect(source.postMessage).not.toHaveBeenCalled()
+	})
+
+	describe("request routing", () => {
+		it("routes readFile request", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 42,
+						method: pluginMethods.readFile,
+						params: { path: "page-01.png" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+
+			expect(source.postMessage).toHaveBeenCalledWith(
+				{
+					type: "response",
+					id: 42,
+					ok: true,
+					data: expect.any(ArrayBuffer),
+				},
+				"*",
+			)
+		})
+
+		it("routes listFiles request", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{ type: "request", id: 1, method: pluginMethods.listFiles },
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+			expect(source.postMessage).toHaveBeenCalledWith(
+				{
+					type: "response",
+					id: 1,
+					ok: true,
+					data: [{ filename: "a.png" }],
+				},
+				"*",
+			)
+		})
+
+		it("routes listComments request", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 2,
+						method: pluginMethods.listComments,
+						params: { resId: "r-1" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+		})
+
+		it("routes createComment request", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 3,
+						method: pluginMethods.createComment,
+						params: { body: "hello" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+		})
+
+		it("routes prefSet request with pluginId", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 4,
+						method: pluginMethods.setPref,
+						params: { key: "theme", value: "dark" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+		})
+
+		it("routes getUploadUrl and returns url+fileId", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{ type: "request", id: 5, method: pluginMethods.getUploadUrl },
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+			expect(source.postMessage).toHaveBeenCalledWith(
+				{
+					type: "response",
+					id: 5,
+					ok: true,
+					data: {
+						uploadUrl: "https://example.com/upload",
+						fileId: "f-1",
+					},
+				},
+				"*",
+			)
+		})
+	})
+
+	describe("dialog routing", () => {
+		it("routes dialog.confirm", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 10,
+						method: pluginMethods.dialogConfirm,
+						params: { message: "Are you sure?" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+			expect(source.postMessage).toHaveBeenCalledWith(
+				{ type: "response", id: 10, ok: true, data: true },
+				"*",
+			)
+		})
+
+		it("routes dialog.prompt with defaultValue", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 11,
+						method: pluginMethods.dialogPrompt,
+						params: {
+							message: "Enter name",
+							defaultValue: "Alice",
+						},
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+		})
+
+		it("routes dialog.alert", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 12,
+						method: pluginMethods.dialogAlert,
+						params: { message: "Done!" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+		})
+	})
+
+	describe("error handling", () => {
+		it("responds with ok:false when a handler throws", async () => {
+			const handler = createHostMessageHandler([
+				defineHandler("fail", async () => {
+					throw new Error("boom")
+				}),
+			])
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 99,
+						method: "fail",
+						params: { relPath: "missing.png" },
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalledWith(
+					{
+						type: "response",
+						id: 99,
+						ok: false,
+						error: "boom",
+					},
+					"*",
+				)
+			})
+		})
+
+		it("responds with error message for unknown method", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 100,
+						method: "unknownMethod",
+					},
+					source,
+				),
+			)
+
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalledWith(
+					{
+						type: "response",
+						id: 100,
+						ok: false,
+						error: "Unknown method: unknownMethod",
+					},
+					"*",
+				)
+			})
+		})
+	})
+
+	describe("subscribe messages", () => {
+		it("records subscription via addSubscription", () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+
+			handler(
+				new MessageEvent("message", {
+					data: { type: "subscribe", key: "theme:changed" },
+					source,
+					origin: "null",
+				}),
+			)
+
+			// No response for subscribe — it's fire-and-forget
+			expect(source.postMessage).not.toHaveBeenCalled()
+		})
+	})
+
+	describe("cleanup", () => {
+		it("does not respond after iframe is unregistered", async () => {
+			const handler = createHostMessageHandler(buildHandlers())
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			unregisterIframe(source)
+
+			handler(
+				fakeMessageEvent(
+					{ type: "request", id: 1, method: pluginMethods.listFiles },
+					source,
+				),
+			)
+
+			// Give async handlers time to fire
+			await new Promise((r) => setTimeout(r, 10))
+			expect(source.postMessage).not.toHaveBeenCalled()
+		})
+	})
+})

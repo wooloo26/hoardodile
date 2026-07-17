@@ -1,0 +1,59 @@
+{
+	"id": "c9cf1c0a-2a99-44fe-ac71-4068bea2fabf",
+	"name": "Manga",
+	"description": "Manga reader with scroll / paged modes, per-page messages and position restore.",
+	"version": "0.1.0",
+	"permissions": {
+		"sourceMeta": true,
+		"searchMeta": true,
+		"comment": true
+	},
+	"i18n": {
+		"name": {
+			"en": "Manga",
+			"zh": "漫画"
+		},
+		"description": {
+			"en": "Manga reader with scroll / paged modes, per-page messages and position restore.",
+			"zh": "漫画阅读器，支持滚动/翻页模式、页内留言与阅读进度恢复。"
+		},
+		"imageKindLabel": {
+			"en": "Image",
+			"zh": "图片"
+		},
+		"animationKindLabel": {
+			"en": "Animation",
+			"zh": "动图"
+		},
+		"anchorLabel": {
+			"en": "P",
+			"zh": "页"
+		}
+	},
+	"ui": {
+		"height": "85vh",
+		"card": {
+			"image": {
+				"bl": ["{{if(gt(file.count, 1), join(' ', file.count))}}"],
+				"br": ["{{searchKindIcons()}}", "{{source.width}}x{{source.height}}"]
+			}
+		},
+		"search": {
+			"kinds": [
+				{
+					"key": "image",
+					"label": "{{t('imageKindLabel')}}",
+					"icon": "{{lucide('Image')}}"
+				},
+				{
+					"key": "animation",
+					"label": "{{t('animationKindLabel')}}",
+					"icon": "{{lucide('Sparkle')}}"
+				}
+			]
+		},
+		"comment": {
+			"anchor": "{{inc(data.page)}}{{t('anchorLabel')}}"
+		}
+	}
+}

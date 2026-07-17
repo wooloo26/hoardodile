@@ -1,0 +1,598 @@
+/* ────────────────────────────────────────────────────────────────────
+   Document decorative layer for the knowledge base (documents area).
+
+   "Ink Garden": sumi-e ink atmosphere, washi paper, kintsugi gold and
+   a celadon secondary, with an ensō motif. Scoped under `.doc` so the
+   rest of the app keeps the stock theme; portaled overlays owned by
+   the documents feature re-apply `.doc` on their content element.
+
+   The actual shadcn color tokens now live in @hoardodile/ui/theme.css as the
+   `.theme-gold-celadon` palette; this file only provides the layout,
+   component and motion flourishes that consume those variables.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* ── Atmosphere (layout root only) ───────────────────────────────── */
+
+[data-doc-layout].doc {
+	position: relative;
+	isolation: isolate;
+	background-color: var(--background);
+	color: var(--foreground);
+}
+
+/* Mist + paper grain. Fixed so the texture stays still while content
+   scrolls; z-index -1 keeps it behind everything inside the isolated
+   stacking context. The grain is a tiny inline SVG turbulence tile. */
+[data-doc-layout].doc::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+		radial-gradient(
+			120% 70% at 78% -12%,
+			oklch(0.995 0.012 95 / 0.85),
+			transparent 60%
+		),
+		radial-gradient(
+			90% 62% at -8% 105%,
+			oklch(0.93 0.022 150 / 0.32),
+			transparent 55%
+		);
+	background-size:
+		160px 160px,
+		auto,
+		auto;
+}
+
+.dark [data-doc-layout].doc::before {
+	background-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+		radial-gradient(
+			110% 75% at 80% -15%,
+			oklch(0.235 0.032 285 / 0.55),
+			transparent 60%
+		),
+		radial-gradient(
+			95% 65% at -5% 110%,
+			oklch(0.21 0.03 200 / 0.42),
+			transparent 55%
+		);
+	background-size:
+		160px 160px,
+		auto,
+		auto;
+}
+
+/* Document page UI font (sidebar, headers, etc.) */
+[data-doc-layout] {
+	font-family: var(--font-doc-ui, var(--font-app, var(--font-sans)));
+}
+
+/* Document editor: zoom only affects body text. Cards and chips */
+/* opt out so embedded media keeps its own typography. */
+[data-doc-zoom-root] .ProseMirror {
+	color: var(--foreground);
+	line-height: 1.75;
+	font-size: calc(var(--doc-zoom, 1) * 1rem);
+	font-family: var(--font-doc-editor, var(--font-app, var(--font-sans)));
+	overflow-wrap: break-word;
+}
+
+/* BlockNote renders each block as a flex item with an .bn-inline-content
+   wrapper. Give both explicit break opportunities and a zero min-width so
+   long unbroken strings (e.g. a run of digits) wrap instead of forcing the
+   whole page to overflow. */
+[data-doc-zoom-root] .bn-block-content,
+[data-doc-zoom-root] .bn-inline-content {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+[data-doc-zoom-root] .bn-editor {
+	background-color: transparent;
+}
+
+[data-doc-zoom-root] {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+[data-doc-zoom-root] .bn-container {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+[data-doc-zoom-root] .bn-editor {
+	flex: 1;
+}
+
+/* On mobile viewports (< md / 768 px) the default 16px body text is
+   uncomfortably small for long-form reading; bump the base unit so every
+   zoom step stays proportional. Matches @hoardodile/ui/viewport. */
+@media (width < 48rem) {
+	[data-doc-zoom-root] .ProseMirror {
+		font-size: calc(var(--doc-zoom, 1) * 1.55rem);
+	}
+}
+
+[data-doc-zoom-root] [data-character-chip],
+[data-doc-zoom-root] [data-resource-card] {
+	font-size: calc(var(--doc-zoom, 1) * 1rem);
+	line-height: 1.4;
+	text-indent: 0;
+}
+
+[data-doc-zoom-root] [data-character-chip] .text-sm,
+[data-doc-zoom-root] [data-resource-card] .text-sm {
+	font-size: 0.825em;
+}
+
+/* Scale the CharChip avatar along with the document zoom so the
+   inline character mention stays visually proportional. */
+[data-doc-zoom-root] [data-character-chip] .size-7 {
+	width: calc(var(--doc-zoom, 1) * 1.75rem);
+	height: calc(var(--doc-zoom, 1) * 1.75rem);
+}
+
+[data-doc-zoom-root] [data-character-chip] .size-8 {
+	width: calc(var(--doc-zoom, 1) * 2rem);
+	height: calc(var(--doc-zoom, 1) * 2rem);
+}
+
+/* Decorative leading bar on every paragraph block (edit mode only;
+   hidden in reading mode via route `data-reading`). Drawn as a
+   background-image gradient instead of a pseudo-element so we don't
+   collide with BlockNote's own ::before / ::after usage (placeholder
+   text, list markers). The vertical inset (4px top/bottom) makes
+   consecutive paragraph bars visually distinct. */
+[data-reading="false"]
+	[data-doc-zoom-root]
+	.bn-block-content[data-content-type="paragraph"] {
+	padding-left: 0.75rem;
+	background-image: linear-gradient(
+		to bottom,
+		transparent 0,
+		transparent 4px,
+		color-mix(in srgb, var(--muted-foreground) 25%, transparent) 4px,
+		color-mix(in srgb, var(--muted-foreground) 25%, transparent)
+			calc(100% - 4px),
+		transparent calc(100% - 4px)
+	);
+	background-size: 3px 100%;
+	background-repeat: no-repeat;
+	background-position: 0 0;
+}
+
+/* Empty paragraphs: hide the bar (looks odd next to a single-line gap)
+   and clear the first-line indent so the placeholder text is not
+   pushed off-axis and forced to wrap as a vertical column. */
+[data-reading="false"]
+	[data-doc-zoom-root]
+	.bn-block-content[data-content-type="paragraph"]:has(
+		.ProseMirror-trailingBreak:only-child
+	) {
+	background-image: none;
+}
+
+[data-reading="false"]
+	[data-doc-zoom-root][data-doc-indent="true"]
+	.bn-block-content[data-content-type="paragraph"]:has(
+		.ProseMirror-trailingBreak:only-child
+	) {
+	text-indent: 0;
+}
+
+/* Optional first-line indent for paragraph blocks. */
+[data-doc-zoom-root][data-doc-indent="true"]
+	.bn-block-content[data-content-type="paragraph"] {
+	text-indent: 2em;
+}
+
+/* Per-paragraph opt-out (paragraph block prop `indent === false`). */
+[data-doc-zoom-root][data-doc-indent="true"]
+	.bn-block-content[data-content-type="paragraph"][data-indent="false"] {
+	text-indent: 0;
+}
+
+/* Mobile (< md / 768 px): hide the BlockNote side menu (drag handle /
+   add-block button). The route container provides the small horizontal
+   breathing room itself, so the editor's intrinsic padding stays 0. */
+@media (width < 48rem) {
+	[data-doc-zoom-root] .bn-side-menu {
+		display: none !important;
+	}
+
+	[data-doc-zoom-root] .bn-editor {
+		padding-inline: 0;
+	}
+
+	/* Scale down headings so they stay readable without overwhelming the
+	   narrow viewport. H1 ≈ 1.7× base, each subsequent level steps down. */
+	[data-doc-zoom-root] .ProseMirror h1 {
+		font-size: calc(var(--doc-zoom, 1) * 2.38rem);
+	}
+
+	[data-doc-zoom-root] .ProseMirror h2 {
+		font-size: calc(var(--doc-zoom, 1) * 2rem);
+	}
+
+	[data-doc-zoom-root] .ProseMirror h3 {
+		font-size: calc(var(--doc-zoom, 1) * 1.75rem);
+	}
+
+	[data-doc-zoom-root] .ProseMirror h4 {
+		font-size: calc(var(--doc-zoom, 1) * 1.56rem);
+	}
+
+	[data-doc-zoom-root] .ProseMirror h5 {
+		font-size: calc(var(--doc-zoom, 1) * 1.47rem);
+	}
+
+	[data-doc-zoom-root] .ProseMirror h6 {
+		font-size: calc(var(--doc-zoom, 1) * 1.4rem);
+	}
+}
+
+[data-doc-zoom-root] a {
+	color: inherit !important;
+	text-decoration: none !important;
+}
+
+/* BlockNote suggestion menus (/, @, #) and AI combobox */
+.bn-suggestion-menu .bn-suggestion-menu-item[aria-selected="true"],
+#ai-suggestion-menu .bn-suggestion-menu-item[aria-selected="true"] {
+	background-color: var(--color-muted);
+	color: var(--foreground);
+}
+
+/* ── Component classes ───────────────────────────────────────────── */
+
+@layer components {
+	/* Small-caps micro-annotation. */
+	.doc-label {
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+	}
+
+	/* Hairline divider with a rotated-square "ink seal" at its center. */
+	.doc-divider {
+		position: relative;
+		display: block;
+		height: 1px;
+		width: 8rem;
+		background: linear-gradient(
+			to right,
+			transparent,
+			color-mix(in oklab, var(--primary) 45%, transparent),
+			transparent
+		);
+	}
+
+	.doc-divider::after {
+		content: "";
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 4px;
+		height: 4px;
+		transform: translate(-50%, -50%) rotate(45deg);
+		background: color-mix(in oklab, var(--primary) 70%, transparent);
+	}
+
+	/* Translucent washi panel. */
+	.doc-sheet {
+		background: color-mix(in oklab, var(--card) 78%, transparent);
+		border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+		box-shadow:
+			0 1px 2px oklch(0 0 0 / 0.03),
+			0 16px 48px -20px oklch(0.35 0.04 80 / 0.25);
+	}
+
+	.dark .doc-sheet {
+		box-shadow:
+			0 1px 2px oklch(0 0 0 / 0.35),
+			0 20px 60px -24px oklch(0 0 0 / 0.6);
+	}
+
+	/* Floating translucent toolbar chrome. Blur only on md+ (>= 768 px)
+	   pointers — mobile WebKit pays dearly for backdrop filters. */
+	.doc-toolbar {
+		background: color-mix(in oklab, var(--card) 88%, transparent);
+		border-bottom: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
+		box-shadow: 0 2px 16px -6px oklch(0 0 0 / 0.1);
+	}
+
+	.dark .doc-toolbar {
+		box-shadow: 0 2px 20px -6px oklch(0 0 0 / 0.45);
+	}
+
+	@media (width >= 48rem) {
+		.doc-toolbar {
+			background: color-mix(in oklab, var(--card) 72%, transparent);
+			-webkit-backdrop-filter: blur(12px) saturate(1.15);
+			backdrop-filter: blur(12px) saturate(1.15);
+		}
+	}
+
+	/* Fading hairline under-stroke for titles. */
+	.doc-title-underline {
+		background-image: linear-gradient(
+			to right,
+			color-mix(in oklab, var(--primary) 38%, transparent),
+			color-mix(in oklab, var(--border) 90%, transparent) 35%,
+			transparent 95%
+		);
+		background-size: 100% 1px;
+		background-repeat: no-repeat;
+		background-position: left bottom;
+	}
+
+	/* Full-height translucent paper column for the document page (md+). */
+	@media (width >= 48rem) {
+		.doc-sheet-col {
+			background: color-mix(in oklab, var(--card) 55%, transparent);
+			border-inline: 1px solid
+				color-mix(in oklab, var(--border) 70%, transparent);
+			box-shadow: 0 0 60px -30px oklch(0 0 0 / 0.18);
+		}
+
+		.dark .doc-sheet-col {
+			box-shadow: 0 0 80px -30px oklch(0 0 0 / 0.55);
+		}
+	}
+}
+
+/* ── Tree ────────────────────────────────────────────────────────── */
+
+/* Gold ink-stroke marker on the active row. */
+.doc-tree-active {
+	background: color-mix(in oklab, var(--primary) 10%, transparent);
+}
+
+.doc-tree-active::before {
+	content: "";
+	position: absolute;
+	left: 0.2rem;
+	top: 18%;
+	bottom: 18%;
+	width: 2px;
+	border-radius: 999px;
+	background: var(--primary);
+	box-shadow: 0 0 10px var(--gold-glow);
+}
+
+/* Vertical hairline guide for nested branches. `--doc-depth` is the
+   parent depth, set inline by the tree component. */
+.doc-tree-children {
+	position: relative;
+}
+
+.doc-tree-children::before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	bottom: 2px;
+	left: calc(0.75rem + var(--doc-depth, 0) * 1rem);
+	width: 1px;
+	background: color-mix(in oklab, var(--border) 75%, transparent);
+}
+
+/* ── Reading-mode immersion: chrome recedes until pointed at ─────── */
+
+@media (hover: hover) {
+	.doc [data-reading="true"] .doc-detail-header {
+		opacity: 0.35;
+		transition: opacity 0.45s ease;
+	}
+
+	.doc [data-reading="true"] .doc-detail-header:hover,
+	.doc [data-reading="true"] .doc-detail-header:focus-within {
+		opacity: 1;
+	}
+}
+
+/* ── Editor content ──────────────────────────────────────────────── */
+
+.doc [data-doc-zoom-root] .ProseMirror h1 {
+	padding-bottom: 0.25em;
+	background-image: linear-gradient(
+		to right,
+		color-mix(in oklab, var(--primary) 38%, transparent),
+		color-mix(in oklab, var(--border) 90%, transparent) 40%,
+		transparent 95%
+	);
+	background-size: 100% 1px;
+	background-repeat: no-repeat;
+	background-position: left bottom;
+}
+
+.doc [data-doc-zoom-root] .ProseMirror blockquote {
+	border-left: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
+	background: color-mix(in oklab, var(--primary) 6%, transparent);
+	border-radius: 0 0.5rem 0.5rem 0;
+	padding: 0.35em 1em;
+	color: color-mix(in oklab, var(--foreground) 88%, var(--primary));
+}
+
+.doc [data-doc-zoom-root] .ProseMirror code:not(pre code) {
+	font-family: "LXGW WenKai Mono", ui-monospace, Consolas, monospace;
+	color: var(--gold-celadon);
+	background: color-mix(in oklab, var(--gold-celadon) 12%, transparent);
+	border-radius: 0.3em;
+	padding: 0.08em 0.35em;
+	font-size: 0.92em;
+}
+
+.doc [data-doc-zoom-root] .ProseMirror ::selection {
+	background: color-mix(in oklab, var(--primary) 30%, transparent);
+}
+
+/* BlockNote renders placeholders as ::after on empty block content. */
+.doc [data-doc-zoom-root]
+	.bn-block-content:has(.ProseMirror-trailingBreak:only-child)::after {
+	color: color-mix(in oklab, var(--muted-foreground) 72%, transparent);
+}
+
+/* Recolor the edit-mode paragraph leading bar from gray to a quiet
+   gold wash (geometry comes from the base rule in index.css). */
+.doc [data-reading="false"]
+	[data-doc-zoom-root]
+	.bn-block-content[data-content-type="paragraph"] {
+	background-image: linear-gradient(
+		to bottom,
+		transparent 0,
+		transparent 4px,
+		color-mix(in srgb, var(--primary) 32%, transparent) 4px,
+		color-mix(in srgb, var(--primary) 32%, transparent) calc(100% - 4px),
+		transparent calc(100% - 4px)
+	);
+}
+
+.doc [data-doc-diff="true"] .ProseMirror ins {
+	background: oklch(0.92 0.08 145);
+	color: oklch(0.25 0.08 145);
+	text-decoration: none;
+	border-bottom: 2px solid oklch(0.65 0.12 145);
+	padding: 0.05em 0.2em;
+	border-radius: 0.2em;
+}
+
+.doc [data-doc-diff="true"] .ProseMirror del {
+	background: oklch(0.94 0.04 25);
+	color: oklch(0.4 0.1 25);
+	text-decoration: line-through;
+	text-decoration-color: oklch(0.65 0.15 25);
+	padding: 0.05em 0.2em;
+	border-radius: 0.2em;
+}
+
+.dark .doc [data-doc-diff="true"] .ProseMirror ins {
+	background: oklch(0.28 0.09 150);
+	color: oklch(0.92 0.06 150);
+	border-bottom-color: oklch(0.6 0.12 150);
+}
+
+.dark .doc [data-doc-diff="true"] .ProseMirror del {
+	background: oklch(0.3 0.06 25);
+	color: oklch(0.92 0.05 25);
+	text-decoration-color: oklch(0.7 0.12 25);
+}
+
+/* ── Quiet scrollbars inside the doc scope ───────────────────────── */
+
+.doc *::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+.doc *::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.doc *::-webkit-scrollbar-thumb {
+	background: color-mix(in oklab, var(--muted-foreground) 28%, transparent);
+	border-radius: 8px;
+	border: 3px solid transparent;
+	background-clip: padding-box;
+}
+
+.doc *::-webkit-scrollbar-thumb:hover {
+	background: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
+	background-clip: padding-box;
+}
+
+/* ── Motion ──────────────────────────────────────────────────────── */
+
+.doc-reveal {
+	opacity: 0;
+	animation: doc-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.doc-reveal-2 {
+	animation-delay: 110ms;
+}
+
+.doc-reveal-3 {
+	animation-delay: 220ms;
+}
+
+.doc-reveal-4 {
+	animation-delay: 330ms;
+}
+
+.zen-enso-draw path {
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	animation: doc-draw 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+}
+
+.zen-enso-spin {
+	animation: doc-spin 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+	transform-origin: center;
+}
+
+.zen-enso-breathe {
+	animation: doc-breathe 7s ease-in-out infinite;
+	transform-origin: center;
+}
+
+@keyframes doc-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes doc-draw {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes doc-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes doc-breathe {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 0.8;
+	}
+
+	50% {
+		transform: scale(1.03);
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.doc-reveal,
+	.zen-enso-breathe {
+		animation: none;
+	}
+
+	.doc-reveal {
+		opacity: 1;
+	}
+
+	.zen-enso-draw path {
+		animation: none;
+		stroke-dashoffset: 0;
+	}
+}

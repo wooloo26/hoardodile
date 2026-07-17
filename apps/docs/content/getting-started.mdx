@@ -1,0 +1,36 @@
+# Getting Started
+
+## Requirements
+
+- **Node.js 24**
+- **pnpm**, installed via `corepack enable` (the exact version is pinned by the `packageManager` field in `package.json`)
+
+## Install and run
+
+```bash
+pnpm install
+pnpm build
+
+# One-shot setup: writes the admin password
+# (optionally restores a snapshot via RESTORE_FROM)
+pnpm -F @hoardodile/server setup:dev
+
+# Start the server (serves the built web app)
+pnpm -F @hoardodile/server start
+```
+
+Then open [http://127.0.0.1:3000](http://127.0.0.1:3000) and log in with the admin password you just set.
+
+The production binary also exposes an `app-server-setup` command for the same one-shot setup.
+
+## Development mode
+
+```bash
+pnpm dev
+```
+
+Starts the web app, the server, and the plugin watchers together. Set `DEV_PLUGINS=gallery,manga` to select which plugins to watch; when omitted in a TTY, an interactive prompt appears.
+
+## Where your data lives
+
+Set the `STORAGE_ROOT` environment variable to choose the storage location (it defaults to a directory under the OS temp dir, which you do **not** want for real data). See [Configuration](/configuration) for the full list of environment variables.

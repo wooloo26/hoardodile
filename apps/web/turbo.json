@@ -1,0 +1,20 @@
+{
+	"extends": ["//"],
+	"tasks": {
+		"build": {
+			"dependsOn": [
+				"@hoardodile/plugin-sdk-web#build",
+				"@hoardodile/schemas#build",
+				"@hoardodile/shared#build",
+				"@hoardodile/ui#build"
+			],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"$TURBO_ROOT$/pnpm-lock.yaml",
+				"$TURBO_ROOT$/LICENSE",
+				"$TURBO_ROOT$/scripts/generate-licenses.mjs"
+			],
+			"outputs": ["dist/**"]
+		}
+	}
+}

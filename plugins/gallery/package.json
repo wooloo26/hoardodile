@@ -1,0 +1,45 @@
+{
+	"name": "@hoardodile/plugin-gallery",
+	"version": "0.0.0",
+	"private": true,
+	"license": "GPL-3.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./main": "./src/main.ts",
+		"./locales/*": "./src/locales/*.ts",
+		"./danmaku/*": "./src/danmaku/*.ts"
+	},
+	"scripts": {
+		"build": "node ../../scripts/build-plugin.mjs",
+		"watch": "node ../../scripts/build-plugin.mjs --watch",
+		"lint": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@hoardodile/consts": "workspace:*",
+		"@hoardodile/plugin-sdk-react": "workspace:*",
+		"@hoardodile/plugin-sdk-server": "workspace:*",
+		"@hoardodile/plugin-sdk-types": "workspace:*",
+		"@hoardodile/plugin-sdk-web": "workspace:*",
+		"@hoardodile/ui": "workspace:*",
+		"@videojs/react": "10.0.0-beta.25",
+		"danmaku": "^2.0.9",
+		"lucide-react": "catalog:",
+		"react": "catalog:",
+		"sonner": "catalog:",
+		"zustand": "catalog:"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "catalog:",
+		"@testing-library/jest-dom": "catalog:",
+		"@testing-library/react": "catalog:",
+		"@types/react": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"jsdom": "catalog:",
+		"tailwindcss": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}

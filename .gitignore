@@ -1,0 +1,42 @@
+node_modules
+dist
+build
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.cache
+*.tsbuildinfo
+temp
+.turbo
+
+# Finder (MacOS) folder config
+.DS_Store
+
+# lefthook local overrides
+lefthook-local.yml
+
+.tanstack
+.playwright
+
+# TanStack Router generated route tree
+apps/web/src/routeTree.gen.ts
+
+# Generated third-party license artifacts
+apps/web/public/licenses.json
+apps/web/public/LICENSE
+
+# Playwright
+apps/web/test-results
+apps/web/playwright-report
+apps/web/stats.html
+
+# Docs site (Next.js / Nextra)
+apps/docs/.next
+apps/docs/out
+apps/docs/next-env.d.ts

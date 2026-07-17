@@ -1,0 +1,53 @@
+import type { QueryClient } from "@tanstack/react-query"
+import type { HandlerEntry } from "./handlers/registry"
+import { createHostMessageHandler } from "./hostMessageHandler"
+
+// ── Ref-counted global postMessage handler ─────────────────────────────────
+
+let globalHandler: ((event: MessageEvent) => void) | undefined
+let handlerRefCount = 0
+
+function addGlobalHandler(handler: (event: MessageEvent) => void): void {
+	if (handlerRefCount === 0) {
+		window.addEventListener("message", handler)
+		globalHandler = handler
+	}
+	handlerRefCount++
+}
+
+function removeGlobalHandler(): void {
+	handlerRefCount--
+	if (handlerRefCount === 0 && globalHandler !== undefined) {
+		window.removeEventListener("message", globalHandler)
+		globalHandler = undefined
+	}
+}
+
+// ── Auto-discovery via import.meta.glob ────────────────────────────────────
+
+type HandlerModule = {
+	readonly createHandlers: (qc: QueryClient) => readonly HandlerEntry[]
+}
+
+const handlerModules = import.meta.glob<HandlerModule>("./handlers/*.ts", {
+	eager: true,
+})
+
+function buildHandlers(qc: QueryClient): HandlerEntry[] {
+	const handlers: HandlerEntry[] = []
+	for (const mod of Object.values(handlerModules)) {
+		if (mod.createHandlers !== undefined) {
+			handlers.push(...mod.createHandlers(qc))
+		}
+	}
+	return handlers
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────
+
+/** Registers the global postMessage handler once; call cleanup on unmount. */
+export function ensureGlobalHandler(qc: QueryClient): () => void {
+	const handler = createHostMessageHandler(buildHandlers(qc))
+	addGlobalHandler(handler)
+	return () => removeGlobalHandler()
+}

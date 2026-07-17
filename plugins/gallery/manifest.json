@@ -1,0 +1,85 @@
+{
+	"id": "665cfbdd-1db6-48f5-9d53-1008b8cb84c3",
+	"name": "Gallery",
+	"description": "Builtin media gallery plugin",
+	"version": "0.1.0",
+	"permissions": {
+		"sourceMeta": true,
+		"searchMeta": true,
+		"danmaku": true,
+		"comment": true
+	},
+	"i18n": {
+		"name": {
+			"en": "Gallery",
+			"zh": "图库"
+		},
+		"description": {
+			"en": "Builtin media gallery plugin",
+			"zh": "内置媒体图库插件"
+		},
+		"imageKindLabel": {
+			"en": "Image",
+			"zh": "图片"
+		},
+		"animationKindLabel": {
+			"en": "Animation",
+			"zh": "动图"
+		},
+		"videoKindLabel": {
+			"en": "Video",
+			"zh": "视频"
+		},
+		"audioKindLabel": {
+			"en": "Audio",
+			"zh": "音频"
+		}
+	},
+	"ui": {
+		"card": {
+			"image": {
+				"bl": ["{{if(gt(file.count, 1), join(' ', file.count))}}"],
+				"br": ["{{searchKindIcons()}}", "{{source.width}}x{{source.height}}"]
+			},
+			"video": {
+				"bl": ["{{if(gt(file.count, 1), join(' ', file.count))}}"],
+				"br": [
+					"{{searchKindIcons()}}",
+					"{{duration(source.durationMs)}}",
+					"{{source.width}}x{{source.height}}"
+				]
+			},
+			"audio": {
+				"bl": ["{{if(gt(file.count, 1), join(' ', file.count))}}"],
+				"br": ["{{searchKindIcons()}}", "{{duration(source.durationMs)}}"]
+			}
+		},
+		"search": {
+			"kinds": [
+				{
+					"key": "image",
+					"label": "{{t('imageKindLabel')}}",
+					"icon": "{{lucide('Image')}}"
+				},
+				{
+					"key": "animation",
+					"label": "{{t('animationKindLabel')}}",
+					"icon": "{{lucide('Sparkle')}}"
+				},
+				{
+					"key": "video",
+					"label": "{{t('videoKindLabel')}}",
+					"icon": "{{lucide('Video')}}"
+				},
+				{
+					"key": "audio",
+					"label": "{{t('audioKindLabel')}}",
+					"icon": "{{lucide('Music')}}"
+				}
+			]
+		},
+		"comment": {
+			"anchor": "{{duration(data.timeMs)}}"
+		}
+	}
+}

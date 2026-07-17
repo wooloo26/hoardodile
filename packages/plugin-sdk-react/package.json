@@ -1,0 +1,27 @@
+{
+	"name": "@hoardodile/plugin-sdk-react",
+	"version": "0.0.0",
+	"private": true,
+	"license": "GPL-3.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./test-utils": "./src/test-utils.ts"
+	},
+	"scripts": {
+		"build": "tsc --noEmit",
+		"lint": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@hoardodile/plugin-sdk-types": "workspace:*",
+		"@hoardodile/plugin-sdk-web": "workspace:*",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"typescript": "catalog:"
+	}
+}

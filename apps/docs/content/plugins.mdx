@@ -1,0 +1,30 @@
+# Plugins
+
+Content types are handled by plugins. Three ship built-in, and unknown file types fall back to a generic file plugin (`packages/plugin-file`).
+
+| Plugin  | Description                                                               |
+| ------- | ------------------------------------------------------------------------- |
+| Gallery | Built-in media gallery (images, animations, videos, danmaku, messages)    |
+| Manga   | Manga reader with scroll/paged modes, per-page messages, position restore |
+| Novel   | Novel reader                                                              |
+
+## Architecture
+
+A content plugin is made of three parts:
+
+- **`manifest.json`** — declares the plugin's UUID, permissions, i18n strings, and UI templates
+- **Server side** — a `main.js` exposing `createPlugin(api)`, implementing the `ContentPlugin` contract from `@hoardodile/plugin-sdk-server` (prefer `definePlugin()` for a declarative definition)
+- **Client side** — a renderer that runs inside a sandboxed iframe and talks to the host app over `postMessage`
+
+The server loads each plugin's `dist/main.js` via dynamic import. On the client, framework-agnostic plugins use `@hoardodile/plugin-sdk-web`; React plugins use `@hoardodile/plugin-sdk-react` (`createPluginRoot`, `usePluginAPI`, `useVisibility`).
+
+## Plugin SDK packages
+
+| Package                      | Role                                    |
+| ---------------------------- | --------------------------------------- |
+| `@hoardodile/plugin-sdk-types`  | Shared plugin runtime types          |
+| `@hoardodile/plugin-sdk-server` | Server-side plugin contract + helpers |
+| `@hoardodile/plugin-sdk-web`    | Framework-agnostic iframe/postMessage runtime |
+| `@hoardodile/plugin-sdk-react`  | React bindings for iframe plugins    |
+
+The `plugin-sdk-*` packages are intended for future npm publication, so their public API surface is kept deliberate.

@@ -1,0 +1,32 @@
+{
+	"id": "b3bfba9e-b14b-42b1-8bf9-147251317dc0",
+	"name": "Novel",
+	"description": "Novel reader.",
+	"version": "0.1.0",
+	"permissions": {
+		"comment": true
+	},
+	"i18n": {
+		"name": {
+			"en": "Novel",
+			"zh": "小说"
+		},
+		"description": {
+			"en": "Novel reader.",
+			"zh": "小说阅读器。"
+		},
+		"anchorPrefix": {
+			"en": "Para ",
+			"zh": "第"
+		},
+		"anchorSuffix": {
+			"en": "",
+			"zh": "段"
+		}
+	},
+	"ui": {
+		"comment": {
+			"anchor": "{{t('anchorPrefix')}}{{inc(data.paragraphIndex)}}{{t('anchorSuffix')}}"
+		}
+	}
+}

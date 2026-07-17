@@ -1,0 +1,40 @@
+@import "@hoardodile/ui/theme.css";
+@source "../**/*.{ts,tsx}";
+
+#root {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+/* Reader scrollbar: always-present, thin, low-contrast.
+   The track is transparent so the bar reads as a subtle hint over
+   the black page background; pair with `scrollbar-gutter: stable`
+   on the container so the gutter never collapses while pages stream
+   in, which would otherwise reflow the layout. The same visual
+   weight (1.5 = 6px, white/20) is reused for the paged-mode
+   decorative indicator so switching modes feels seamless. */
+.manga-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.manga-scrollbar::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+.manga-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.manga-scrollbar::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 3px;
+}
+
+.manga-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.4);
+}

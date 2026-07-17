@@ -1,0 +1,58 @@
+# Configuration
+
+The server has no CLI flags; all runtime configuration comes from environment variables, validated at startup by `apps/server/src/config/env.ts`. Copy `.env.example` to `.env` and adjust the values for your environment.
+
+Relative file and directory paths are resolved against the monorepo workspace root, so behaviour does not depend on the process working directory.
+
+## Server
+
+| Variable   | Default       | Description                                  |
+| ---------- | ------------- | -------------------------------------------- |
+| `NODE_ENV` | `development` | `development`, `test`, or `production`       |
+| `HOST`     | `127.0.0.1`   | Bind address                                 |
+| `PORT`     | `3000`        | Bind port                                    |
+| `LOG_LEVEL` | `info`       | `fatal` … `trace`, or `silent`               |
+
+## Storage
+
+| Variable             | Default                        | Description                                                                                                |
+| -------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `STORAGE_ROOT`       | OS temp dir (`app-dev`)        | Root for the live DB, version archives, and local caches. **Set this explicitly for real deployments.**    |
+| `DATABASE_URL`       | `{STORAGE_ROOT}/app.sqlite`    | Live DB path override (mostly for tests; `:memory:` is supported)                                          |
+| `SHARED_FOLDER_ROOT` | _(unset)_                      | Root directory exposed by the shared-folder import browser. When unset, only zip-file import is available. |
+| `APP_WEB_ROOT`       | _(bundled next to the server)_ | Override the directory of pre-built web assets served at `/`                                               |
+
+## Sessions & security
+
+| Variable                | Default       | Description                                                                                                        |
+| ----------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `SESSION_COOKIE_NAME`   | `app_session` | Session cookie name                                                                                                |
+| `SESSION_TTL_SECONDS`   | `2592000`     | Session lifetime (30 days)                                                                                         |
+| `SESSION_SECURE_COOKIE` | `false`       | Force the `Secure` flag on session cookies                                                                         |
+| `FORCE_HTTPS`           | `false`       | Refuse to issue/refresh session cookies over plain HTTP. Enable when behind a TLS-terminating reverse proxy.       |
+| `DISABLE_DEV_PLUGINS`   | `false`       | Ignore `DEV_PLUGIN_PATHS`. Recommended for public-facing deployments.                                              |
+
+## Uploads & media
+
+| Variable                     | Default  | Description                                                                      |
+| ---------------------------- | -------- | -------------------------------------------------------------------------------- |
+| `MAX_UPLOAD_BYTES`           | 16 GiB   | Upper bound on a single resource upload                                          |
+| `MAX_ARCHIVE_EXTRACTED_BYTES` | 64 GiB  | Hard cap on bytes written when extracting an archive upload (zip-bomb defence)   |
+| `FFMPEG_PATH`                | _(auto)_ | Optional `ffmpeg` binary override                                                |
+| `FFPROBE_PATH`               | _(auto)_ | Optional `ffprobe` binary override                                               |
+
+## Plugins
+
+| Variable           | Default                        | Description                                                  |
+| ------------------ | ------------------------------ | ------------------------------------------------------------ |
+| `BUILTIN_PATH`     | `packages/plugin-file/dist`    | Directory of the built-in fallback content plugin            |
+| `DEV_PLUGIN_PATHS` | _(empty)_                      | Comma-separated dev plugin directories loaded from disk      |
+| `DEV_PLUGINS`      | _(prompt)_                     | Comma-separated plugin names for `pnpm dev`                  |
+
+## One-shot setup
+
+| Variable              | Description                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `RESTORE_FROM`        | Snapshot name to restore during `setup:dev` / `app-server-setup`, before the server starts listening |
+| `ADMIN_PASSWORD`      | Admin password in plain text (convenient for dev)                                  |
+| `ADMIN_PASSWORD_FILE` | File containing the admin password (recommended for production)                    |

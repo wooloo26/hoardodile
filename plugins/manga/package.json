@@ -1,0 +1,43 @@
+{
+	"name": "@hoardodile/plugin-manga",
+	"version": "0.0.0",
+	"private": true,
+	"license": "GPL-3.0",
+	"type": "module",
+	"exports": {
+		"./main": "./src/main.ts",
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "node ../../scripts/build-plugin.mjs",
+		"watch": "node ../../scripts/build-plugin.mjs --watch",
+		"lint": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@hoardodile/consts": "workspace:*",
+		"@hoardodile/plugin-sdk-react": "workspace:*",
+		"@hoardodile/plugin-sdk-server": "workspace:*",
+		"@hoardodile/plugin-sdk-types": "workspace:*",
+		"@hoardodile/plugin-sdk-web": "workspace:*",
+		"@hoardodile/ui": "workspace:*",
+		"@tanstack/react-virtual": "^3.14.6",
+		"lucide-react": "catalog:",
+		"react": "catalog:",
+		"react-zoom-pan-pinch": "^4.0.3",
+		"zustand": "catalog:"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "catalog:",
+		"@testing-library/jest-dom": "catalog:",
+		"@testing-library/react": "catalog:",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"jsdom": "catalog:",
+		"tailwindcss": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}

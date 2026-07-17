@@ -1,0 +1,29 @@
+{
+	"$schema": "./node_modules/turbo/schema.json",
+	"futureFlags": { "globalConfiguration": true },
+	"global": {
+		"inputs": ["tsconfig.json", "pnpm-workspace.yaml"],
+		"env": ["CI", "NODE_ENV"],
+		"passThroughEnv": ["CI", "GITHUB_*", "TURBO_*"]
+	},
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**", "out/**"]
+		},
+		"lint": {
+			"outputs": [],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"$TURBO_ROOT$/biome.json",
+				"!.turbo/**",
+				"!public/**",
+				"!e2e/**"
+			]
+		},
+		"test": {
+			"outputs": [],
+			"inputs": ["$TURBO_DEFAULT$", "!.turbo/**", "!public/**", "!e2e/**"]
+		}
+	}
+}

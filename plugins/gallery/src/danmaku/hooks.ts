@@ -1,0 +1,278 @@
+import type { Danmaku as DanmakuRecord } from "@hoardodile/plugin-sdk-web"
+import { booleanCodec, numberCodec } from "@hoardodile/plugin-sdk-web"
+import type { VideoPlayerStore } from "@videojs/react"
+import type Danmaku from "danmaku"
+import { useEffect, useRef, useState } from "react"
+import { usePluginAPI } from "../hooks"
+import {
+	areaToHeight,
+	noopReject,
+	serverResumeKey,
+	toEngineComment,
+} from "./helpers"
+import {
+	AUTOPLAY_PREF_KEY,
+	type DanmakuSettings,
+	RESUME_MIN_REMAINING_MS,
+	RESUME_THROTTLE_MS,
+	VOLUME_PREF_KEY,
+} from "./types"
+
+type EngineDeps = {
+	readonly stageRef: React.RefObject<HTMLDivElement | null>
+	readonly videoRef: React.RefObject<HTMLVideoElement | null>
+	readonly danmakuRef: React.MutableRefObject<Danmaku | undefined>
+	readonly comments: readonly DanmakuRecord[] | undefined
+	readonly settings: DanmakuSettings
+}
+
+export function useDanmakuEngine(deps: EngineDeps) {
+	const { stageRef, videoRef, danmakuRef, comments, settings } = deps
+	const fontSize = settings.fontSizePx
+	const area = settings.area
+	const initializedRef = useRef(false)
+	const commentsReady = comments !== undefined
+
+	useEffect(() => {
+		if (initializedRef.current) return
+		if (!commentsReady) return
+		const stage = stageRef.current
+		const video = videoRef.current
+		if (stage === null || video === null) return
+		initializedRef.current = true
+		let cancelled = false
+		let instance: Danmaku | undefined
+		const initialComments = (comments ?? []).map((c) =>
+			toEngineComment(c, fontSize),
+		)
+		import("danmaku")
+			.then((mod) => {
+				if (cancelled) return
+				const Ctor = mod.default
+				instance = new Ctor({
+					container: stage,
+					media: video,
+					comments: initialComments,
+					engine: "dom",
+				})
+				danmakuRef.current = instance
+			})
+			.catch(noopReject)
+		return () => {
+			cancelled = true
+			instance?.destroy()
+			danmakuRef.current = undefined
+		}
+	}, [commentsReady])
+
+	useEffect(() => {
+		const d = danmakuRef.current
+		if (d === undefined) return
+		d.resize()
+	}, [danmakuRef, area])
+
+	useEffect(() => {
+		const stage = stageRef.current
+		if (stage === null) return
+		stage.style.height = areaToHeight(area)
+	}, [stageRef, area])
+}
+
+type ResumePlaybackDeps = {
+	readonly videoRef: React.RefObject<HTMLVideoElement | null>
+	readonly resId: string
+	readonly filename: string
+	readonly currentMs: number
+	readonly durationMs: number
+	readonly disabled?: boolean
+}
+
+export function useResumePlayback(deps: ResumePlaybackDeps) {
+	const api = usePluginAPI()
+	const {
+		videoRef,
+		resId,
+		filename,
+		currentMs,
+		durationMs,
+		disabled = false,
+	} = deps
+	const lastWriteRef = useRef(0)
+	const apiRef = useRef(api)
+	apiRef.current = api
+	const latestRef = useRef({ resId, filename, currentMs, durationMs })
+	latestRef.current = { resId, filename, currentMs, durationMs }
+	useEffect(() => {
+		if (disabled) return
+		const v = videoRef.current
+		if (v === null) return
+		const now = Date.now()
+		if (now - lastWriteRef.current < RESUME_THROTTLE_MS) return
+		const durMs = durationMs > 0 ? durationMs : durationFromElement(v)
+		if (durMs === 0) return
+		const curMs = currentMs > 0 ? currentMs : Math.round(v.currentTime * 1000)
+		writeResume({
+			resId,
+			filename,
+			currentMs: curMs,
+			durationMs: durMs,
+			setPrefSync: (key, value) => {
+				apiRef.current.setPref(key, value)
+			},
+		})
+		lastWriteRef.current = now
+	}, [videoRef, resId, filename, currentMs, durationMs, disabled])
+	useEffect(function flushOnUnmountAndPagehide() {
+		if (disabled) return
+		function flush() {
+			const snap = latestRef.current
+			const v = videoRef.current
+			const durMs =
+				snap.durationMs > 0
+					? snap.durationMs
+					: v !== null
+						? durationFromElement(v)
+						: 0
+			if (durMs === 0) return
+			const curMs =
+				snap.currentMs > 0
+					? snap.currentMs
+					: v !== null
+						? Math.round(v.currentTime * 1000)
+						: 0
+			writeResume({
+				resId: snap.resId,
+				filename: snap.filename,
+				currentMs: curMs,
+				durationMs: durMs,
+				setPrefSync: (key, value) => {
+					apiRef.current.setPref(key, value)
+				},
+			})
+		}
+		window.addEventListener("pagehide", flush)
+		return () => {
+			window.removeEventListener("pagehide", flush)
+			flush()
+		}
+	}, [])
+}
+
+function durationFromElement(v: HTMLVideoElement): number {
+	const d = v.duration
+	return Number.isFinite(d) && d > 0 ? Math.round(d * 1000) : 0
+}
+
+function writeResume(args: {
+	readonly resId: string
+	readonly filename: string
+	readonly currentMs: number
+	readonly durationMs: number
+	readonly setPrefSync: (key: string, value: string) => void
+}): void {
+	const { currentMs, durationMs, setPrefSync } = args
+	const remaining = durationMs - currentMs
+	const prefKey = serverResumeKey(args.resId, args.filename)
+	if (remaining <= RESUME_MIN_REMAINING_MS) {
+		setPrefSync(prefKey, "")
+	} else if (currentMs > 1000) {
+		setPrefSync(prefKey, String(currentMs))
+	}
+}
+
+type ResumeApplyDeps = {
+	readonly videoRef: React.RefObject<HTMLVideoElement | null>
+	readonly resId: string
+	readonly filename: string
+	readonly disabled?: boolean
+}
+
+export function useResumeApply(deps: ResumeApplyDeps): {
+	readonly lastResumedAt: number | undefined
+} {
+	const api = usePluginAPI()
+	const { videoRef, resId, filename, disabled = false } = deps
+	const prefKey = serverResumeKey(resId, filename)
+	const [prefValue] = api.usePref<number>(prefKey, 0, numberCodec())
+	const appliedRef = useRef(false)
+	const [lastResumedAt, setLastResumedAt] = useState<number | undefined>(
+		undefined,
+	)
+	useEffect(
+		function applyResume() {
+			if (disabled) return
+			if (appliedRef.current) return
+			const winningMs = prefValue > 0 ? prefValue : 0
+			if (winningMs <= 0) {
+				appliedRef.current = true
+				return
+			}
+			const v = videoRef.current
+			if (v === null) return
+			function tryApply(): boolean {
+				if (v === null) return false
+				const total = v.duration
+				if (!Number.isFinite(total) || total <= 0) return false
+				appliedRef.current = true
+				if (total * 1000 - winningMs < RESUME_MIN_REMAINING_MS) return true
+				if (v.currentTime * 1000 < winningMs - 250) {
+					v.currentTime = winningMs / 1000
+					setLastResumedAt(Date.now())
+				}
+				return true
+			}
+			if (tryApply()) return
+			function handler() {
+				if (tryApply() && v !== null) {
+					v.removeEventListener("loadedmetadata", handler)
+					v.removeEventListener("durationchange", handler)
+					v.removeEventListener("canplay", handler)
+				}
+			}
+			v.addEventListener("loadedmetadata", handler)
+			v.addEventListener("durationchange", handler)
+			v.addEventListener("canplay", handler)
+			return () => {
+				v.removeEventListener("loadedmetadata", handler)
+				v.removeEventListener("durationchange", handler)
+				v.removeEventListener("canplay", handler)
+			}
+		},
+		[prefValue, videoRef, resId, filename, disabled],
+	)
+	return { lastResumedAt }
+}
+
+type InitialVolumeDeps = {
+	readonly store: VideoPlayerStore
+	readonly duration: number
+}
+
+export function useInitialVolume(deps: InitialVolumeDeps) {
+	const api = usePluginAPI()
+	const { store, duration } = deps
+	const [volume] = api.usePref<number>(VOLUME_PREF_KEY, 1, numberCodec())
+	const appliedRef = useRef(false)
+	useEffect(() => {
+		if (appliedRef.current) return
+		if (duration <= 0) return
+		appliedRef.current = true
+		const clamped = Math.min(1, Math.max(0, volume))
+		try {
+			store.setVolume(clamped)
+		} catch {}
+	}, [store, duration, volume])
+}
+
+export function useAutoplayPref(): {
+	readonly autoplay: boolean
+	readonly setAutoplay: (next: boolean) => void
+} {
+	const api = usePluginAPI()
+	const [autoplay, setAutoplay] = api.usePref<boolean>(
+		AUTOPLAY_PREF_KEY,
+		false,
+		booleanCodec(),
+	)
+	return { autoplay, setAutoplay }
+}

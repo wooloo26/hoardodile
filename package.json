@@ -1,0 +1,88 @@
+{
+	"name": "hoardodile",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Archive and preview your gallery, manga, novels.",
+	"author": "wooloo26",
+	"license": "GPL-3.0",
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/wooloo26/hoardodile.git"
+	},
+	"homepage": "https://github.com/wooloo26/hoardodile",
+	"bugs": "https://github.com/wooloo26/hoardodile/issues",
+	"keywords": [
+		"self-hosted",
+		"archive",
+		"gallery",
+		"manga",
+		"novel",
+		"privacy"
+	],
+	"scripts": {
+		"dev": "node scripts/dev.mjs",
+		"build": "turbo run build",
+		"test": "turbo run test --concurrency=4",
+		"lint": "biome check . && turbo run lint",
+		"format": "biome check --write",
+		"db:generate": "pnpm -F @hoardodile/server db:generate",
+		"deps:update": "pnpm up -L && pnpm -r up -L",
+		"licenses:check": "node scripts/generate-licenses.mjs --check",
+		"licenses:generate": "node scripts/generate-licenses.mjs",
+		"version:check": "node scripts/check-version-sync.mjs",
+		"release": "release-it",
+		"postinstall": "lefthook install"
+	},
+	"lint-staged": {
+		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+			"biome check --write --no-errors-on-unmatched",
+			"biome format --write --no-errors-on-unmatched"
+		]
+	},
+	"release-it": {
+		"git": {
+			"commitMessage": "chore(release): v${version}",
+			"tagName": "v${version}",
+			"requireBranch": "main"
+		},
+		"github": {
+			"release": true,
+			"releaseName": "v${version}"
+		},
+		"npm": {
+			"publish": false
+		},
+		"plugins": {
+			"@release-it/conventional-changelog": {
+				"preset": {
+					"name": "conventionalcommits"
+				},
+				"infile": false
+			}
+		},
+		"hooks": {
+			"after:bump": "node scripts/sync-version.mjs"
+		}
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.4",
+		"@clack/prompts": "^1.7.0",
+		"@commitlint/cli": "^21.2.1",
+		"@commitlint/config-conventional": "^21.2.0",
+		"@release-it/conventional-changelog": "^11.0.1",
+		"@tailwindcss/vite": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"lefthook": "^2.1.10",
+		"license-checker-rseidelsohn": "^5.0.1",
+		"lint-staged": "^17.0.8",
+		"npm-run-all2": "^9.0.2",
+		"release-it": "^20.2.1",
+		"turbo": "^2.10.5",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vite-node": "catalog:",
+		"vitest": "catalog:"
+	},
+	"packageManager": "pnpm@11.10.0"
+}

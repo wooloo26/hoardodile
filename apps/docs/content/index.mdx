@@ -1,0 +1,25 @@
+# Introduction
+
+hoardodile is a privacy-first, self-hosted archiving app for your personal media and documents. It is single-user by design, stores everything on your own machine, and keeps immutable, versioned snapshots of your archive so you can sync and migrate hosts with any file-sync tool.
+
+## Features
+
+- **Versioned archiving** — each released version freezes its files and a DB snapshot under `versions/<v>/`; old versions stay read-only and are never deleted
+- **Pluggable content types** — gallery, manga, and novel plugins ship built-in; unknown file types fall back to a generic file plugin
+- **Organization** — resources, characters, documents, tags, messages, danmaku, search, and usage stats
+- **Single-user authentication** — argon2-hashed password with session cookies; your data never leaves your host
+- **Manual backup & host-switching** — sync the `versions/` directory with any tool you like, back up the DB in-app, and restore on the new host
+
+## How it works
+
+The app is a pnpm monorepo: a Fastify + tRPC server, a React single-page app, and iframe-based content plugins. Everything — database, originals, thumbnails, logs — lives under a single storage root on your machine:
+
+- `{storage}/app.sqlite` — the live runtime database (not synced)
+- `{storage}/versions/<version>/` — frozen, syncable version partitions (DB snapshot, resources, characters, documents); old versions are read-only
+- `{storage}/local/` — host-only state (logs, thumbnails, trash, staging, session key, extracted caches)
+
+Because a released version's partition never changes, any file-sync tool (Syncthing, rsync, cloud drives) can replicate your archive safely.
+
+## Next steps
+
+Head to [Getting Started](/getting-started) to run your own instance.

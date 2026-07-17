@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # pnpm workspace at the repo root. Shared dependency versions live in the
+  # `catalog:` section of pnpm-workspace.yaml; if Dependabot ever misses a
+  # catalog entry, `pnpm deps:update` is the manual fallback.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 3
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
+  # Keep the actions used by .github/workflows/*.yml current.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

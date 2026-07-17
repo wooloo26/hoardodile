@@ -1,0 +1,342 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+	--text-tiny: 0.625rem;
+	--font-heading: var(--font-sans);
+	--font-sans:
+		"Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+		"Microsoft YaHei", Arial, sans-serif;
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar: var(--sidebar);
+	--color-chart-5: var(--chart-5);
+	--color-chart-4: var(--chart-4);
+	--color-chart-3: var(--chart-3);
+	--color-chart-2: var(--chart-2);
+	--color-chart-1: var(--chart-1);
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-background: var(--background);
+	--radius: 0.625rem;
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: calc(var(--radius) * 0.8);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) * 1.4);
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
+
+	/* Breakpoints are declared explicitly so the JS mobile detection and
+	   Tailwind responsive prefixes stay in sync. `MOBILE_BREAKPOINT_PX` in
+	   @hoardodile/ui/viewport must match `--breakpoint-md` (768 px). */
+	--breakpoint-sm: 40rem;
+	--breakpoint-md: 48rem;
+	--breakpoint-lg: 64rem;
+	--breakpoint-xl: 80rem;
+	--breakpoint-2xl: 96rem;
+}
+
+:root {
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.145 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.145 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.145 0 0);
+	--primary: oklch(0.81 0.06 88);
+	--primary-foreground: oklch(0.48 0.1 125);
+	--secondary: oklch(0.97 0 0);
+	--secondary-foreground: oklch(0.48 0.1 125);
+	--muted: oklch(0.97 0 0);
+	--muted-foreground: oklch(0.556 0 0);
+	--accent: oklch(0.94 0.025 88);
+	--accent-foreground: oklch(0.48 0.1 125);
+	--destructive: oklch(0.577 0.245 27.325);
+	--destructive-foreground: oklch(1 0 0);
+	--border: oklch(0.922 0 0);
+	--input: oklch(0.922 0 0);
+	--ring: oklch(0.58 0.1 125);
+	--chart-1: oklch(0.81 0.06 88);
+	--chart-2: oklch(0.74 0.07 85);
+	--chart-3: oklch(0.66 0.08 90);
+	--chart-4: oklch(0.58 0.1 125);
+	--chart-5: oklch(0.5 0.08 130);
+	--sidebar: oklch(0.985 0 0);
+	--sidebar-foreground: oklch(0.145 0 0);
+	--sidebar-primary: oklch(0.81 0.06 88);
+	--sidebar-primary-foreground: oklch(0.48 0.1 125);
+	--sidebar-accent: oklch(0.94 0.025 88);
+	--sidebar-accent-foreground: oklch(0.48 0.1 125);
+	--sidebar-border: oklch(0.922 0 0);
+	--sidebar-ring: oklch(0.58 0.1 125);
+	--shadow-color: oklch(0 0 0);
+}
+
+.dark {
+	--background: oklch(0.145 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.22 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.269 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.83 0.07 88);
+	--primary-foreground: oklch(0.48 0.1 125);
+	--secondary: oklch(0.269 0 0);
+	--secondary-foreground: oklch(0.83 0.07 88);
+	--muted: oklch(0.269 0 0);
+	--muted-foreground: oklch(0.708 0 0);
+	--accent: oklch(0.32 0.04 125);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.704 0.191 22.216);
+	--destructive-foreground: oklch(0.985 0 0);
+	--border: oklch(0.275 0 0);
+	--input: oklch(0.325 0 0);
+	--ring: oklch(0.72 0.08 88);
+	--chart-1: oklch(0.83 0.07 88);
+	--chart-2: oklch(0.76 0.08 85);
+	--chart-3: oklch(0.68 0.09 90);
+	--chart-4: oklch(0.6 0.1 125);
+	--chart-5: oklch(0.52 0.08 130);
+	--sidebar: oklch(0.205 0 0);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.83 0.07 88);
+	--sidebar-primary-foreground: oklch(0.48 0.1 125);
+	--sidebar-accent: oklch(0.269 0 0);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(0.275 0 0);
+	--sidebar-ring: oklch(0.72 0.08 88);
+	--shadow-color: oklch(0 0 0);
+}
+
+/* ── Gold & Celadon (Ink Garden) ─────────────────────────────────────
+   Paired light/dark palette. Defined here so it can be applied globally
+   on <html> or locally inside a document/feature scope. The two dark
+   selectors cover both cases without duplication.
+   ─────────────────────────────────────────────────────────────────── */
+
+.theme-gold-celadon {
+	/* Paper Day */
+	--background: oklch(0.969 0.0088 92);
+	--foreground: oklch(0.298 0.018 270);
+	--card: oklch(0.984 0.006 92);
+	--card-foreground: oklch(0.298 0.018 270);
+	--popover: oklch(0.987 0.005 92);
+	--popover-foreground: oklch(0.298 0.018 270);
+	--primary: oklch(0.56 0.098 75);
+	--primary-foreground: oklch(0.984 0.008 92);
+	--secondary: oklch(0.938 0.013 95);
+	--secondary-foreground: oklch(0.56 0.098 75);
+	--muted: oklch(0.933 0.012 92);
+	--muted-foreground: oklch(0.505 0.022 85);
+	--accent: oklch(0.91 0.019 90);
+	--accent-foreground: oklch(0.298 0.018 270);
+	--destructive: oklch(0.55 0.18 28);
+	--destructive-foreground: oklch(0.984 0.006 92);
+	--border: oklch(0.88 0.014 88);
+	--input: oklch(0.88 0.014 88);
+	--ring: oklch(0.68 0.095 80);
+	--sidebar: oklch(0.984 0.006 92);
+	--sidebar-foreground: oklch(0.298 0.018 270);
+	--sidebar-primary: oklch(0.56 0.098 75);
+	--sidebar-primary-foreground: oklch(0.984 0.008 92);
+	--sidebar-accent: oklch(0.91 0.019 90);
+	--sidebar-accent-foreground: oklch(0.298 0.018 270);
+	--sidebar-border: oklch(0.88 0.014 88);
+	--sidebar-ring: oklch(0.68 0.095 80);
+
+	--gold-celadon: oklch(0.54 0.075 165);
+	--gold-glow: oklch(0.56 0.098 75 / 0.25);
+}
+
+html.dark.theme-gold-celadon,
+.dark .theme-gold-celadon {
+	/* Ink Night */
+	--background: oklch(0.168 0.014 264);
+	--foreground: oklch(0.918 0.012 90);
+	--card: oklch(0.206 0.016 264);
+	--card-foreground: oklch(0.918 0.012 90);
+	--popover: oklch(0.228 0.017 264);
+	--popover-foreground: oklch(0.918 0.012 90);
+	--primary: oklch(0.795 0.094 85);
+	--primary-foreground: oklch(0.205 0.02 264);
+	--secondary: oklch(0.245 0.018 264);
+	--secondary-foreground: oklch(0.795 0.094 85);
+	--muted: oklch(0.236 0.016 264);
+	--muted-foreground: oklch(0.66 0.018 85);
+	--accent: oklch(0.275 0.019 264);
+	--accent-foreground: oklch(0.918 0.012 90);
+	--destructive: oklch(0.63 0.155 25);
+	--destructive-foreground: oklch(0.97 0.01 90);
+	--border: oklch(0.285 0.018 264);
+	--input: oklch(0.305 0.018 264);
+	--ring: oklch(0.73 0.085 85);
+	--sidebar: oklch(0.206 0.016 264);
+	--sidebar-foreground: oklch(0.918 0.012 90);
+	--sidebar-primary: oklch(0.795 0.094 85);
+	--sidebar-primary-foreground: oklch(0.205 0.02 264);
+	--sidebar-accent: oklch(0.275 0.019 264);
+	--sidebar-accent-foreground: oklch(0.918 0.012 90);
+	--sidebar-border: oklch(0.285 0.018 264);
+	--sidebar-ring: oklch(0.73 0.085 85);
+
+	--gold-celadon: oklch(0.78 0.07 160);
+	--gold-glow: oklch(0.795 0.094 85 / 0.3);
+}
+
+/* ── Default palette class ───────────────────────────────────────────
+   Mirrors :root / .dark so a local scope can explicitly opt back into
+   the default palette even when the global theme uses another palette.
+   ─────────────────────────────────────────────────────────────────── */
+
+.theme-default {
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.145 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.145 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.145 0 0);
+	--primary: oklch(0.81 0.06 88);
+	--primary-foreground: oklch(0.48 0.1 125);
+	--secondary: oklch(0.97 0 0);
+	--secondary-foreground: oklch(0.48 0.1 125);
+	--muted: oklch(0.97 0 0);
+	--muted-foreground: oklch(0.556 0 0);
+	--accent: oklch(0.94 0.025 88);
+	--accent-foreground: oklch(0.48 0.1 125);
+	--destructive: oklch(0.577 0.245 27.325);
+	--destructive-foreground: oklch(1 0 0);
+	--border: oklch(0.922 0 0);
+	--input: oklch(0.922 0 0);
+	--ring: oklch(0.58 0.1 125);
+	--chart-1: oklch(0.81 0.06 88);
+	--chart-2: oklch(0.74 0.07 85);
+	--chart-3: oklch(0.66 0.08 90);
+	--chart-4: oklch(0.58 0.1 125);
+	--chart-5: oklch(0.5 0.08 130);
+	--sidebar: oklch(0.985 0 0);
+	--sidebar-foreground: oklch(0.145 0 0);
+	--sidebar-primary: oklch(0.81 0.06 88);
+	--sidebar-primary-foreground: oklch(0.48 0.1 125);
+	--sidebar-accent: oklch(0.94 0.025 88);
+	--sidebar-accent-foreground: oklch(0.48 0.1 125);
+	--sidebar-border: oklch(0.922 0 0);
+	--sidebar-ring: oklch(0.58 0.1 125);
+	--shadow-color: oklch(0 0 0);
+}
+
+html.dark.theme-default,
+.dark .theme-default {
+	--background: oklch(0.145 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.22 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.269 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.83 0.07 88);
+	--primary-foreground: oklch(0.48 0.1 125);
+	--secondary: oklch(0.269 0 0);
+	--secondary-foreground: oklch(0.83 0.07 88);
+	--muted: oklch(0.269 0 0);
+	--muted-foreground: oklch(0.708 0 0);
+	--accent: oklch(0.32 0.04 125);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.704 0.191 22.216);
+	--destructive-foreground: oklch(0.985 0 0);
+	--border: oklch(0.275 0 0);
+	--input: oklch(0.325 0 0);
+	--ring: oklch(0.72 0.08 88);
+	--chart-1: oklch(0.83 0.07 88);
+	--chart-2: oklch(0.76 0.08 85);
+	--chart-3: oklch(0.68 0.09 90);
+	--chart-4: oklch(0.6 0.1 125);
+	--chart-5: oklch(0.52 0.08 130);
+	--sidebar: oklch(0.205 0 0);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.83 0.07 88);
+	--sidebar-primary-foreground: oklch(0.48 0.1 125);
+	--sidebar-accent: oklch(0.269 0 0);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(0.275 0 0);
+	--sidebar-ring: oklch(0.72 0.08 88);
+	--shadow-color: oklch(0 0 0);
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+
+	body {
+		@apply text-foreground;
+	}
+
+	html {
+		@apply font-sans;
+	}
+
+	button:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
+@source "../**/*.{ts,tsx}";
+
+/* ── Override tw-animate-css keyframes to remove filter:blur which forces
+     extra compositor work on mobile WebKit even when blur(0) ── */
+@keyframes enter {
+	from {
+		opacity: var(--tw-enter-opacity, 1);
+		transform: translate3d(
+				var(--tw-enter-translate-x, 0),
+				var(--tw-enter-translate-y, 0),
+				0
+			)
+			scale3d(
+				var(--tw-enter-scale, 1),
+				var(--tw-enter-scale, 1),
+				var(--tw-enter-scale, 1)
+			)
+			rotate(var(--tw-enter-rotate, 0));
+	}
+}
+
+@keyframes exit {
+	to {
+		opacity: var(--tw-exit-opacity, 1);
+		transform: translate3d(
+				var(--tw-exit-translate-x, 0),
+				var(--tw-exit-translate-y, 0),
+				0
+			)
+			scale3d(
+				var(--tw-exit-scale, 1),
+				var(--tw-exit-scale, 1),
+				var(--tw-exit-scale, 1)
+			)
+			rotate(var(--tw-exit-rotate, 0));
+	}
+}

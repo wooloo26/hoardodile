@@ -1,0 +1,5 @@
+import { definePluginAPI } from "@hoardodile/plugin-sdk-react"
+import type { GallerySchema } from "./shared"
+
+export const { PluginAPIProvider, usePluginAPI } =
+	definePluginAPI<GallerySchema>()

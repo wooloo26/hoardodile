@@ -1,0 +1,52 @@
+packages:
+  - apps/*
+  - packages/*
+  - plugins/*
+overrides:
+  # nextra(-theme-docs) validates theme props with z.custom at runtime. Since
+  # zod 4.2, undefined fails non-optional custom fields before the check runs,
+  # which breaks every docs page render. Pin their zod to 4.1.12 (workspace
+  # packages keep the catalog zod).
+  'zod@^4.1.12': 4.1.12
+allowBuilds:
+  '@ffmpeg-installer/darwin-arm64': true
+  '@ffmpeg-installer/darwin-x64': true
+  '@ffmpeg-installer/linux-arm': true
+  '@ffmpeg-installer/linux-arm64': true
+  '@ffmpeg-installer/linux-ia32': true
+  '@ffmpeg-installer/linux-x64': true
+  '@ffprobe-installer/darwin-arm64': true
+  '@ffprobe-installer/darwin-x64': true
+  '@ffprobe-installer/linux-arm': true
+  '@ffprobe-installer/linux-arm64': true
+  '@ffprobe-installer/linux-ia32': true
+  '@ffprobe-installer/linux-x64': true
+  better-sqlite3: true
+  esbuild: true
+  ffmpeg-static: true
+  lefthook: true
+  msw: true
+  sharp: true
+catalog:
+  '@tailwindcss/vite': ^4.3.2
+  '@testing-library/jest-dom': ^6.9.1
+  '@testing-library/react': ^16.3.2
+  '@types/node': ^26.1.1
+  '@types/react': ^19.2.17
+  '@types/react-dom': ^19.2.3
+  '@vitejs/plugin-react': ^6.0.3
+  es-toolkit: ^1.49.0
+  esbuild: ^0.28.1
+  jsdom: ^29.1.1
+  lucide-react: ^1.24.0
+  react: ^19.2.7
+  react-dom: ^19.2.7
+  react-use: ^17.6.1
+  sonner: ^2.0.7
+  tailwindcss: ^4.3.2
+  typescript: ^7.0.2
+  vite: ^8.1.5
+  vite-node: ^6.0.0
+  vitest: ^4.1.10
+  zod: ^4.4.3
+  zustand: ^5.0.14

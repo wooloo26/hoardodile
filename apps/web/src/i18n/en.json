@@ -1,0 +1,1406 @@
+{
+	"common": {
+		"back": "Back",
+		"cancel": "Cancel",
+		"close": "Close",
+		"save": "Save",
+		"saving": "Saving...",
+		"loading": "Loading...",
+		"remove": "Remove",
+		"removeAria": "Remove",
+		"edit": "Edit",
+		"delete": "Delete",
+		"rename": "Rename",
+		"confirm": "Confirm",
+		"expand": "Expand",
+		"collapse": "Collapse",
+		"working": "Working...",
+		"prev": "Prev",
+		"next": "Next",
+		"first": "First",
+		"last": "Last",
+		"jumpToPage": "P",
+		"go": "Go",
+		"unknownError": "Unknown error",
+		"show": "Show",
+		"hide": "Hide",
+		"requestFailed": "Request failed",
+		"saved": "Saved",
+		"saveFailed": "Could not save",
+		"confirmByTypingPrompt": "Please enter the following to confirm this operation:",
+		"searchIncludeIntro": "Search intro",
+		"underline": "Underline",
+		"colorPicker": {
+			"clear": "Clear color",
+			"set": "Set color",
+			"customColor": "Custom colour",
+			"defaultPresets": "Presets",
+			"myPresets": "My presets",
+			"addPreset": "Add to my presets",
+			"removePresetAria": "Remove preset {{color}}",
+			"specialStyles": "Special styles"
+		}
+	},
+	"entityMeta": {
+		"nameLabel": "Name",
+		"namePlaceholder": "Enter a name",
+		"introLabel": "Description",
+		"introPlaceholder": "Optional short description",
+		"colorLabel": "Color",
+		"colorPlaceholder": "Optional CSS color; leave empty for default",
+		"pinned": "Pinned"
+	},
+	"language": {
+		"label": "Language",
+		"description": "Choose the interface language.",
+		"english": "English",
+		"chinese": "中文"
+	},
+	"theme": {
+		"description": "Choose the color mode and palette.",
+		"modeLabel": "Mode",
+		"paletteLabel": "Palette",
+		"mode": {
+			"light": "Light",
+			"dark": "Dark",
+			"system": "System"
+		},
+		"palette": {
+			"default": "Hoardodile",
+			"gold-celadon": "Gold & Celadon"
+		}
+	},
+	"font": {
+		"label": "Font",
+		"description": "Choose the global application font stack. Add multiple fonts and drag to set priority.",
+		"inherit": "Inherit global font",
+		"inheritedHint": "Currently inheriting the global font setting",
+		"addCustom": "Type font name…",
+		"optionalTags": "Optional fonts",
+		"selected": "Selected fonts",
+		"presets": {
+			"inter": "Inter",
+			"lxgw-wenkai": "LXGW WenKai",
+			"lxgw-wenkai-mono": "LXGW WenKai Mono",
+			"source-sans-3": "Source Sans 3"
+		}
+	},
+	"dateTime": {
+		"description": "Choose the date/time display format and timezone.",
+		"formatLabel": "Date format",
+		"timeZoneLabel": "Time zone",
+		"format": {
+			"ymdDash": "2024-06-12 14:30:00",
+			"ymdSlash": "2024/06/12 14:30:00",
+			"dmySlash": "12/06/2024 14:30:00",
+			"mdySlash": "06/12/2024 14:30:00",
+			"ymdChinese": "2024年06月12日 14:30:00"
+		},
+		"timeZone": {
+			"local": "Local",
+			"utc": "UTC",
+			"asiaShanghai": "Shanghai",
+			"asiaTokyo": "Tokyo",
+			"asiaSeoul": "Seoul",
+			"europeLondon": "London",
+			"europeParis": "Paris",
+			"americaNewYork": "New York",
+			"americaLosAngeles": "Los Angeles",
+			"australiaSydney": "Sydney"
+		}
+	},
+	"appShell": {
+		"primaryNav": "Primary navigation",
+		"nav": {
+			"overview": "Overview",
+			"resources": "Resources",
+			"characters": "Characters",
+			"documents": "Documents",
+			"comments": "Messages",
+			"me": "Settings"
+		}
+	},
+	"search": {
+		"title": "Search results",
+		"placeholder": "Search characters, resources, documents…",
+		"submit": "Search",
+		"sectionTitles": {
+			"characters": "Characters",
+			"resources": "Resources",
+			"documents": "Documents"
+		},
+		"counts": {
+			"characters": "{{count}} characters",
+			"resources": "{{count}} resources",
+			"documents": "{{count}} documents"
+		},
+		"viewAll": "View all {{count}}",
+		"empty": {
+			"title": "No results found",
+			"description": "Try a different keyword"
+		},
+		"resultLabels": {
+			"document": "Document",
+			"folder": "Folder"
+		}
+	},
+	"me": {
+		"tabs": {
+			"preferences": "Preferences",
+			"custom": "Custom",
+			"data": "Data",
+			"app": "App",
+			"plugins": "Plugins"
+		},
+		"section": {
+			"language": "Language",
+			"theme": "Theme",
+			"font": "Font",
+			"dateTime": "Date & Time",
+			"traits": "Character traits",
+			"relationshipTypes": "Character relationships",
+			"categoriesTags": "Categories & Tags",
+			"collections": "Collections",
+			"rebuild": "Rebuild",
+			"fullscreen": "Fullscreen",
+			"plugins": "Content Plugins",
+			"trash": "Trash",
+			"usage": "Usage history"
+		},
+		"fullscreen": {
+			"description": "Fill the screen with the web UI for distraction-free reading or presentation.",
+			"enter": "Enter fullscreen",
+			"exit": "Exit fullscreen",
+			"unsupported": "Fullscreen is not supported in this environment"
+		},
+		"signOut": {
+			"description": "Sign out of the current account and return to the login page."
+		},
+		"licenses": {
+			"title": "Licenses",
+			"description": "View open-source dependencies, font attributions, and project license information.",
+			"viewButton": "View licenses",
+			"projectLicense": "Project License",
+			"projectLicenseDescription": "This application is released under the GNU General Public License v3.0 (GPL-3.0).",
+			"fullLicense": "Full license",
+			"dependencies": "Open Source Dependencies",
+			"fonts": "Fonts",
+			"packageCount": "{{count}} packages",
+			"noPackages": "No packages"
+		},
+		"about": {
+			"title": "About",
+			"description": "Version, links, update check, and open-source licenses.",
+			"tagline": "Privacy-first, self-hosted archiving app for personal media and documents.",
+			"repository": "GitHub repository",
+			"checkUpdate": "Check for updates",
+			"checking": "Checking...",
+			"latest": "You're on the latest version.",
+			"outdated": "Version {{version}} is available.",
+			"viewRelease": "View release",
+			"updateError": "Update check failed. Please try again later."
+		},
+		"usage": {
+			"description": "Clears all viewing time, open counts, and stats. Does not affect resources, characters, or plugin resume cache.",
+			"clearAll": "Clear all usage history",
+			"confirmTitle": "Clear all usage history?",
+			"confirmDescription": "Permanently deletes all usage records. Stats and overview recommendations will reset. This cannot be undone.",
+			"confirmPhrase": "Clear all usage history",
+			"confirmLabel": "Confirm clear",
+			"clearing": "Clearing...",
+			"toastSuccess": "All usage history cleared",
+			"toastFailed": "Failed to clear usage history"
+		},
+		"trash": {
+			"description": "Trashed resources, characters, and database backups can be previewed and downloaded here.",
+			"view": "View trash ({{count}})",
+			"download": "Download"
+		}
+	},
+	"plugin": {
+		"loading": "Loading preview...",
+		"previewFailed": "Plugin failed to load"
+	},
+	"plugins": {
+		"description": "Enable, disable, reorder content plugins, or install new ones.",
+		"enableToggle": "Enable or disable plugin",
+		"pin": "Pin",
+		"unpin": "Unpin",
+		"color": "Color",
+		"appearance": "Appearance",
+		"appearanceTitle": "Appearance: {{name}}",
+		"appearanceDescription": "Choose a color and whether to pin this plugin to resource cards.",
+		"dragToReorder": "Drag to reorder",
+		"builtin": "Built-in",
+		"builtinPlugins": "Built-in Plugins",
+		"installed": "Installed Plugins",
+		"actions": "Actions",
+		"dangerZone": "Danger Zone",
+		"dev": "Dev",
+		"missing": "Missing",
+		"rescan": "Rescan plugins",
+		"rescanSuccess": "Plugins rescanned",
+		"uploadPlugin": "Install plugin from zip",
+		"uploadPluginSuccess": "Plugin installed",
+		"uploading": "Installing...",
+		"reset": "Reset",
+		"clear": "Clear",
+		"resetPluginPref": "Reset settings",
+		"resetPluginPrefConfirmTitle": "Reset settings for {{name}}?",
+		"resetPluginPrefConfirmDescription": "This will delete all saved settings for this plugin. The plugin will use its default values after restart. This cannot be undone.",
+		"resetPluginPrefSuccess": "Settings for {{name}} have been reset",
+		"clearPluginCache": "Clear cache",
+		"clearPluginCacheConfirmTitle": "Clear cache for {{name}}?",
+		"clearPluginCacheConfirmDescription": "This will delete all cached data (e.g. resume positions) for this plugin. This cannot be undone.",
+		"clearPluginCacheSuccess": "Cache for {{name}} has been cleared",
+		"resetSystemPref": "Reset all system settings",
+		"resetSystemPrefDescription": "Delete all system preferences (theme, language, font, date format, etc). Defaults will apply after page reload.",
+		"resetSystemPrefSuccess": "All system settings have been reset",
+		"resetSystemPrefConfirmTitle": "Reset all system settings?",
+		"resetSystemPrefConfirmDescription": "This will delete every system preference including theme, language, font, and date format. The page will reload with default values. This cannot be undone.",
+		"resetAllPluginPref": "Reset all plugin settings",
+		"resetAllPluginPrefDescription": "Delete all saved settings for every plugin. Plugins will use defaults after restart.",
+		"resetAllPluginPrefSuccess": "All plugin settings have been reset",
+		"resetAllPluginPrefConfirmTitle": "Reset all plugin settings?",
+		"resetAllPluginPrefConfirmDescription": "This will delete every plugin's saved settings. All plugins will use their default values after restart. This cannot be undone.",
+		"clearAllPluginCache": "Clear all plugin cache",
+		"clearAllPluginCacheDescription": "Delete all cached data (e.g. resume positions) for every plugin.",
+		"clearAllPluginCacheSuccess": "All plugin cache has been cleared",
+		"clearAllPluginCacheConfirmTitle": "Clear all plugin cache?",
+		"clearAllPluginCacheConfirmDescription": "This will delete every plugin's cached data including resume positions. This cannot be undone."
+	},
+	"overview": {
+		"libraryOverview": {
+			"title": "Recently viewed"
+		},
+		"activity": {
+			"title": "Recent activity",
+			"description": "Latest updates across resources, characters, documents, and messages."
+		},
+		"stats": {
+			"resources": "Resources",
+			"characters": "Characters",
+			"documents": "Documents",
+			"comments": "Messages"
+		},
+		"sections": {
+			"recentResources": "Recently updated",
+			"recentViewed": "Recently viewed",
+			"staleNotViewed": "Not viewed in {{days}} days",
+			"recentCharacters": "Recent characters",
+			"recentDocuments": "Recent documents",
+			"recentComments": "Recent messages"
+		},
+		"empty": {
+			"resources": "No resources yet.",
+			"recentViewed": "No viewing history yet.",
+			"characters": "No characters yet.",
+			"documents": "No documents yet.",
+			"comments": "No messages yet."
+		},
+		"todayUsage": {
+			"label": "Today's watch time",
+			"sameAsYesterday": "Same as yesterday",
+			"moreThanYesterday": "{{duration}} more than yesterday",
+			"lessThanYesterday": "{{duration}} less than yesterday"
+		},
+		"viewAll": "View all",
+		"recentViewed": {
+			"dialogTitle": "Recently viewed",
+			"unknownTime": "Unknown time",
+			"emptyPrompt": "No viewing history yet — start exploring or upload your first resource.",
+			"browseResources": "Browse resources",
+			"uploadResource": "Upload a resource"
+		},
+		"pinned": {
+			"charactersTitle": "Pinned characters",
+			"resourcesTitle": "Pinned resources",
+			"charactersEmpty": "No matching characters",
+			"resourcesEmpty": "No matching resources",
+			"add": "Add pinned",
+			"maxReached": "Maximum {{max}} pinned items reached",
+			"dragToReorder": "Drag to reorder",
+			"settings": {
+				"title": "Manage pinned views",
+				"description": "Save frequently used filters to your overview for quick access.",
+				"editTitle": "Edit pinned view",
+				"editDescription": "Change the title and display rules. Adjust filters on the list page.",
+				"titleLabel": "Title",
+				"titlePlaceholder": "Leave empty to use the default title",
+				"showWhenEmpty": "Show when pinned content is empty",
+				"sizeLabel": "Number of items",
+				"save": "Save",
+				"delete": "Delete",
+				"deleteConfirmTitle": "Delete pinned view",
+				"deleteConfirmDescription": "Are you sure you want to delete “{{title}}”? This cannot be undone.",
+				"saveSuccess": "Pinned settings saved",
+				"deleteSuccess": "Pinned view deleted",
+				"toggleEnabledAria": "Enable or disable {{title}}",
+				"noItems": "No pinned views yet",
+				"noItemsHint": "Click Add pinned to save the current filters to the overview.",
+				"noItemsWithFiltersHint": "The current list page already has filters. Click the button above to save them as a pinned view.",
+				"noSelection": "No pinned view selected",
+				"noSelectionHint": "Select an item from the list, or click Add pinned to create a new view.",
+				"itemsCount": "{{current}} / {{max}}",
+				"preview": "Preview",
+				"previewTitle": "Preview filters"
+			}
+		},
+		"sort": {
+			"created": "Created",
+			"updated": "Updated"
+		},
+		"rebuildDescription": "Clear all rebuildable data (local caches, metadata) or precache everything (metadata + thumbnails) from scratch.",
+		"signOut": "Sign out",
+		"signingOut": "Signing out...",
+		"precache": "Precache",
+		"precaching": "Precaching...",
+		"caching": "Warming browser cache...",
+		"refreshCache": "Refresh cache",
+		"clearCache": "Clear Cache",
+		"clearing": "Clearing...",
+		"precacheHint": "Clear wipes local caches and metadata. Precache rebuilds all metadata and generates every thumbnail server-side.",
+		"progressLine": "{{done}} / {{total}} ({{percent}}%) - {{stage}}",
+		"cachedSummary": "{{count}} items precached",
+		"precacheFailed": "Failed to precache: {{error}}",
+		"precacheStageLoading": "Rebuilding metadata and generating thumbnails...",
+		"precacheDefaultError": "Failed to run precache",
+		"precacheInProgress": "A precache is already in progress",
+		"abortPrecache": "Abort precache",
+		"precacheAborted": "Precache aborted",
+		"toastClearSuccess": "Cache cleared",
+		"toastClearFailed": "Failed to clear cache",
+		"toastPrecacheSuccess": "Precached {{count}} items",
+		"toastPrecachePartial": "Precache completed with {{failed}} failures"
+	},
+	"login": {
+		"title": "Sign in",
+		"description": "Enter the password for this host.",
+		"password": "Password",
+		"submit": "Sign in",
+		"submitting": "Signing in...",
+		"formAria": "Sign in",
+		"errorIncorrect": "Incorrect password.",
+		"errorGeneric": "Could not sign in. Check the server and try again."
+	},
+	"dataHistory": {
+		"title": "Data History",
+		"description": "Manage your data snapshots. Backups are for migration or disaster recovery; archives freeze a version as read-only so its data can never change again.",
+		"status": {
+			"currentWritable": "Latest (writable): v{{version}}",
+			"viewingArchive": "Viewing archive: v{{version}}"
+		},
+		"archive": {
+			"title": "v{{version}}",
+			"tagCurrent": "Latest (writable)",
+			"tagActive": "Viewing",
+			"tagReadOnly": "Historical archive",
+			"tagCurrentShort": "latest",
+			"tagActiveShort": "viewing",
+			"nameLabel": "Name",
+			"namePlaceholder": "e.g. v1 milestone",
+			"noteLabel": "Note",
+			"notePlaceholder": "e.g. before migration, data freeze…",
+			"switchHint": "After switching, the app runs in read-only mode against this archive. Return to the latest version to edit again.",
+			"activeHint": "This is the version you are viewing."
+		},
+		"backup": {
+			"typeLabel": "Database backup",
+			"nameLabel": "Name",
+			"nameEmpty": "None",
+			"restoreHint": "The live database will be replaced with this backup. The page will refresh and this cannot be undone from the UI.",
+			"deleteHint": "This backup file will be permanently deleted and cannot be recovered.",
+			"archivedHint": "This backup belongs to an archived version. Its data is frozen and cannot be restored or deleted."
+		},
+		"action": {
+			"backupNow": "Back up now",
+			"backingUp": "Backing up…",
+			"archiveNow": "Archive latest version",
+			"archiving": "Archiving…",
+			"restore": "Restore this backup",
+			"restoring": "Restoring…",
+			"delete": "Delete backup",
+			"deleting": "Deleting…",
+			"switchToVersion": "Switch to this version",
+			"switching": "Switching…"
+		},
+		"reloading": "Reloading…",
+		"detail": {
+			"selectPrompt": "Select a backup or archive on the timeline to view details and available actions.",
+			"size": "Size",
+			"versionNumber": "Version",
+			"createdAt": "Created",
+			"note": "Note"
+		},
+		"note": {
+			"empty": "Click to add a note…",
+			"placeholder": "Add a short description for this snapshot…"
+		},
+		"confirm": {
+			"archiveTitle": "Archive latest version",
+			"archiveDescription": "The latest version's database and all resources, characters, and documents will be frozen as a read-only archive. Data inside an archive never changes again; a new writable version will be created for ongoing work.",
+			"archivePhrase": "archive",
+			"restoreTitle": "Restore backup",
+			"restoreDescription": "The live database will be replaced with the selected backup. The page will refresh and this cannot be undone from the UI.",
+			"restorePhrase": "restore backup",
+			"deleteBackupTitle": "Delete backup forever",
+			"deleteBackupDescription": "This backup file will be permanently deleted and cannot be recovered.",
+			"deleteBackupPhrase": "delete backup",
+			"switchTitle": "Switch to this archive version",
+			"switchDescription": "After switching, the app runs in read-only mode and only historical data is visible. Return to the latest version to edit again."
+		},
+		"empty": {
+			"title": "No data history yet",
+			"description": "Create a backup now to protect against data loss."
+		},
+		"toast": {
+			"backupCreated": "Backup created",
+			"backupFailed": "Backup failed",
+			"archiveFailed": "Archive failed",
+			"backupDeleted": "Backup deleted",
+			"deleteFailed": "Delete failed",
+			"restoreFailed": "Restore failed",
+			"switchFailed": "Switch failed",
+			"metaSaved": "Saved",
+			"metaSaveFailed": "Failed to save"
+		}
+	},
+	"documents": {
+		"title": "Documents",
+		"new": "New document",
+		"newFolder": "New folder",
+		"defaultNewTitle": "Untitled document",
+		"defaultNewFolderTitle": "Untitled folder",
+		"searchPlaceholder": "Search title or content",
+		"loading": "Loading documents…",
+		"countLabel": "{{count}} documents",
+		"listEmpty": "No documents yet.",
+		"untitled": "Untitled",
+		"placeholder": "Start writing…",
+		"editorPlaceholder": "View commands '/'",
+		"saveDraft": "Save draft",
+		"discardDraft": "Discard draft",
+		"commit": "Commit version",
+		"commitDialog": {
+			"title": "Commit version",
+			"description": "Save the current draft as an immutable version. Provide a short message describing what changed.",
+			"messageLabel": "Commit message",
+			"messagePlaceholder": "What changed in this version?",
+			"submit": "Commit",
+			"committing": "Committing…"
+		},
+		"discardDialog": {
+			"title": "Discard draft?",
+			"description": "Your unsaved changes will be replaced with the latest committed version. This cannot be undone.",
+			"confirm": "Discard",
+			"discarding": "Discarding…"
+		},
+		"leaveDialog": {
+			"confirm": "You have unsaved changes in this document. Leave anyway?"
+		},
+		"moreActions": "More actions",
+		"zoom": {
+			"label": "Text zoom",
+			"smaller": "Zoom out",
+			"larger": "Zoom in",
+			"reset": "Reset zoom"
+		},
+		"appearanceSettings": {
+			"title": "Appearance",
+			"theme": "Document theme",
+			"inherit": "Inherit from web theme",
+			"editorFont": "Editor Font",
+			"editorFontDescription": "Font used inside the document editor.",
+			"uiFont": "Page Font",
+			"uiFontDescription": "Font used for titles, sidebar, and other UI areas in the document page."
+		},
+		"readOnly": {
+			"enable": "Reading mode",
+			"disable": "Exit reading mode"
+		},
+		"diff": {
+			"show": "Compare history",
+			"exit": "Exit compare",
+			"compareWith": "Compare with",
+			"selectVersion": "Select version"
+		},
+		"indent": {
+			"enable": "Enable first-line indent"
+		},
+		"welcome": {
+			"title": "Documents",
+			"subtitle": "Create documents or folders on the left. Documents can host nested children too."
+		},
+		"folderHint": "This is a folder. Pick a document inside it to start editing.",
+		"headings": "Contents",
+		"noHeadings": "No headings in this document.",
+		"untitledHeading": "Untitled heading",
+		"statusBar": {
+			"charCount": "{{count}} / {{max}} chars"
+		},
+		"autosave": {
+			"enable": "Enable autosave"
+		},
+		"editMode": {
+			"label": "Adjust order",
+			"toggle": "Toggle adjust order mode",
+			"hint": "Enable to drag-reorder documents in the tree"
+		},
+		"expandAll": "Expand all",
+		"collapseAll": "Collapse all",
+		"slash": {
+			"charactersGroup": "Characters",
+			"resourcesGroup": "Resources",
+			"insertCharacter": "Insert character…",
+			"insertResource": "Insert resource…"
+		},
+		"toast": {
+			"createFailed": "Failed to create",
+			"renameFailed": "Failed to rename",
+			"saveFailed": "Failed to save draft",
+			"saved": "Saved",
+			"commitFailed": "Failed to commit version",
+			"committed": "Version committed",
+			"contentTooLarge": "Content exceeds maximum character limit",
+			"movedToTrash": "Moved to recycle bin",
+			"restored": "Restored",
+			"restoreFailed": "Failed to restore",
+			"deleteFailed": "Failed to delete",
+			"deletedForever": "Permanently deleted",
+			"moveFailed": "Failed to move"
+		},
+		"search": {
+			"empty": "No documents matched"
+		},
+		"trash": {
+			"open": "Recycle bin",
+			"empty": "Recycle bin is empty.",
+			"restore": "Restore",
+			"hardDelete": "Delete forever",
+			"hardDeleteTitle": "Delete forever?",
+			"hardDeleteDescription": "This permanently removes the item. This cannot be undone.",
+			"hardDeleteConfirm": "Delete forever",
+			"hardDeleting": "Deleting…"
+		},
+		"softDeleteDialog": {
+			"title": "Move to recycle bin?",
+			"description": "The item will be hidden from the tree and can be restored later from the recycle bin.",
+			"folderWarning": "All descendant documents inside this folder will be moved to the recycle bin together.",
+			"confirm": "Move to recycle bin"
+		},
+		"toolbar": {
+			"bold": "Bold",
+			"italic": "Italic",
+			"strike": "Strikethrough",
+			"code": "Inline code",
+			"h1": "Heading 1",
+			"h2": "Heading 2",
+			"h3": "Heading 3",
+			"bulletList": "Bullet list",
+			"orderedList": "Numbered list",
+			"blockquote": "Quote",
+			"noFirstLineIndent": "No first-line indent (this paragraph)",
+			"link": "Link",
+			"linkPrompt": "Enter URL (leave blank to remove)",
+			"alignLeft": "Align left",
+			"alignCenter": "Align center",
+			"alignRight": "Align right",
+			"textColor": "Text color",
+			"tagChip": "Tag style",
+			"undo": "Undo",
+			"redo": "Redo"
+		},
+		"help": {
+			"title": "How it works",
+			"shortcutsTitle": "Shortcuts",
+			"tips": [
+				"Edits are saved as a draft automatically; click Commit to capture a version in history.",
+				"Show diff to see inline changes between the draft and the latest committed version.",
+				"Sidebar search matches both title and committed body; pick tags to intersect.",
+				"Toolbar gives you the common rich-text formats for headings, lists, styles and links."
+			],
+			"shortcuts": [
+				{
+					"keys": "Ctrl/Cmd+B",
+					"desc": "Bold"
+				},
+				{
+					"keys": "Ctrl/Cmd+I",
+					"desc": "Italic"
+				},
+				{
+					"keys": "Ctrl/Cmd+Z",
+					"desc": "Undo"
+				},
+				{
+					"keys": "Ctrl/Cmd+Shift+Z",
+					"desc": "Redo"
+				},
+				{
+					"keys": "Ctrl/Cmd+K",
+					"desc": "Link (via toolbar)"
+				}
+			]
+		}
+	},
+	"characters": {
+		"title": "Characters",
+		"searchPlaceholder": "Search by name or intro",
+		"selectedCount": "Selected {{count}}",
+		"exitSelectMode": "Exit selection",
+		"enterSelectMode": "Multi-select",
+		"new": "New",
+		"listEmpty": "No characters yet.",
+		"trashEmpty": "Trash is empty.",
+		"filter": {
+			"trash": "Trash"
+		},
+		"traitFilter": {
+			"label": "Traits: ",
+			"add": "Add",
+			"empty": "Define traits in Settings to filter by them.",
+			"opContains": "contains",
+			"opEmpty": "is empty",
+			"opNotEmpty": "not empty",
+			"opDateAfter": "after",
+			"opDateOnOrAfter": "on or after",
+			"opDateBefore": "before",
+			"opDateOnOrBefore": "on or before",
+			"opDateOn": "on",
+			"opDateMonthDayOn": "month/day on",
+			"opDateMonthDayToday": "today's month/day"
+		},
+		"relationshipFilter": {
+			"label": "Relationships: "
+		},
+		"viewSelected": "Only selected ({{count}})",
+		"sort": {
+			"by": "Sort by:",
+			"direction": "Direction:",
+			"created": "Created",
+			"updated": "Updated",
+			"asc": "Ascending",
+			"desc": "Descending",
+			"random": "Random"
+		},
+		"bulk": {
+			"editTags": "Edit tags",
+			"clearSelection": "Clear selection"
+		},
+		"actionsAria": "Actions for {{name}}",
+		"toast": {
+			"movedToTrash": "Moved to trash",
+			"deleteFailed": "Could not delete",
+			"restored": "Restored",
+			"restoreFailed": "Could not restore",
+			"deletedForever": "Deleted forever",
+			"createSuccess": "Created",
+			"createFailed": "Create failed"
+		},
+		"new_": {
+			"title": "New character",
+			"description": "Create a new character.",
+			"basicInfo": "Basic info",
+			"basicDescription": "The character's name and intro.",
+			"name": "Name",
+			"intro": "Intro",
+			"namePlaceholder": "Name",
+			"links": "Links",
+			"linksDescription": "Tag the character and fill in trait values.",
+			"tags": "Tags",
+			"traits": "Traits",
+			"appearance": "Appearance",
+			"appearanceDescription": "Upload avatar and fullbody art; you can change these later.",
+			"avatar": "Avatar",
+			"fullbody": "Fullbody",
+			"submit": "Create",
+			"submitting": "Creating..."
+		},
+		"preview": {
+			"aria": "Preview: {{name}}"
+		},
+		"detail": {
+			"loadError": "Could not load this character.",
+			"noIntro": "No intro yet",
+			"relationships": "Relationships",
+			"recent": "Latest resources",
+			"fullbody": "Fullbody",
+			"traits": "Traits",
+			"tags": "Tags",
+			"tabsAria": "character sections",
+			"tabs": {
+				"overview": "Overview",
+				"resources": "Resources"
+			},
+			"docSearchTitle": "Documents",
+			"docSearchPlaceholder": "Search title or content in linked documents"
+		},
+		"editDialog": {
+			"aria": "Edit character",
+			"name": "Name",
+			"intro": "Intro"
+		},
+		"editHub": {
+			"title": "Edit - {{name}}"
+		},
+		"tagsDialog": {
+			"title": "Edit tags - {{name}}"
+		},
+		"actions": {
+			"uploadResource": "Upload resource",
+			"editTags": "Tags",
+			"editTraits": "Traits",
+			"editRelations": "Relationships",
+			"editBasic": "Basic info",
+			"editAvatar": "Avatar",
+			"editFullbody": "Fullbody",
+			"openComments": "Messages",
+			"restore": "Restore",
+			"hardDelete": "Delete forever",
+			"softDelete": "Move to trash"
+		},
+		"hardDelete": {
+			"title": "Delete forever?",
+			"description": "This permanently deletes the character and moves its folder to local trash.",
+			"confirm": "Delete forever",
+			"deleting": "Deleting..."
+		},
+		"chips": {
+			"linkCharacters": "Link characters"
+		},
+		"picker": {
+			"selectedEmpty": "No characters selected yet.",
+			"loadFailed": "Could not load"
+		},
+		"selectorDialog": {
+			"title": "Select character",
+			"confirm": "Confirm",
+			"confirmCount": "Confirm ({{count}})",
+			"notSelectable": "This character cannot be selected"
+		},
+		"charactership": {
+			"empty": "No relationships yet. Pick a type above to add one.",
+			"pickerTitle": "Select character",
+			"deleteEdge": "Remove",
+			"deleteConfirmTitle": "Delete relationship",
+			"deleteConfirmDescription": "Are you sure you want to delete this relationship? This cannot be undone.",
+			"pickCharacter": "Pick character",
+			"enterName": "Enter name",
+			"pickEndpoint": "Pick endpoint",
+			"namePlaceholder": "Name",
+			"noTypesHint": "No relationship types yet.",
+			"noTypesLink": "Add types on Me → Custom",
+			"incompleteDraft": "Complete all new relationships before saving",
+			"toast": {
+				"deleteSuccess": "Relationship removed",
+				"deleteFailed": "Could not remove relationship",
+				"addSuccess": "Relationship added",
+				"saveFailed": "Could not save relationship"
+			}
+		}
+	},
+	"collections": {
+		"entityLabel": "collection",
+		"usageLabel": "resources",
+		"chip": {
+			"openLabel": "Open {{name}} collection"
+		},
+		"popover": {
+			"empty": "No resources in this collection"
+		},
+		"picker": {
+			"quickCreate": "Add"
+		},
+		"editDialog": {
+			"title": "Collections for {{name}}"
+		},
+		"panel": {
+			"description": "Manage resource collections, group resources together, and pin important ones.",
+			"empty": "No collections yet",
+			"create": "Add collection",
+			"addDialogTitle": "Add collection",
+			"editDialogTitle": "Edit collection",
+			"addPill": "Add collection",
+			"reorderMode": "Reorder",
+			"reorderModeAria": "Enable drag-and-drop to reorder collections"
+		}
+	},
+	"usage": {
+		"title": "Stats",
+		"description": "Your personal usage summary across resources, characters, documents, and content plugins.",
+		"stats": {
+			"totalTime": "Total watch time",
+			"shareSectionTitle": "Share breakdown",
+			"shareTitle": "Time share",
+			"shareDescription": "Ranked by watch time for the selected period.",
+			"viewShareTitle": "View share",
+			"viewShareDescription": "Ranked by open count for the selected period.",
+			"periodComparison": "Period comparison",
+			"filtersTitle": "Filters",
+			"trendDescription": "Watch time over the selected period.",
+			"todayHourlyDescription": "Watch time by hour for today.",
+			"todayHourly": "Hourly distribution",
+			"trend": "Usage trend",
+			"deviceFilter": "Device",
+			"deviceAll": "All devices",
+			"deviceLocal": "This device ({{id}})",
+			"deviceNamed": "Device {{id}}",
+			"currentDevice": {
+				"title": "Current device",
+				"channelLabel": "Channel",
+				"appVersion": "App {{version}}",
+				"channel": {
+					"web": "Web",
+					"unknown": "Unknown"
+				},
+				"deviceType": {
+					"desktop": "Desktop",
+					"mobile": "Mobile",
+					"tablet": "Tablet",
+					"tv": "TV",
+					"unknown": "Unknown device"
+				},
+				"os": {
+					"windows": "Windows",
+					"macos": "macOS",
+					"linux": "Linux",
+					"ios": "iOS",
+					"android": "Android",
+					"unknown": "Unknown OS"
+				},
+				"browser": {
+					"chrome": "Chrome",
+					"safari": "Safari",
+					"firefox": "Firefox",
+					"edge": "Edge",
+					"opera": "Opera",
+					"unknown": "Unknown browser"
+				}
+			},
+			"exposureMode": "Time counting",
+			"exposureDirect": "Direct",
+			"exposureAssociated": "Associated",
+			"exposureTotal": "Total",
+			"exposureModeNote": "Totals, trends, and share percentages above count direct sessions only. Rankings below use the selected mode."
+		},
+		"insight": {
+			"moreThanPeriod": "{{duration}} more than {{period}}",
+			"lessThanPeriod": "{{duration}} less than {{period}}",
+			"sameAsPeriod": "Same as {{period}}",
+			"comparison": {
+				"yesterday": "yesterday",
+				"lastWeek": "last week",
+				"prior7Days": "the prior 7 days",
+				"lastMonth": "last month",
+				"lastYear": "last year"
+			}
+		},
+		"entityExposure": {
+			"totalTime": "{{duration}} watched",
+			"views": "{{count}} views",
+			"lastViewed": "Last viewed {{time}}"
+		},
+		"leaderboard": {
+			"entityAll": "All",
+			"entityResources": "Resources",
+			"entityCharacters": "Characters",
+			"entityDocuments": "Documents",
+			"entityPlugins": "Content plugins",
+			"empty": "No usage for this period.",
+			"viewsShort": "{{count}} views",
+			"associatedSessionsShort": "{{count}} associated",
+			"rankLabel": "Rank {{rank}}"
+		},
+		"periods": {
+			"today": "Today",
+			"last7days": "Last 7 days",
+			"thisWeek": "This week",
+			"thisMonth": "This month",
+			"thisYear": "This year",
+			"all": "All time"
+		}
+	},
+	"resources": {
+		"title": "Resources",
+		"upload": "Upload",
+		"new": {
+			"title": "New resource",
+			"description": "Upload files and fill in resource details.",
+			"files": "Sequence files",
+			"filesDescription": "Select sequence files to upload and drag to reorder.",
+			"basicInfo": "Basic info",
+			"basicDescription": "Name, intro, and content type.",
+			"links": "Links",
+			"linksDescription": "Tags, linked characters, and collections.",
+			"coverDescription": "Set a cover thumbnail for the resource.",
+			"uploadModes": {
+				"ordered": "Sequence files",
+				"folder": "Folder upload"
+			},
+			"folder": {
+				"sourceShared": "Shared folder",
+				"sourceZip": "Zip file",
+				"browse": "Browse folders",
+				"browseTitle": "Browse folder",
+				"browseDescription": "Select the folder to scan.",
+				"previewTitle": "Scan results",
+				"previewDescription": "Review the items to import.",
+				"resultTitle": "Import results",
+				"scanHere": "Scan this folder",
+				"noSubdirs": "No subdirectories",
+				"pickZip": "Pick zip file",
+				"uploading": "Uploading...",
+				"extracting": "Extracting...",
+				"scanning": "Scanning...",
+				"sharedRoot": "Shared root",
+				"zipRoot": "Archive root",
+				"name": "Name",
+				"type": "Type",
+				"plugin": "Plugin",
+				"confirmImport": "Confirm Import",
+				"importing": "Importing...",
+				"importDone": "Import Done",
+				"resultScanned": "Scanned",
+				"resultImported": "Imported",
+				"resultFailed": "Failed",
+				"sourceSharedDescription": "Import directly from the configured shared folder.",
+				"sourceSharedDisabled": "Shared folder import is not configured.",
+				"sourceZipDescription": "Upload a zip archive and import its contents.",
+				"importingDescription": "Resources are being created from the selected folder. This may take a moment.",
+				"stepSource": "Source",
+				"stepBrowse": "Browse",
+				"stepPreview": "Preview",
+				"stepImport": "Import",
+				"stepDone": "Done",
+				"stepsAria": "Import steps",
+				"emptyTitle": "This folder is empty",
+				"emptyDescription": "There are no files or folders to import here.",
+				"previewCount": "{{count}} items ready to import"
+			},
+			"name": "Name",
+			"intro": "Intro",
+			"contentType": "Content type",
+			"tags": "Tags",
+			"characters": "Linked characters",
+			"cover": "Cover",
+			"collections": "Collections",
+			"namePlaceholder": "Name",
+			"useFilenameAsName": "When the name is empty, use the upload filename (leave unchecked to use current time)",
+			"oneFilePerResource": "Create each file as its own resource",
+			"oneFilePerResourceHint": "Shares intro, type, tags, linked characters, collections, and cover. Each resource contains a single file.",
+			"createdCount": "Created {{count}} resources",
+			"submit": "Create",
+			"uploading": "Uploading...",
+			"errors": {
+				"pickAtLeastOne": "Pick at least one file",
+				"uploadFailed": "Upload failed",
+				"attachCollectionsFailed": "Created the resource but failed to attach to one or more collections",
+				"batchPartialHint": "If this stopped partway, some resources may already exist—check the list."
+			},
+			"created": "Created",
+			"autoDetect": "Auto-detect",
+			"forceSubmitTitle": "Upload in progress",
+			"forceSubmitDesc_one": "{{count}} file has not finished uploading. Only completed files will be kept; the rest will be discarded.",
+			"forceSubmitDesc_other": "{{count}} files have not finished uploading. Only completed files will be kept; the rest will be discarded.",
+			"forceSubmitConfirm": "Upload completed only"
+		},
+		"search": {
+			"placeholder": "Search by name or intro",
+			"empty": "No resources.",
+			"trashEmpty": "Trash is empty.",
+			"sortLabel": "Sort:",
+			"orderLabel": "Order:",
+			"sortCreated": "Created",
+			"sortUpdated": "Updated",
+			"orderDesc": "Newest",
+			"orderAsc": "Oldest",
+			"noCharacters": "No characters",
+			"trash": "Trash",
+			"random": "Random",
+			"pageSizeLabel": "Per page:",
+			"itemCount_one": "{{count}} item",
+			"itemCount_other": "{{count}} items",
+			"contentType": {
+				"label": "Type:"
+			}
+		},
+		"bulk": {
+			"enterSelectMode": "Multi-select",
+			"exitSelectMode": "Exit multi-select",
+			"toolbarCount": "{{count}} selected",
+			"selectCurrentPage": "Select page",
+			"invertCurrentPage": "Invert page",
+			"clearSelection": "Clear selection",
+			"download": "Download selection",
+			"downloadFailed": "Download failed.",
+			"downloadRejected": "Could not build the archive (empty or invalid selection).",
+			"downloadTooMany": "Select at most {{max}} resources to download at once.",
+			"editTags": "Edit tags",
+			"moveToTrash": "Move to trash",
+			"deleteForever": "Delete forever",
+			"confirmSoft": "Move {{count}} resource(s) to trash?",
+			"softDeleteDescription": "The selected resources will be moved to the recycle bin. They can be restored later from the trash.",
+			"hardDeleteTitle": "Delete selected forever?",
+			"hardDeleteDescription": "This permanently deletes the selected resources and moves their folders to local trash. This cannot be undone.",
+			"hardDeleteConfirm": "Delete forever",
+			"hardDeleteDeleting": "Deleting...",
+			"toastAllOk": "Updated {{count}} resource(s).",
+			"toastAllFailed": "Nothing was updated ({{count}} failed).",
+			"toastPartial": "{{ok}} succeeded, {{failed}} failed."
+		},
+		"actions": {
+			"editBasic": "Basic info",
+			"editCharacters": "Linked characters",
+			"editTags": "Tags",
+			"editCollections": "Collections",
+			"editCover": "Cover",
+			"download": "Download",
+			"openComments": "Messages",
+			"extend": "Extend",
+			"restore": "Restore",
+			"hardDelete": "Delete forever",
+			"softDelete": "Move to trash",
+			"actionsAria": "Actions for {{name}}"
+		},
+		"hardDelete": {
+			"title": "Delete forever?",
+			"description": "This permanently deletes the resource and moves its folder to local trash.",
+			"confirm": "Delete forever",
+			"deleting": "Deleting..."
+		},
+		"toast": {
+			"movedToTrash": "Moved to trash",
+			"deleteFailed": "Could not delete",
+			"restored": "Restored",
+			"restoreFailed": "Could not restore",
+			"deletedForever": "Deleted forever"
+		},
+		"preview": {
+			"aria": "Preview: {{name}}",
+			"closePreview": "Close preview",
+			"enterFullscreen": "Enter fullscreen",
+			"exitFullscreen": "Exit fullscreen"
+		},
+		"detail": {
+			"docSearchTitle": "Documents",
+			"docSearchPlaceholder": "Search title or content in linked documents",
+			"notFound": "Resource not found",
+			"fileCount_one": "{{count}} file",
+			"fileCount_other": "{{count}} files",
+			"sidebar": {
+				"tagsHeading": "Tags",
+				"colsHeading": "Collections",
+				"colEmpty": "This collection has no other resources.",
+				"noTags": "No tags assigned",
+				"relatedByTagsHeading": "Related by tags"
+			}
+		},
+		"editDialog": {
+			"aria": "Edit resource basic info",
+			"contentType": "Content type",
+			"contentTypeMissing": "Missing: {{names}}",
+			"name": "Name",
+			"intro": "Intro",
+			"toast": {
+				"contentTypeFailed": "Could not change content type"
+			}
+		},
+		"editHub": {
+			"title": "Edit - {{name}}"
+		},
+		"tagsDialog": {
+			"title": "Edit tags - {{name}}"
+		},
+		"selectorDialog": {
+			"title": "Select resource"
+		},
+		"viewSelected": "Only selected ({{count}})",
+		"picker": {
+			"selectedEmpty": "No selected resources.",
+			"loadFailed": "Failed to load resource."
+		},
+		"selectAria": "Select {{name}}",
+		"toggleSelectAria": "Toggle selection for {{name}}",
+		"video": {
+			"previewAria": "Preview {{name}}",
+			"playAria": "Play {{name}}",
+			"stopAria": "Stop {{name}}"
+		},
+		"editPanel": {
+			"nameRequired": "Name is required"
+		}
+	},
+	"relationshipTypes": {
+		"panel": {
+			"description": "Define relationship types here for character overview display and filtering.",
+			"empty": "No relationships yet. Tap add to create one.",
+			"addPill": "Add relationship",
+			"addDialogTitle": "Add relationship",
+			"editDialogTitle": "Edit relationship",
+			"reorderMode": "Reorder",
+			"reorderModeAria": "Enable drag-and-drop to reorder relationships",
+			"tabDefinition": "Definition",
+			"tabDetails": "Details"
+		},
+		"addType": "Add relationship",
+		"preview": {
+			"characterA": "Character A",
+			"characterB": "Character B",
+			"aCallsB": "A is B's",
+			"bCallsA": "B is A's",
+			"labelPlaceholder": "e.g. friend"
+		},
+		"kind": {
+			"directed": {
+				"label": "Directed",
+				"iconLabel": "One-way",
+				"hint": "One-way relationship from A to B only, e.g. unrequited love"
+			},
+			"symmetric": {
+				"label": "Symmetric",
+				"iconLabel": "Mutual",
+				"hint": "Mutual relationship, e.g. friends or spouses"
+			},
+			"hierarchical": {
+				"label": "Hierarchical",
+				"iconLabel": "Ranked",
+				"hint": "A above B, direction A→B, e.g. mentor and apprentice"
+			}
+		},
+		"presetSection": "Presets",
+		"fillPreset": "Fill form",
+		"presets": {
+			"friend": {
+				"name": "Friend",
+				"selfLabel": "friend",
+				"targetLabel": "friend"
+			},
+			"mentor": {
+				"name": "Mentor / apprentice",
+				"selfLabel": "mentor",
+				"targetLabel": "apprentice"
+			},
+			"unrequited": {
+				"name": "Unrequited love",
+				"selfLabel": "admirer",
+				"targetLabel": "crush"
+			}
+		},
+		"delete": {
+			"kindLabel": "relationship",
+			"usageLabel": "relationship links"
+		},
+		"toast": {
+			"created": "Relationship created",
+			"createFailed": "Could not create relationship"
+		}
+	},
+	"traits": {
+		"panel": {
+			"description": "Manage character trait fields such as text, number, height, and weight.",
+			"empty": "No trait definitions yet. Use Add to create one.",
+			"addDialogTitle": "Add trait",
+			"editDialogTitle": "Edit trait",
+			"addBtn": "Add trait",
+			"addPill": "Add trait",
+			"reorderMode": "Reorder",
+			"reorderModeAria": "Enable drag-and-drop to reorder traits",
+			"toast": {
+				"added": "Trait added"
+			}
+		},
+		"kind": {
+			"text": "Text",
+			"multitext": "Multi-text",
+			"number": "Number",
+			"weight": "Weight",
+			"height": "Height",
+			"date": "Date"
+		},
+		"delete": {
+			"kindLabel": "trait",
+			"usageLabel": "characters"
+		},
+		"values": {
+			"noDefinitions": "No trait definitions yet. Open Settings / Traits to add them.",
+			"inputPlaceholder": "Enter value",
+			"remove": "Remove",
+			"allSet": "All traits already set.",
+			"emptyError": "These traits are empty and cannot be saved: {{names}}",
+			"parseError": "Invalid value for \"{{name}}\": {{value}}",
+			"date": {
+				"prefixPlaceholder": "Era / calendar",
+				"after": "CE",
+				"before": "BCE",
+				"year": "Year",
+				"month": "Month",
+				"day": "Day"
+			}
+		}
+	},
+	"categories": {
+		"panel": {
+			"description": "Manage categories and tags for organizing and filtering resources and characters.",
+			"tagLabel": "Tags:",
+			"empty": "No categories or tags yet.",
+			"kindTabsAria": "Category kind",
+			"reorderMode": "Reorder",
+			"reorderModeAria": "Enable drag-and-drop to reorder categories and tags",
+			"kindTab": {
+				"common": "Common",
+				"resource": "Resources",
+				"character": "Characters"
+			},
+			"tagsEmpty": "No tags.",
+			"dependencyMessage": "This tag is used by {{parts}} and cannot be deleted directly.",
+			"dependencyResources": "{{count}} res",
+			"dependencyCharacters": "{{count}} char",
+			"tagCharacterCount": "char {{count}}",
+			"tagResourceCount": "res {{count}}",
+			"copyTagName": "Copy to clipboard",
+			"toast": {
+				"added": "Added",
+				"addFailed": "Could not add",
+				"copied": "Copied to clipboard",
+				"copyFailed": "Could not copy"
+			},
+			"addCategoryPill": "Add category",
+			"addTagPill": "Add tag",
+			"searchPlaceholder": "Search tags…",
+			"specialStyle": {
+				"silver": "Silver",
+				"gold": "Gold",
+				"rainbow": "Rainbow",
+				"oilslick": "Oilslick",
+				"kintsugi": "Kintsugi"
+			}
+		},
+		"delete": {
+			"kindLabelCategory": "category",
+			"kindLabelTag": "tag",
+			"usageLabelTags": "tags"
+		},
+		"form": {
+			"createCategory": "Add category",
+			"creating": "Creating...",
+			"addTag": "Add tag"
+		},
+		"dialog": {
+			"addCategoryTitle": "Add category",
+			"addTagTitle": "Add tag",
+			"editCategoryTitle": "Edit category",
+			"editTagTitle": "Edit tag"
+		}
+	},
+	"tags": {
+		"picker": {
+			"noCategories": "No categories defined.",
+			"selectedHeader": "Selected:",
+			"tagsHeader": "Tags:",
+			"empty": "No tags in this category.",
+			"emptyAll": "No tags defined yet.",
+			"searchPlaceholder": "Search tags…",
+			"noMatches": "No matching tags"
+		},
+		"bulk": {
+			"nonCommonHint": "{{count}} tags are not shared by all selected items. You can add any tag; only shared tags can be removed."
+		},
+		"toast": {
+			"attachFailed": "Could not attach tag",
+			"detachFailed": "Could not detach tag"
+		},
+		"filterMode": {
+			"label": "Tag Match:",
+			"and": "AND",
+			"or": "OR",
+			"not": "NOT",
+			"nor": "NOR"
+		}
+	},
+	"imageCrop": {
+		"pickHint": "Click or drag to select an image",
+		"reselect": "Re-upload",
+		"showPreview": "Show preview",
+		"previewLabel": "Preview",
+		"previewAlt": "Cropped preview",
+		"saveFailed": "Save failed"
+	},
+	"imageEdit": {
+		"confirmDeleteTitle": "Remove image?",
+		"confirmDeleteDescription": "This will remove the current image. This action cannot be undone."
+	},
+	"deleteEntity": {
+		"dialogConfirmTitle": "Delete “{{name}}”?",
+		"dialogConfirmDescription": "This will permanently delete this {{kind}}. This action cannot be undone.",
+		"defaultLabel": "Delete",
+		"defaultNoun": "items",
+		"confirm": "Confirm delete",
+		"deleting": "Deleting...",
+		"forceTitle": "Cannot delete {{kind}}",
+		"usageMessage": "This {{kind}} is used by {{count}} {{usage}} and cannot be deleted directly.",
+		"toast": {
+			"deleteSuccess": "{{kind}} deleted",
+			"deleteFailed": "Delete failed",
+			"forceDeleteSuccess": "{{kind}} force-deleted",
+			"forceDeleteFailed": "Force delete failed",
+			"nameMismatch": "Name does not match"
+		},
+		"forceConfirm": "Force delete",
+		"forceDeleting": "Deleting..."
+	},
+	"upload": {
+		"addFiles": "Add files",
+		"clearAll": "Clear",
+		"totalCount": "{{count}} files in total",
+		"removeFile": "Remove file"
+	},
+	"comments": {
+		"title": "Messages",
+		"empty": "No messages yet",
+		"summaryCount": "{{floors}} floors, {{replies}} replies",
+		"summaryShort": "{{floors}} · {{replies}} replies",
+		"floor": "#{{n}}",
+		"composerPlaceholder": "Write a message...",
+		"replyPlaceholder": "Write a reply...",
+		"submit": "Post",
+		"submitting": "Posting...",
+		"reply": "Reply",
+		"actions": "Message actions",
+		"trash": "Trash",
+		"emptyTrash": "Trash is empty",
+		"deleted": "Deleted",
+		"delete": "Delete",
+		"deleteConfirmTitle": "Delete this message?",
+		"deleteConfirmDescription": "It will be moved to trash. You can restore it later.",
+		"restore": "Restore",
+		"hardDelete": "Delete permanently",
+		"hardDeleteConfirmTitle": "Delete permanently?",
+		"hardDeleteConfirmDescription": "Cannot be undone. Deleting a floor removes all its replies.",
+		"trashSummaryCount": "{{floors}} deleted floors, {{replies}} deleted replies",
+		"viewReplies": "View {{count}} replies",
+		"collapseReplies": "Collapse replies",
+		"sortBy": "Sort",
+		"sort": {
+			"newest": "Newest",
+			"oldest": "Oldest",
+			"mostLikes": "Most likes",
+			"leastLikes": "Least likes"
+		},
+		"searchPlaceholder": "Search message text",
+		"filterByCharacter": "Character",
+		"filterByResource": "Resource",
+		"clearFilter": "Clear filter",
+		"charsRemaining": "{{count}} characters left",
+		"linkResources": "Link resources",
+		"linkCharactersAdd": "Link character",
+		"linkResourcesAdd": "Link resource",
+		"toast": {
+			"posted": "Message posted",
+			"postFailed": "Failed to post message",
+			"deleted": "Moved to trash",
+			"restored": "Message restored",
+			"hardDeleted": "Permanently deleted",
+			"voteFailed": "Failed to record vote"
+		}
+	}
+}

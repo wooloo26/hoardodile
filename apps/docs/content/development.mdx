@@ -1,0 +1,58 @@
+# Development
+
+hoardodile is a pnpm monorepo orchestrated with Turborepo.
+
+## Layout
+
+```
+apps/
+  web/         React SPA, TanStack Router (routes/, features/, components/)
+  server/      Fastify (domain/ = biz logic, infra/ = db/trpc/storage, config/, lib/, scripts/)
+  docs/        This documentation site (Nextra)
+packages/
+  consts/      Shared constants
+  shared/      Utils, errors, pagination
+  schemas/     Domain schemas, derived types, schema-related constants
+  ui/          shadcn/ui + Radix + Base UI primitives, theme, hooks, components
+  plugin-file/ Built-in fallback plugin for unknown file types
+  plugin-sdk-*/ Plugin runtime types and SDKs (server, web, react)
+plugins/       Content plugins (gallery, manga, novel)
+scripts/       Root dev/build/license/guard scripts
+```
+
+## Commands
+
+```bash
+pnpm dev          # web + server + plugin watches (DEV_PLUGINS=gallery,manga to select)
+pnpm test         # all unit/integration tests (Vitest, Turborepo)
+pnpm lint         # biome check + per-package tsc --noEmit
+pnpm format       # biome check + format with write
+pnpm build        # build all plugins, then the server (embeds web dist, migrations, assets)
+pnpm db:generate  # generate Drizzle migrations from domain schemas
+pnpm release      # cut a release: bump + sync versions, tag, push, create GitHub Release
+```
+
+Run the docs site locally with:
+
+```bash
+pnpm -F @hoardodile/docs dev   # http://localhost:3000
+```
+
+## Testing
+
+- **Unit/integration:** Vitest, files at `src/**/*.test.{ts,tsx}`. Server runs in a node environment; web and plugins use jsdom.
+- **E2E:** Playwright (chromium, serial, ephemeral server + web + seeded DB). Specs live at `apps/web/e2e/`; run with `pnpm -F @hoardodile/web test:e2e`.
+
+## Conventions
+
+- Each domain follows `schema.ts` → `repo.ts` → `service.ts` → `router.ts`; plugin-exposing domains add `plugin.ts`.
+- Services are factories (`create*Service(deps)`) — dependency injection via closures, no classes.
+- Commit messages follow Conventional Commits (`type(scope): subject`), enforced by commitlint.
+- Pre-push hooks run `pnpm lint`, `pnpm test`, and `pnpm version:check`.
+- One unified app version, owned by the root `package.json`. Never hand-edit a `version` field; releases are cut with `pnpm release`.
+
+## Guardrails
+
+- Writes under `versions/<v>/` go only through `paths.latest` inside `writeVersioned`; `scripts/guard-versions.mjs` enforces this.
+- Never hand-edit generated files: `routeTree.gen.ts`, `licenses.json`, Drizzle migrations, `pnpm-lock.yaml`.
+- No telemetry and no external calls, except the user-triggered update check in Settings → About.

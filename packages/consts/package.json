@@ -1,0 +1,24 @@
+{
+	"name": "@hoardodile/consts",
+	"version": "0.0.0",
+	"private": true,
+	"license": "GPL-3.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./media-exts": "./src/media-exts.ts",
+		"./res-consts": "./src/res-consts.ts",
+		"./text-limits": "./src/text-limits.ts",
+		"./timezone": "./src/timezone.ts",
+		"./page": "./src/page.ts"
+	},
+	"scripts": {
+		"build": "tsc --noEmit",
+		"lint": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

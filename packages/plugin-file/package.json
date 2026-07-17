@@ -1,0 +1,41 @@
+{
+	"name": "@hoardodile/plugin-file",
+	"version": "0.0.0",
+	"private": true,
+	"license": "GPL-3.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./main": "./src/main.ts"
+	},
+	"scripts": {
+		"build": "node ../../scripts/build-plugin.mjs",
+		"watch": "node ../../scripts/build-plugin.mjs --watch",
+		"lint": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@hoardodile/consts": "workspace:*",
+		"@hoardodile/plugin-sdk-react": "workspace:*",
+		"@hoardodile/plugin-sdk-server": "workspace:*",
+		"@hoardodile/plugin-sdk-types": "workspace:*",
+		"@hoardodile/plugin-sdk-web": "workspace:*",
+		"@hoardodile/ui": "workspace:*",
+		"@headless-tree/core": "^1.7.0",
+		"@headless-tree/react": "^1.7.0",
+		"lucide-react": "catalog:",
+		"react": "catalog:"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "catalog:",
+		"@testing-library/jest-dom": "catalog:",
+		"@testing-library/react": "catalog:",
+		"@types/react": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"jsdom": "catalog:",
+		"tailwindcss": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}
