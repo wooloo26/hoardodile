@@ -190,6 +190,35 @@ const envSchema = z
 				z.array(z.string()),
 			)
 			.default([]),
+		/**
+		 * Plugin sandbox watchdog: kill a plugin worker when an invocation
+		 * neither returns nor shows resource-API activity for this long.
+		 * Hooks that keep calling the API (e.g. probing thousands of files)
+		 * reset the watchdog continuously and never trip it.
+		 */
+		PLUGIN_WATCHDOG_TIMEOUT_MS: z.coerce
+			.number()
+			.int()
+			.positive()
+			.default(60_000),
+		/**
+		 * Absolute cap for a single plugin hook invocation, regardless of
+		 * activity. Backstop for "slow but not hung" pathological hooks.
+		 */
+		PLUGIN_HOOK_HARD_TIMEOUT_MS: z.coerce
+			.number()
+			.int()
+			.positive()
+			.default(30 * 60_000),
+		/**
+		 * V8 old-generation memory cap per plugin worker, in MiB. Exceeding
+		 * it aborts the worker; the plugin respawns lazily on the next call.
+		 */
+		PLUGIN_WORKER_MAX_OLD_SPACE_MB: z.coerce
+			.number()
+			.int()
+			.positive()
+			.default(512),
 	})
 	.transform((data) => {
 		const storageRoot = makeAbsolute(data.STORAGE_ROOT)

@@ -1,18 +1,13 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import { pathToFileURL } from "node:url"
-import {
-	assertPluginShape,
-	createFailingPlugin,
-	definePlugin,
-} from "@hoardodile/plugin-sdk-server"
-import type { PluginManifestId } from "@hoardodile/schemas"
+import { createFailingPlugin } from "@hoardodile/plugin-sdk-server"
 import type {
 	FoundPlugin,
 	MissingPlugin,
 	PluginDefinition,
 	PluginRegistryEntry,
 } from "./api-types.ts"
+import type { PluginSandbox } from "./sandbox/host.ts"
 
 export type PluginActivation = {
 	readonly activateAll: (
@@ -23,16 +18,22 @@ export type PluginActivation = {
 	) => PluginRegistryEntry[]
 }
 
-export function createPluginActivation(): PluginActivation {
+export type PluginActivationDeps = {
+	readonly sandbox: PluginSandbox
+}
+
+export function createPluginActivation(
+	deps: PluginActivationDeps,
+): PluginActivation {
 	async function activateAll(
 		found: readonly FoundPlugin[],
 	): Promise<PluginRegistryEntry[]> {
-		// Import plugin bundles in parallel — sequential imports multiply the
-		// boot cost on slow or antivirus-scanned disks. Array order is kept by
-		// `map`, and `loadAll` re-sorts by priority afterwards anyway.
+		// Load plugin bundles in parallel — sequential worker spawns multiply
+		// the boot cost on slow or antivirus-scanned disks. Array order is
+		// kept by `map`, and `loadAll` re-sorts by priority afterwards anyway.
 		return Promise.all(
 			found.map(async (candidate) => {
-				const plugin = await loadDiskPlugin(candidate.diskPath)
+				const plugin = await loadDiskPlugin(deps.sandbox, candidate)
 				return {
 					id: candidate.id,
 					manifest: candidate.manifest,
@@ -70,47 +71,26 @@ export function createPluginActivation(): PluginActivation {
 	return { activateAll, createFailingEntries }
 }
 
-async function loadDiskPlugin(dirPath: string): Promise<PluginDefinition> {
-	const mainJsPath = join(dirPath, "main.js")
+async function loadDiskPlugin(
+	sandbox: PluginSandbox,
+	candidate: FoundPlugin,
+): Promise<PluginDefinition> {
+	const mainJsPath = join(candidate.diskPath, "main.js")
 	if (!existsSync(mainJsPath)) {
-		const id = guessIdFromPath(dirPath)
-		console.warn(`[plugin-activation] ${id}: no main.js, not loaded`)
+		console.warn(`[plugin-activation] ${candidate.id}: no main.js, not loaded`)
 		return createFailingPlugin(["main.js not found"])
 	}
 
-	try {
-		const url = pathToFileURL(mainJsPath).href
-		const mod: unknown = await import(url)
-		const extracted = extractDefaultPlugin(mod)
-		if (extracted === undefined) {
-			const id = guessIdFromPath(dirPath)
-			console.warn(
-				`[plugin-activation] ${id}: main.js does not export default plugin`,
-			)
-			return createFailingPlugin(["invalid main.js"])
-		}
-		assertPluginShape(extracted)
-		return definePlugin(extracted)
-	} catch (err) {
-		const id = guessIdFromPath(dirPath)
-		console.error(`[plugin-activation] ${id}: failed to load main.js`, err)
+	// Enabled plugins keep their worker alive; disabled ones only probe the
+	// hook list — their worker respawns lazily if a bound resource still
+	// invokes a hook.
+	const plugin = await sandbox.loadPlugin({
+		id: candidate.id,
+		mainPath: mainJsPath,
+		eager: candidate.enabled,
+	})
+	if (plugin === undefined) {
 		return createFailingPlugin(["main.js load error"])
 	}
-}
-
-function guessIdFromPath(dirPath: string): PluginManifestId {
-	const parts = dirPath.split(/[/\\]/)
-	const last = parts.at(-1)
-	return last ?? "unknown"
-}
-
-interface PluginModule {
-	readonly default?: unknown
-}
-
-function extractDefaultPlugin(mod: unknown): PluginDefinition | undefined {
-	if (typeof mod !== "object" || mod === null) return undefined
-	const m = mod as PluginModule
-	if (m.default === undefined) return undefined
-	return m.default as PluginDefinition
+	return plugin
 }

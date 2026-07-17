@@ -13,6 +13,7 @@ import type { SqliteDb } from "src/infra/db/connection.ts"
 import { createPluginActivation } from "./activation.ts"
 import type { PluginRegistry, PluginRegistryEntry } from "./api-types.ts"
 import { createPluginDiscovery } from "./discovery.ts"
+import { createPluginSandbox, type PluginSandbox } from "./sandbox/host.ts"
 
 export type PluginLoader = {
 	readonly loadAll: () => Promise<PluginRegistry>
@@ -27,6 +28,12 @@ export type PluginLoaderDeps = {
 	readonly db: SqliteDb
 	readonly disableDevPlugins?: boolean
 	/**
+	 * Worker-thread sandbox that executes plugin hooks. Optional so tests
+	 * without any `main.js` on disk can omit it; the default spawns real
+	 * workers when a loadable bundle is found.
+	 */
+	readonly sandbox?: PluginSandbox
+	/**
 	 * Optional timing sink for boot diagnostics — receives the duration of
 	 * each `loadAll` step. Defaults to a no-op so tests stay quiet.
 	 */
@@ -37,9 +44,17 @@ export function createPluginLoader(deps: PluginLoaderDeps): PluginLoader {
 	let registry: PluginRegistry | undefined
 
 	const discovery = createPluginDiscovery(deps)
-	const activation = createPluginActivation()
+	const sandbox = deps.sandbox ?? createPluginSandbox()
+	const activation = createPluginActivation({ sandbox })
 
 	async function loadAll(): Promise<PluginRegistry> {
+		const disposeStart = performance.now()
+		// Terminate workers from the previous registry. This also makes
+		// rescan pick up changed plugin code — worker respawn re-imports
+		// main.js, bypassing the ESM module cache of the main thread.
+		await sandbox.disposeAll()
+		deps.onTiming?.("dispose", Math.round(performance.now() - disposeStart))
+
 		const seedStart = performance.now()
 		seedBundledPlugins(deps.pluginsDir)
 		deps.onTiming?.("seed", Math.round(performance.now() - seedStart))

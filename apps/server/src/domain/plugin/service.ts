@@ -2,6 +2,7 @@ import type { PluginManifest, PluginManifestId } from "@hoardodile/schemas"
 import { eq } from "drizzle-orm"
 import type { SqliteDb } from "src/infra/db/connection.ts"
 import type { PluginLoader } from "./loader.ts"
+import type { PluginSandbox } from "./sandbox/host.ts"
 import { contentPlugins } from "./schema.ts"
 
 export type PluginSettingsRow = {
@@ -19,6 +20,7 @@ export type PluginSettingsRow = {
 export type PluginServiceDeps = {
 	readonly db: SqliteDb
 	readonly loader: PluginLoader
+	readonly sandbox: PluginSandbox
 }
 
 export type PluginService = {
@@ -37,7 +39,7 @@ export type PluginService = {
 }
 
 export function createPluginService(deps: PluginServiceDeps): PluginService {
-	const { db, loader } = deps
+	const { db, loader, sandbox } = deps
 
 	function listAll(): PluginSettingsRow[] {
 		const registry = loader.getRegistry()
@@ -107,6 +109,14 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
 			pinned: settings.pinned,
 			color: settings.color,
 		})
+
+		if (settings.enabled === false) {
+			// Free the disabled plugin's worker. The sandboxed definition
+			// stays in the registry: hooks of disabled plugins keep serving
+			// resources already bound to them, and lazily respawn a worker
+			// on the next invocation.
+			sandbox.unloadPlugin(id)
+		}
 	}
 
 	function reorder(ids: readonly PluginManifestId[]): void {

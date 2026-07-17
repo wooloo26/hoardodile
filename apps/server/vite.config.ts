@@ -124,6 +124,32 @@ function copyMigrationSqlPlugin(): Plugin {
 	}
 }
 
+/**
+ * Copy the plugin sandbox worker entry next to every output location that
+ * may host the sandbox host code: entries land in `dist/` and chunks in
+ * `dist/chunks/`, and the host resolves the worker via
+ * `new URL("./worker-entry.mjs", import.meta.url)` at runtime.
+ */
+function copyWorkerEntryPlugin(): Plugin {
+	return {
+		name: "app-copy-worker-entry",
+		apply: "build",
+		closeBundle() {
+			const src = path.resolve(
+				import.meta.dirname,
+				"src/domain/plugin/sandbox/worker-entry.mjs",
+			)
+			for (const dst of [
+				path.resolve(import.meta.dirname, "dist/worker-entry.mjs"),
+				path.resolve(import.meta.dirname, "dist/chunks/worker-entry.mjs"),
+			]) {
+				mkdirSync(path.dirname(dst), { recursive: true })
+				copyFileSync(src, dst)
+			}
+		},
+	}
+}
+
 function copyDirRecursiveSync(src: string, dst: string): void {
 	mkdirSync(dst, { recursive: true })
 	for (const entry of readdirSync(src)) {
@@ -155,6 +181,7 @@ export default defineConfig({
 		copyServerAssetsPlugin(),
 		copyWebDistPlugin(),
 		copyPluginDistPlugin(),
+		copyWorkerEntryPlugin(),
 	],
 	build: {
 		target: "node24",
