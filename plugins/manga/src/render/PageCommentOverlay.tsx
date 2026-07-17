@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 /**
@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
  * everything piling up in lane 0.
  */
 export function MangaPageCommentOverlay(props: {
-	readonly comments: readonly Comment[]
+	readonly comments: readonly Message[]
 	readonly enabled: boolean
 }) {
 	const { comments, enabled } = props
@@ -24,7 +24,7 @@ export function MangaPageCommentOverlay(props: {
 	return <ActiveOverlay comments={comments} />
 }
 
-function ActiveOverlay(props: { readonly comments: readonly Comment[] }) {
+function ActiveOverlay(props: { readonly comments: readonly Message[] }) {
 	const { comments } = props
 	const containerRef = useRef<HTMLDivElement | null>(null)
 	const [lanes, setLanes] = useState(8)

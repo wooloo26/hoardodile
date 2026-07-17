@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { AppDialog } from "@hoardodile/ui/components/app-dialog"
 import { useTranslation } from "../i18n"
 import { CommentComposer } from "./CommentComposer"
@@ -9,19 +9,19 @@ export function NovelParagraphCommentDialog(props: {
 	readonly onClose: () => void
 	readonly filename: string
 	readonly paragraphIndex: number | undefined
-	readonly comments: readonly Comment[]
+	readonly comments: readonly Message[]
 }) {
 	const api = usePluginAPI()
 	const { open, onClose, filename, paragraphIndex, comments } = props
 	const { t } = useTranslation()
-	const createComment = api.useCreateComment()
+	const createMessage = api.useCreateMessage()
 
 	function handleOpenChange(next: boolean) {
 		if (!next) onClose()
 	}
 
 	async function handleSubmit(body: string) {
-		await createComment.mutate({
+		await createMessage.mutate({
 			body,
 			anchor: {
 				resId: api.resource.id,
@@ -67,7 +67,7 @@ export function NovelParagraphCommentDialog(props: {
 				<div className="border-t pt-3">
 					<CommentComposer
 						onSubmit={handleSubmit}
-						isPending={createComment.isPending}
+						isPending={createMessage.isPending}
 						placeholder={t("commentPlaceholder")}
 					/>
 				</div>

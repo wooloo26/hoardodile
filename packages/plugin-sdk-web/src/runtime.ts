@@ -22,9 +22,9 @@ import {
 } from "./stores.ts"
 import type {
 	Codec,
-	Comment,
 	Danmaku,
 	DanmakuMode,
+	Message,
 	MutationState,
 	QueryState,
 	ResAnchor,
@@ -237,15 +237,15 @@ export function createIframeHostAPI<
 		return buildFrameUrl(ctx.resId, filename, timeMs, ctx.fileToken)
 	}
 
-	function listComments(resId: string): Promise<readonly Comment[]> {
-		return host.request("listComments", { resId })
+	function listMessages(resId: string): Promise<readonly Message[]> {
+		return host.request("listMessages", { resId })
 	}
 
-	function createComment(input: {
+	function createMessage(input: {
 		readonly body: string
 		readonly anchor?: ResAnchor
-	}): Promise<Comment> {
-		return host.request("createComment", input)
+	}): Promise<Message> {
+		return host.request("createMessage", input)
 	}
 
 	function listDanmaku(resId: string): Promise<readonly Danmaku[]> {
@@ -308,15 +308,15 @@ export function createIframeHostAPI<
 		throw new Error("useFileList must be provided by a framework adapter")
 	}
 
-	function useCommentList(): QueryState<readonly Comment[]> {
-		throw new Error("useCommentList must be provided by a framework adapter")
+	function useMessageList(): QueryState<readonly Message[]> {
+		throw new Error("useMessageList must be provided by a framework adapter")
 	}
 
-	function useCreateComment(): MutationState<
+	function useCreateMessage(): MutationState<
 		{ readonly body: string; readonly anchor?: ResAnchor },
-		Comment
+		Message
 	> {
-		throw new Error("useCreateComment must be provided by a framework adapter")
+		throw new Error("useCreateMessage must be provided by a framework adapter")
 	}
 
 	function useDanmakuList(): QueryState<readonly Danmaku[]> {
@@ -364,8 +364,8 @@ export function createIframeHostAPI<
 		resolveFileUrl,
 		resolveBaseUrl,
 		resolveFrameUrl,
-		listComments,
-		createComment,
+		listMessages,
+		createMessage,
 		listDanmaku,
 		createDanmaku,
 		getPref,
@@ -376,8 +376,8 @@ export function createIframeHostAPI<
 		uploadCover,
 		invalidate,
 		useFileList,
-		useCommentList,
-		useCreateComment,
+		useMessageList,
+		useCreateMessage,
 		useDanmakuList,
 		useCreateDanmaku,
 		usePref,

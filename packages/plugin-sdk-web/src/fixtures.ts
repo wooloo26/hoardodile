@@ -58,9 +58,9 @@ export function createWebPluginAPIStub(
 		resolveFileUrl: (filename) => `/files/${filename}`,
 		resolveBaseUrl: () => "/files/",
 		resolveFrameUrl: (filename, timeMs) => `/frame/${filename}/${timeMs}`,
-		listComments: async () => [],
-		createComment: async () => {
-			throw new Error("createComment stub not overridden")
+		listMessages: async () => [],
+		createMessage: async () => {
+			throw new Error("createMessage stub not overridden")
 		},
 		listDanmaku: async () => [],
 		createDanmaku: async () => {
@@ -79,15 +79,15 @@ export function createWebPluginAPIStub(
 			isError: false,
 			error: null,
 		}),
-		useCommentList: () => ({
+		useMessageList: () => ({
 			data: [],
 			isLoading: false,
 			isError: false,
 			error: null,
 		}),
-		useCreateComment: () => ({
+		useCreateMessage: () => ({
 			mutate: async () => {
-				throw new Error("useCreateComment stub not overridden")
+				throw new Error("useCreateMessage stub not overridden")
 			},
 			isPending: false,
 		}),

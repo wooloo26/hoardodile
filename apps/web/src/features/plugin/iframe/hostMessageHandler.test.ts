@@ -52,8 +52,8 @@ function buildHandlers() {
 			async (ctx) => new ArrayBuffer(4 + ctx.resId.length),
 		),
 		defineHandler(pluginMethods.listFiles, async () => [{ filename: "a.png" }]),
-		defineHandler(pluginMethods.listComments, async () => []),
-		defineHandler(pluginMethods.createComment, async () => ({
+		defineHandler(pluginMethods.listMessages, async () => []),
+		defineHandler(pluginMethods.createMessage, async () => ({
 			id: "c-1",
 			body: "ok",
 		})),
@@ -166,7 +166,7 @@ describe("createHostMessageHandler", () => {
 			)
 		})
 
-		it("routes listComments request", async () => {
+		it("routes listMessages request", async () => {
 			const handler = createHostMessageHandler(buildHandlers())
 			const source = fakeWindow()
 			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
@@ -176,7 +176,7 @@ describe("createHostMessageHandler", () => {
 					{
 						type: "request",
 						id: 2,
-						method: pluginMethods.listComments,
+						method: pluginMethods.listMessages,
 						params: { resId: "r-1" },
 					},
 					source,
@@ -188,7 +188,7 @@ describe("createHostMessageHandler", () => {
 			})
 		})
 
-		it("routes createComment request", async () => {
+		it("routes createMessage request", async () => {
 			const handler = createHostMessageHandler(buildHandlers())
 			const source = fakeWindow()
 			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
@@ -198,7 +198,7 @@ describe("createHostMessageHandler", () => {
 					{
 						type: "request",
 						id: 3,
-						method: pluginMethods.createComment,
+						method: pluginMethods.createMessage,
 						params: { body: "hello" },
 					},
 					source,

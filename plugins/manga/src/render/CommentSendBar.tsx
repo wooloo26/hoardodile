@@ -22,7 +22,7 @@ export function MangaCommentSendBar(props: {
 	const api = usePluginAPI()
 	const { t } = useTranslation()
 	const [text, setText] = useState("")
-	const create = api.useCreateComment()
+	const create = api.useCreateMessage()
 
 	function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
@@ -39,7 +39,7 @@ export function MangaCommentSendBar(props: {
 			.then(
 				() => {
 					setText("")
-					void api.invalidate("comments")
+					void api.invalidate("messages")
 					onSuccess?.()
 				},
 				() => {

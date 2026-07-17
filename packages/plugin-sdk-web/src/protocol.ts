@@ -101,16 +101,16 @@ export type PluginRequests = {
 		readonly input: { readonly path: string }
 		readonly output: ArrayBuffer
 	}
-	listComments: {
+	listMessages: {
 		readonly input: { readonly resId: string }
-		readonly output: readonly import("@hoardodile/plugin-sdk-types").Comment[]
+		readonly output: readonly import("@hoardodile/plugin-sdk-types").Message[]
 	}
-	createComment: {
+	createMessage: {
 		readonly input: {
 			readonly body: string
 			readonly anchor?: import("@hoardodile/plugin-sdk-types").ResAnchor
 		}
-		readonly output: import("@hoardodile/plugin-sdk-types").Comment
+		readonly output: import("@hoardodile/plugin-sdk-types").Message
 	}
 	listDanmaku: {
 		readonly input: { readonly resId: string }
@@ -159,7 +159,7 @@ export type HostPushes = {
 	prefsChanged: { readonly key: string; readonly value?: string }
 	"res:invalidate": undefined
 	"resources:invalidate": undefined
-	"comments:invalidate": undefined
+	"messages:invalidate": undefined
 	"danmaku:invalidate": undefined
 }
 
@@ -172,7 +172,7 @@ export type RequestOutput<K extends keyof PluginRequests> =
 	PluginRequests[K]["output"]
 
 /** Targets that can be invalidated from the plugin runtime. */
-export type InvalidateTarget = "resource" | "resources" | "comments" | "danmaku"
+export type InvalidateTarget = "resource" | "resources" | "messages" | "danmaku"
 
 /**
  * Type-safe host bridge. The runtime still serialises messages as plain

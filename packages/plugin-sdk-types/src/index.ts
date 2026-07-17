@@ -7,14 +7,14 @@ export type ResourceId = string & { readonly __brand: "ResourceId" }
 /** Web plugin danmaku mode. */
 export type DanmakuMode = "scroll" | "top" | "bottom"
 
-/** Web plugin anchor for comments and danmaku. */
+/** Web plugin anchor for messages and danmaku. */
 export type ResAnchor = {
 	readonly resId: string
 	readonly data?: unknown
 }
 
-/** Web plugin comment shape. */
-export type Comment = {
+/** Web plugin message shape. */
+export type Message = {
 	readonly id: string
 	readonly parentId?: string
 	readonly body: string

@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { booleanCodec } from "@hoardodile/plugin-sdk-web"
 import { Button } from "@hoardodile/ui/components/button"
 import { MessageSquare, MessageSquareOff, Rows3, Square } from "lucide-react"
@@ -93,13 +93,13 @@ export function MangaReader() {
 
 	// comments: manual fetch so we can refresh after posting
 	const [commentsData, setCommentsData] = useState<
-		readonly Comment[] | undefined
+		readonly Message[] | undefined
 	>(undefined)
 	useEffect(() => {
-		api.listComments(resId).then(setCommentsData)
+		api.listMessages(resId).then(setCommentsData)
 	}, [api, resId])
 	const refreshComments = useCallback(() => {
-		api.listComments(resId).then(setCommentsData)
+		api.listMessages(resId).then(setCommentsData)
 	}, [api, resId])
 	const perPageComments = useMemo(
 		() => buildPerPageComments(commentsData ?? []),
@@ -299,9 +299,9 @@ function MangaTopBar(props: {
 }
 
 function buildPerPageComments(
-	all: readonly Comment[],
-): ReadonlyMap<string, readonly Comment[]> {
-	const map = new Map<string, Comment[]>()
+	all: readonly Message[],
+): ReadonlyMap<string, readonly Message[]> {
+	const map = new Map<string, Message[]>()
 	for (const c of all) {
 		const a = c.anchor
 		if (a === undefined) continue

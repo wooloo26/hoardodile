@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { useCallback, useEffect, useRef } from "react"
 import {
 	type ReactZoomPanPinchRef,
@@ -37,7 +37,7 @@ export function MangaPagedView(props: {
 	readonly useOriginal: boolean
 	readonly currentPageIndex: number
 	readonly onChangePage: (index: number) => void
-	readonly perPageComments: ReadonlyMap<string, readonly Comment[]>
+	readonly perPageComments: ReadonlyMap<string, readonly Message[]>
 	readonly showComments: boolean
 	readonly direction: "ltr" | "rtl"
 }) {

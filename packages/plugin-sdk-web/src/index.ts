@@ -1,8 +1,8 @@
 export type {
-	Comment,
 	Danmaku,
 	DanmakuMode,
 	FileStats,
+	Message,
 	ResAnchor,
 } from "@hoardodile/plugin-sdk-types"
 export { booleanCodec, jsonCodec, numberCodec } from "./codecs.ts"

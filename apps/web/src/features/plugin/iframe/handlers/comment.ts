@@ -7,7 +7,7 @@ import { defineHandler, type HandlerEntry } from "./registry"
 export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 	return [
 		defineHandler(
-			pluginMethods.listComments,
+			pluginMethods.listMessages,
 			z.object({ resId: z.string().min(1) }),
 			async (_ctx, params) => {
 				const r = await trpcQuery("comment", "list", { resId: params.resId })
@@ -16,7 +16,7 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 		),
 
 		defineHandler(
-			pluginMethods.createComment,
+			pluginMethods.createMessage,
 			z.object({ body: z.string().min(1), anchor: z.any().optional() }),
 			async (_ctx, params) => {
 				return trpcMutate("comment", "create", {

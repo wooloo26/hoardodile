@@ -11,9 +11,9 @@ export const pluginMethods = {
 	readFile: "readFile",
 	listFiles: "listFiles",
 
-	// Comments
-	listComments: "listComments",
-	createComment: "createComment",
+	// Messages
+	listMessages: "listMessages",
+	createMessage: "createMessage",
 
 	// Danmaku
 	listDanmaku: "listDanmaku",

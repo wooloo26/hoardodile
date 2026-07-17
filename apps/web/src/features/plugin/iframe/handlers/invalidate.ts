@@ -21,7 +21,7 @@ export function createHandlers(qc: QueryClient): HandlerEntry[] {
 					case "resources":
 						await invalidateResources(qc)
 						break
-					case "comments":
+					case "messages":
 						await invalidateComments(qc)
 						break
 					case "danmaku":

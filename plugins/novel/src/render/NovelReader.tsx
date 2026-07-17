@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "../i18n"
 import {
@@ -83,11 +83,11 @@ export function NovelReader(props: { readonly open: boolean }) {
 	})
 
 	// Comments are fetched imperatively; the SDK only exposes a create hook.
-	const [comments, setComments] = useState<readonly Comment[]>([])
+	const [comments, setComments] = useState<readonly Message[]>([])
 	useEffect(() => {
 		let cancelled = false
 		api
-			.listComments(resId)
+			.listMessages(resId)
 			.then(function got(rows) {
 				if (cancelled) return
 				setComments(rows)

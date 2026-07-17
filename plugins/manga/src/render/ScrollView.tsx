@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { MangaPage } from "../shared"
@@ -32,7 +32,7 @@ export function MangaScrollView(props: {
 	readonly useOriginal: boolean
 	readonly currentPageIndex: number
 	readonly onPageVisible: (index: number) => void
-	readonly perPageComments: ReadonlyMap<string, readonly Comment[]>
+	readonly perPageComments: ReadonlyMap<string, readonly Message[]>
 	readonly showComments: boolean
 	/** Triggers a smooth scroll to a specific page; resets to undefined after. */
 	readonly scrollToPage: number | undefined

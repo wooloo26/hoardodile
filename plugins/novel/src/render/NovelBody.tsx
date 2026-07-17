@@ -1,4 +1,4 @@
-import type { Comment } from "@hoardodile/plugin-sdk-web"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import {
 	useCallback,
 	useEffect,
@@ -57,7 +57,7 @@ export function NovelBody(props: {
 	readonly onScrollAnchorChange: (anchor: NovelScrollAnchor) => void
 	readonly onParagraphLongPress: (idx: number) => void
 	readonly onParagraphCommentTap: (idx: number) => void
-	readonly commentsByParagraph: ReadonlyMap<number, readonly Comment[]>
+	readonly commentsByParagraph: ReadonlyMap<number, readonly Message[]>
 	readonly scrollToAnchor: NovelScrollAnchor | undefined
 	readonly onScrollHandled: () => void
 	readonly scrollToPage: number | undefined

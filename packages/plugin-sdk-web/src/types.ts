@@ -1,8 +1,8 @@
 import type {
-	Comment,
 	Danmaku,
 	DanmakuMode,
 	FileStats,
+	Message,
 	PluginSchema,
 	ResAnchor,
 } from "@hoardodile/plugin-sdk-types"
@@ -91,12 +91,12 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	 */
 	readonly resolveFrameUrl: (filename: string, timeMs: number) => string
 
-	/** Comments. */
-	readonly listComments: (resId: string) => Promise<readonly Comment[]>
-	readonly createComment: (input: {
+	/** Messages. */
+	readonly listMessages: (resId: string) => Promise<readonly Message[]>
+	readonly createMessage: (input: {
 		readonly body: string
 		readonly anchor?: ResAnchor
-	}) => Promise<Comment>
+	}) => Promise<Message>
 
 	/** Danmaku. */
 	readonly listDanmaku: (resId: string) => Promise<readonly Danmaku[]>
@@ -126,10 +126,10 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 
 	/** Reactive hooks. */
 	readonly useFileList: () => QueryState<readonly TSchema["file"][]>
-	readonly useCommentList: (resId: string) => QueryState<readonly Comment[]>
-	readonly useCreateComment: () => MutationState<
+	readonly useMessageList: (resId: string) => QueryState<readonly Message[]>
+	readonly useCreateMessage: () => MutationState<
 		{ readonly body: string; readonly anchor?: ResAnchor },
-		Comment
+		Message
 	>
 	readonly useDanmakuList: (
 		resId: string,
@@ -159,8 +159,8 @@ export type PluginErrorInfo = {
 }
 
 export type {
-	Comment,
 	Danmaku,
 	DanmakuMode,
+	Message,
 	ResAnchor,
 } from "@hoardodile/plugin-sdk-types"

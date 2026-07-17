@@ -1,7 +1,7 @@
 import type {
-	Comment,
 	Danmaku,
 	DanmakuMode,
+	Message,
 	PluginSchema,
 	ResAnchor,
 } from "@hoardodile/plugin-sdk-types"
@@ -102,13 +102,13 @@ function useFileList(host: Host) {
 	})
 }
 
-// ── Comment queries ──────────────────────────────────────────────────────
+// ── Message queries ──────────────────────────────────────────────────────
 
-function useCommentList(host: Host, resId: string) {
-	return useHostQuery<"listComments", readonly Comment[]>(host, {
-		method: "listComments",
+function useMessageList(host: Host, resId: string) {
+	return useHostQuery<"listMessages", readonly Message[]>(host, {
+		method: "listMessages",
 		params: { resId },
-		invalidateKey: "comments:invalidate",
+		invalidateKey: "messages:invalidate",
 		extraDeps: [resId],
 	})
 }
@@ -149,17 +149,17 @@ function useHostMutation<
 	return { mutate, isPending }
 }
 
-function useCreateComment(
+function useCreateMessage(
 	host: Host,
 ): MutationState<
 	{ readonly body: string; readonly anchor?: ResAnchor },
-	Comment
+	Message
 > {
 	return useHostMutation<
-		"createComment",
+		"createMessage",
 		{ readonly body: string; readonly anchor?: ResAnchor },
-		Comment
-	>(host, "createComment")
+		Message
+	>(host, "createMessage")
 }
 
 function useCreateDanmaku(host: Host): MutationState<
@@ -285,8 +285,8 @@ export function createPluginQueryAPI<
 ): Pick<
 	WebPluginAPI<TSchema>,
 	| "useFileList"
-	| "useCommentList"
-	| "useCreateComment"
+	| "useMessageList"
+	| "useCreateMessage"
 	| "useDanmakuList"
 	| "useCreateDanmaku"
 	| "usePref"
@@ -295,8 +295,8 @@ export function createPluginQueryAPI<
 	return {
 		useFileList: () =>
 			useFileList(host) as QueryState<readonly TSchema["file"][]>,
-		useCommentList: (resId: string) => useCommentList(host, resId),
-		useCreateComment: () => useCreateComment(host),
+		useMessageList: (resId: string) => useMessageList(host, resId),
+		useCreateMessage: () => useCreateMessage(host),
 		useDanmakuList: (resId: string, filter?: unknown) =>
 			useDanmakuList(host, resId, filter),
 		useCreateDanmaku: () => useCreateDanmaku(host),
