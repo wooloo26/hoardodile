@@ -1,4 +1,11 @@
 import { Worker } from "node:worker_threads"
+import {
+	PLUGIN_HOOK_HARD_TIMEOUT_MS,
+	PLUGIN_WATCHDOG_TIMEOUT_MS,
+	PLUGIN_WORKER_MAX_OLD_SPACE_MB,
+	PLUGIN_WORKER_MAX_RESPAWNS,
+	PLUGIN_WORKER_RESPAWN_WINDOW_MS,
+} from "@hoardodile/consts/plugin"
 import type {
 	PluginDefinition,
 	ResourceAPI,
@@ -38,11 +45,11 @@ export type PluginSandboxConfig = {
 }
 
 export const DEFAULT_SANDBOX_CONFIG: PluginSandboxConfig = {
-	watchdogMs: 60_000,
-	hardTimeoutMs: 30 * 60_000,
-	maxOldSpaceMb: 512,
-	maxRespawns: 3,
-	respawnWindowMs: 60_000,
+	watchdogMs: PLUGIN_WATCHDOG_TIMEOUT_MS,
+	hardTimeoutMs: PLUGIN_HOOK_HARD_TIMEOUT_MS,
+	maxOldSpaceMb: PLUGIN_WORKER_MAX_OLD_SPACE_MB,
+	maxRespawns: PLUGIN_WORKER_MAX_RESPAWNS,
+	respawnWindowMs: PLUGIN_WORKER_RESPAWN_WINDOW_MS,
 }
 
 export type PluginSandbox = {

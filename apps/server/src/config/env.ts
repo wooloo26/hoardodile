@@ -2,6 +2,11 @@ import { existsSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import {
+	PLUGIN_HOOK_HARD_TIMEOUT_MS,
+	PLUGIN_WATCHDOG_TIMEOUT_MS,
+	PLUGIN_WORKER_MAX_OLD_SPACE_MB,
+} from "@hoardodile/consts/plugin"
 import { z } from "zod"
 
 /**
@@ -200,7 +205,7 @@ const envSchema = z
 			.number()
 			.int()
 			.positive()
-			.default(60_000),
+			.default(PLUGIN_WATCHDOG_TIMEOUT_MS),
 		/**
 		 * Absolute cap for a single plugin hook invocation, regardless of
 		 * activity. Backstop for "slow but not hung" pathological hooks.
@@ -209,7 +214,7 @@ const envSchema = z
 			.number()
 			.int()
 			.positive()
-			.default(30 * 60_000),
+			.default(PLUGIN_HOOK_HARD_TIMEOUT_MS),
 		/**
 		 * V8 old-generation memory cap per plugin worker, in MiB. Exceeding
 		 * it aborts the worker; the plugin respawns lazily on the next call.
@@ -218,7 +223,7 @@ const envSchema = z
 			.number()
 			.int()
 			.positive()
-			.default(512),
+			.default(PLUGIN_WORKER_MAX_OLD_SPACE_MB),
 	})
 	.transform((data) => {
 		const storageRoot = makeAbsolute(data.STORAGE_ROOT)

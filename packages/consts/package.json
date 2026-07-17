@@ -7,6 +7,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./media-exts": "./src/media-exts.ts",
+		"./plugin": "./src/plugin.ts",
 		"./res-consts": "./src/res-consts.ts",
 		"./text-limits": "./src/text-limits.ts",
 		"./timezone": "./src/timezone.ts",
