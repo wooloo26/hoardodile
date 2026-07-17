@@ -1,7 +1,7 @@
 commit-msg:
   jobs:
-    - name: commitlint
-      run: pnpm commitlint --edit {1}
+    - name: verify-commit
+      run: node scripts/verify-commit.mjs {1}
 
 pre-commit:
   parallel: true

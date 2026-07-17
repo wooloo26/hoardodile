@@ -62,11 +62,12 @@ scripts/       Root dev/license/guard/version scripts
 - `apps/web/src/routeTree.gen.ts` — TanStack Router.
 - `apps/web/public/licenses.json` and `apps/web/public/LICENSE` — generated on web build/watch.
 - `apps/server/src/infra/db/migrations/` — `pnpm db:generate`.
+- `CHANGELOG.md` — `@release-it/conventional-changelog` on `pnpm release`.
 - `pnpm-lock.yaml` — `pnpm install`.
 
 ## Commits & releases
 
-- Conventional Commits (`type(scope): subject`), enforced by commitlint.
+- Conventional Commits (`type(scope): subject`), enforced by `scripts/verify-commit.mjs` (commit-msg hook).
 - Before finishing a change, run in order: `pnpm format` → `pnpm lint` → `pnpm test`, all green.
 - One unified app version, owned by the root `package.json`. Releases are cut only with `pnpm release` (release-it, needs `GITHUB_TOKEN`). **Never hand-edit a `version` field**; other workspace packages stay `0.0.0`.
 

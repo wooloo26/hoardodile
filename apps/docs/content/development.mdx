@@ -47,7 +47,7 @@ pnpm -F @hoardodile/docs dev   # http://localhost:3000
 
 - Each domain follows `schema.ts` → `repo.ts` → `service.ts` → `router.ts`; plugin-exposing domains add `plugin.ts`.
 - Services are factories (`create*Service(deps)`) — dependency injection via closures, no classes.
-- Commit messages follow Conventional Commits (`type(scope): subject`), enforced by commitlint.
+- Commit messages follow Conventional Commits (`type(scope): subject`), enforced by `scripts/verify-commit.mjs` (commit-msg hook).
 - Pre-push hooks run `pnpm lint`, `pnpm test`, and `pnpm version:check`.
 - One unified app version, owned by the root `package.json`. Never hand-edit a `version` field; releases are cut with `pnpm release`.
 
