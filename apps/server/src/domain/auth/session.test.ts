@@ -98,7 +98,12 @@ describe("session store (iron-session)", () => {
 	test("verifyToken rejects tampered tokens", async () => {
 		const token = await store.createToken(86_400, 1_000)
 		const parts = token.sealed.split(".")
-		const tampered = `${parts[0]!}.${parts[1]!}.x${parts[2]!.slice(1)}`
+		const sig = parts[2]!
+		// Flip the first signature char to one that is guaranteed different —
+		// a fixed replacement is a no-op whenever the random HMAC happens to
+		// start with it (~1/64), which made this test flaky.
+		const flipped = sig.startsWith("x") ? "y" : "x"
+		const tampered = `${parts[0]!}.${parts[1]!}.${flipped}${sig.slice(1)}`
 		expect(await store.verifyToken(tampered, 1_000)).toBeUndefined()
 	})
 
