@@ -89,15 +89,13 @@ function buildServices(selectedPlugins) {
 
 	svcs.push({
 		name: "web",
-		command: "pnpm",
-		args: ["-F", "@hoardodile/web", "watch"],
+		command: "pnpm -F @hoardodile/web watch",
 	})
 
 	for (const pl of selectedPlugins) {
 		svcs.push({
 			name: `plugin:${pl.name}`,
-			command: "pnpm",
-			args: ["-F", `@hoardodile/plugin-${pl.name}`, "watch"],
+			command: `pnpm -F @hoardodile/plugin-${pl.name} watch`,
 		})
 	}
 
@@ -124,8 +122,7 @@ function buildServices(selectedPlugins) {
 
 	svcs.push({
 		name: "server",
-		command: "pnpm",
-		args: ["-F", "@hoardodile/server", "dev"],
+		command: "pnpm -F @hoardodile/server dev",
 		env: serverEnv,
 	})
 
@@ -184,7 +181,10 @@ async function main() {
 
 	for (const svc of services) {
 		console.log(`[dev] starting ${svc.name}...`)
-		const child = spawn(svc.command, svc.args, {
+		// Spawn a single command string through the shell: passing an args
+		// array with `shell: true` triggers Node's DEP0190 warning, and the
+		// commands are static strings with no user input.
+		const child = spawn(svc.command, {
 			stdio: "inherit",
 			shell: true,
 			env: svc.env !== undefined ? { ...process.env, ...svc.env } : process.env,
