@@ -68,7 +68,7 @@ function useAnchorLabel(anchor: ResAnchor): string {
 	const manifest = pluginListQuery.data?.find(
 		(p) => p.id === pluginId,
 	)?.manifest
-	const template = manifest?.ui?.comment?.anchor
+	const template = manifest?.ui?.message?.anchor
 	if (template === undefined) return ""
 
 	const rendered = renderCardTemplate(

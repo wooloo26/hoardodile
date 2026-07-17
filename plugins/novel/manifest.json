@@ -4,7 +4,7 @@
 	"description": "Novel reader.",
 	"version": "0.1.0",
 	"permissions": {
-		"comment": true
+		"message": true
 	},
 	"i18n": {
 		"name": {
@@ -25,7 +25,7 @@
 		}
 	},
 	"ui": {
-		"comment": {
+		"message": {
 			"anchor": "{{t('anchorPrefix')}}{{inc(data.paragraphIndex)}}{{t('anchorSuffix')}}"
 		}
 	}

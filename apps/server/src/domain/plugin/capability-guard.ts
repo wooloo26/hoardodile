@@ -5,7 +5,7 @@ export type PluginCapability =
 	| "sourceMeta"
 	| "searchMeta"
 	| "danmaku"
-	| "comment"
+	| "message"
 
 export type CapabilityGuard = {
 	/** Check whether a manifest grants the given capability. */

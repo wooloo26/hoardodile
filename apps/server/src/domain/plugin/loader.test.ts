@@ -25,7 +25,7 @@ function buildManifest(
 			sourceMeta: false,
 			searchMeta: false,
 			danmaku: false,
-			comment: false,
+			message: false,
 		},
 		...overrides,
 	}

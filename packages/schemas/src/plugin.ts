@@ -7,7 +7,7 @@ export const pluginPermissions = z.object({
 	sourceMeta: z.boolean().default(false),
 	searchMeta: z.boolean().default(false),
 	danmaku: z.boolean().default(false),
-	comment: z.boolean().default(false),
+	message: z.boolean().default(false),
 })
 export type PluginPermissions = z.infer<typeof pluginPermissions>
 
@@ -43,9 +43,9 @@ const searchUi = z.object({
 	kinds: z.array(searchKind),
 })
 
-const commentUi = z.object({
+const messageUi = z.object({
 	/**
-	 * Template string for comment anchor chip labels. Rendered by the
+	 * Template string for message anchor chip labels. Rendered by the
 	 * host's template engine. Supports `{{data.field}}`, `{{duration(ms)}}`,
 	 * `{{inc(n)}}`, `{{t('key')}}`, etc.
 	 */
@@ -56,7 +56,7 @@ export const pluginManifestUi = z.object({
 	height: z.string().min(1).optional(),
 	card: coverKindUiMap.optional(),
 	search: searchUi.optional(),
-	comment: commentUi.optional(),
+	message: messageUi.optional(),
 })
 export type PluginManifestUi = z.infer<typeof pluginManifestUi>
 export type CoverKindUi = z.infer<typeof coverKindUi>

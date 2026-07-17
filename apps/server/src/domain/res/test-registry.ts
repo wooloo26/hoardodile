@@ -29,7 +29,7 @@ export const TEST_BUILTIN_MANIFEST = {
 		sourceMeta: true,
 		searchMeta: true,
 		danmaku: true,
-		comment: true,
+		message: true,
 		preferences: false,
 		node: false,
 	},

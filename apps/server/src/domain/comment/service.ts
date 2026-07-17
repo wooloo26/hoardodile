@@ -285,7 +285,7 @@ export function createCommentService(deps: CommentServiceDeps): CommentService {
 			if (resRow !== undefined && resRow.contentPluginId !== null) {
 				const pluginEntry = deps.pluginRegistry?.getById(resRow.contentPluginId)
 				if (pluginEntry !== undefined) {
-					guard.require(pluginEntry.manifest, "comment")
+					guard.require(pluginEntry.manifest, "message")
 				}
 			}
 		}

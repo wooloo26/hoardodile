@@ -6,7 +6,7 @@
 	"permissions": {
 		"sourceMeta": true,
 		"searchMeta": true,
-		"comment": true
+		"message": true
 	},
 	"i18n": {
 		"name": {
@@ -52,7 +52,7 @@
 				}
 			]
 		},
-		"comment": {
+		"message": {
 			"anchor": "{{inc(data.page)}}{{t('anchorLabel')}}"
 		}
 	}

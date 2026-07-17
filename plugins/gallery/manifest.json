@@ -7,7 +7,7 @@
 		"sourceMeta": true,
 		"searchMeta": true,
 		"danmaku": true,
-		"comment": true
+		"message": true
 	},
 	"i18n": {
 		"name": {
@@ -78,7 +78,7 @@
 				}
 			]
 		},
-		"comment": {
+		"message": {
 			"anchor": "{{duration(data.timeMs)}}"
 		}
 	}

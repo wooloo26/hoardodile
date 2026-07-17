@@ -23,7 +23,7 @@ function manifestFor(id: PluginManifestId, name: string) {
 			sourceMeta: false,
 			searchMeta: false,
 			danmaku: false,
-			comment: false,
+			message: false,
 			preferences: false,
 			node: false,
 		},
