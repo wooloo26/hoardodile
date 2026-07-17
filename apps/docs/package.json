@@ -9,7 +9,7 @@
 		"lint": "tsc --noEmit"
 	},
 	"dependencies": {
-		"next": "^15.5.20",
+		"next": "^16.2.10",
 		"nextra": "^4.6.1",
 		"nextra-theme-docs": "^4.6.1",
 		"react": "catalog:",
@@ -19,6 +19,6 @@
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"typescript": "^5.9.3"
+		"typescript": "^7.0.2"
 	}
 }
