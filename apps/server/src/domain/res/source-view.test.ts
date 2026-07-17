@@ -57,6 +57,47 @@ describe("openEntryStream", () => {
 	})
 })
 
+describe("readEntrySlice", () => {
+	test("reads a positioned byte range from a STORED entry", async () => {
+		const root = mkdtempSync(join(tmpdir(), "src-view-slice-"))
+		try {
+			const paths = createStoragePaths({ root, latestVersion: 1 })
+			const resId = "res-slice"
+			const archivePath = paths.latest.resSourceArchive(resId)
+			await mkdir(join(root, "versions", "1", "resources", resId), {
+				recursive: true,
+			})
+			const payload = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8])
+			await writeStoredZip(archivePath, [
+				["data.bin", payload],
+				["empty.bin", Buffer.alloc(0)],
+			])
+
+			const view = buildSourceArtifactView(
+				{ paths, zipCdCache: createZipCdCache() },
+				resId,
+				1,
+				{ kind: "zip", archivePath },
+			)
+
+			expect(
+				(await view.readEntrySlice("data.bin", 2, 5)).toJSON().data,
+			).toEqual([3, 4, 5])
+			// End clamps to the entry size; past-the-end start is empty.
+			expect(
+				(await view.readEntrySlice("data.bin", 6, 100)).toJSON().data,
+			).toEqual([7, 8])
+			expect((await view.readEntrySlice("data.bin", 100, 200)).byteLength).toBe(
+				0,
+			)
+			// Zero-length entry does not read past the archive bounds.
+			expect((await view.readEntrySlice("empty.bin", 0, 10)).byteLength).toBe(0)
+		} finally {
+			rmSync(root, { recursive: true, force: true })
+		}
+	})
+})
+
 describe("withMaterializedEntry cache", () => {
 	test("reuses persisted extraction across calls", async () => {
 		const root = mkdtempSync(join(tmpdir(), "src-view-"))

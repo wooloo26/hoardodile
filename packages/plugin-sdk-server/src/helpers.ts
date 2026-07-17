@@ -60,3 +60,32 @@ export async function probeVideoFile(
 		durationMs: probed?.durationMs,
 	}
 }
+
+export type ReadFileChunksOptions = {
+	/** Chunk size in bytes. Defaults to 1 MiB. */
+	readonly chunkSize?: number
+}
+
+/**
+ * Stream a file as a sequence of chunks via ranged `readFile` calls.
+ * Memory stays bounded by the chunk size on both sides of the plugin
+ * boundary — the host never buffers the whole file.
+ */
+export async function* readFileChunks(
+	api: ResourceAPI,
+	path: string,
+	opts: ReadFileChunksOptions = {},
+): AsyncGenerator<Uint8Array, void, undefined> {
+	const chunkSize = opts.chunkSize ?? 1024 * 1024
+	let offset = 0
+	for (;;) {
+		const chunk = await api.readFile(path, {
+			start: offset,
+			end: offset + chunkSize,
+		})
+		if (chunk.byteLength === 0) return
+		yield chunk
+		if (chunk.byteLength < chunkSize) return
+		offset += chunk.byteLength
+	}
+}

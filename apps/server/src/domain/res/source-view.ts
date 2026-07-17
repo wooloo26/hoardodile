@@ -58,6 +58,12 @@ export type SourceArtifactView = {
 	/** Stream-read `relPath` into a Buffer. */
 	readEntry(relPath: string): Promise<Buffer>
 	/**
+	 * Read the byte range `[start, end)` of `relPath` (`end` exclusive).
+	 * The range is clamped to the entry size; an out-of-range start
+	 * resolves to an empty buffer.
+	 */
+	readEntrySlice(relPath: string, start: number, end: number): Promise<Buffer>
+	/**
 	 * Stream entry bytes directly from `source.hoard` without writing to
 	 * the extracted cache. Prefer this for thumb/probe paths.
 	 */
@@ -145,6 +151,10 @@ function buildEmptyView(
 		return fail(relPath)
 	}
 
+	async function readEntrySlice(relPath: string): Promise<Buffer> {
+		return fail(relPath)
+	}
+
 	async function openEntryStream(_relPath: string): Promise<{
 		readonly stream: Readable
 		readonly size: number
@@ -179,6 +189,7 @@ function buildEmptyView(
 		artifactPath: "",
 		listEntries,
 		readEntry,
+		readEntrySlice,
 		openEntryStream,
 		withMaterializedEntry,
 		withSeekableEntry,
@@ -207,6 +218,29 @@ function buildZipView(
 			)
 		}
 		return readSlice(range.path, range.start, range.end)
+	}
+
+	async function readEntrySlice(
+		relPath: string,
+		start: number,
+		end: number,
+	): Promise<Buffer> {
+		const range = await resolveByteRange(relPath)
+		if (range === undefined) {
+			throw notFound(
+				"resource.file_not_found",
+				`zip resource ${resId} has no entry ${relPath}`,
+				{ resId, relPath },
+			)
+		}
+		const clampedStart = Math.min(Math.max(0, start), range.size)
+		const clampedEnd = Math.min(Math.max(clampedStart, end), range.size)
+		if (clampedEnd <= clampedStart) return Buffer.alloc(0)
+		return readSlice(
+			range.path,
+			range.start + clampedStart,
+			range.start + clampedEnd - 1,
+		)
 	}
 
 	async function materializeToCache(
@@ -332,6 +366,7 @@ function buildZipView(
 		artifactPath: archivePath,
 		listEntries,
 		readEntry,
+		readEntrySlice,
 		openEntryStream,
 		withMaterializedEntry,
 		withSeekableEntry,

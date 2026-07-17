@@ -21,6 +21,7 @@ export type {
 	ImageInfo,
 	Logger,
 	PluginDefinition,
+	ReadFileRange,
 	ResourceAPI,
 	VideoInfo,
 } from "./types.ts"

@@ -70,14 +70,18 @@ export function createResourceAPIFixture(
 		async listFiles() {
 			return config.files ?? []
 		},
-		async readFile(path) {
+		async readFile(path, range) {
 			const content = config.contents?.[path]
-			if (content !== undefined) {
-				return typeof content === "string"
+			if (content === undefined) {
+				throw new Error(`ResourceAPIFixture: no content for "${path}"`)
+			}
+			const bytes =
+				typeof content === "string"
 					? new TextEncoder().encode(content)
 					: content
-			}
-			throw new Error(`ResourceAPIFixture: no content for "${path}"`)
+			if (range === undefined) return bytes
+			// Mirrors host semantics: the range is clamped to the content size.
+			return bytes.slice(range.start ?? 0, range.end)
 		},
 		async statFile(path) {
 			return resolveValue(path, config.stats, undefined)

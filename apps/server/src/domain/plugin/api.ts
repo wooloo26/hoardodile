@@ -1,10 +1,12 @@
-import { readdir } from "node:fs/promises"
+import { open, readdir } from "node:fs/promises"
 import { extname, isAbsolute, join, normalize, resolve, sep } from "node:path"
 import type { Readable } from "node:stream"
 import { IMAGE_EXTS } from "@hoardodile/consts/media-exts"
+import { PLUGIN_READ_FILE_MAX_BYTES } from "@hoardodile/consts/plugin"
 import type {
 	AudioInfo,
 	ImageInfo,
+	ReadFileRange,
 	ResourceAPI,
 	VideoInfo,
 } from "@hoardodile/plugin-sdk-server"
@@ -18,6 +20,11 @@ import type {
 export type PluginSourceView = {
 	readonly listEntries: () => Promise<readonly string[]>
 	readonly readEntry: (relPath: string) => Promise<Buffer>
+	readonly readEntrySlice: (
+		relPath: string,
+		start: number,
+		end: number,
+	) => Promise<Buffer>
 	readonly openEntryStream: (
 		relPath: string,
 	) => Promise<{ readonly stream: Readable; readonly size: number }>
@@ -44,16 +51,37 @@ export type CreatePluginResourceAPIDeps = {
 		source: string | Readable,
 	) => Promise<AudioInfo | undefined>
 	readonly isAnimatedImage: (source: string | Readable) => Promise<boolean>
+	/** Per-call `readFile` byte cap. Defaults to {@link PLUGIN_READ_FILE_MAX_BYTES}. */
+	readonly maxReadFileBytes?: number
 }
 
 export function createPluginResourceAPI(
 	deps: CreatePluginResourceAPIDeps,
 ): ResourceAPI {
 	const { view } = deps
+	const maxReadFileBytes = deps.maxReadFileBytes ?? PLUGIN_READ_FILE_MAX_BYTES
 
-	async function readFileScoped(path: string): Promise<Uint8Array> {
-		const buf = await view.readEntry(path)
-		return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
+	async function readFileScoped(
+		path: string,
+		range?: ReadFileRange,
+	): Promise<Uint8Array> {
+		if (range === undefined) {
+			const size = (await view.resolveByteRange(path))?.size
+			if (size !== undefined) assertReadSize(path, size, maxReadFileBytes)
+			const buf = await view.readEntry(path)
+			return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
+		}
+		const start = Math.max(0, range.start ?? 0)
+		const size = (await view.resolveByteRange(path))?.size
+		if (size === undefined) {
+			// Unknown size (missing entry) — let the view raise its own error.
+			return toUint8Array(
+				await view.readEntrySlice(path, start, range.end ?? start),
+			)
+		}
+		const end = Math.min(range.end ?? size, size)
+		assertReadSize(path, Math.max(0, end - start), maxReadFileBytes)
+		return toUint8Array(await view.readEntrySlice(path, start, end))
 	}
 
 	async function listFilesScoped(): Promise<readonly string[]> {
@@ -124,16 +152,35 @@ export function createPluginResourceAPI(
  * Create a minimal {@link ResourceAPI} backed by a raw filesystem
  * directory. Used during import to run detectors before resources exist.
  */
-export function createImportResourceAPI(dir: string): ResourceAPI {
+export function createImportResourceAPI(
+	dir: string,
+	opts: { readonly maxReadFileBytes?: number } = {},
+): ResourceAPI {
+	const maxReadFileBytes = opts.maxReadFileBytes ?? PLUGIN_READ_FILE_MAX_BYTES
 	return {
 		logInfo() {},
 		logWarn() {},
 		logError() {},
-		async readFile(relPath) {
+		async readFile(relPath, range) {
 			const safe = resolveSafeImportPath(dir, relPath)
-			const { readFile } = await import("node:fs/promises")
-			const buf = await readFile(safe)
-			return new Uint8Array(buf)
+			const handle = await open(safe, "r")
+			try {
+				const { size } = await handle.stat()
+				if (range === undefined) {
+					assertReadSize(relPath, size, maxReadFileBytes)
+					return new Uint8Array(await handle.readFile())
+				}
+				const start = Math.max(0, range.start ?? 0)
+				const end = Math.min(range.end ?? size, size)
+				const length = Math.max(0, end - start)
+				assertReadSize(relPath, length, maxReadFileBytes)
+				if (length === 0) return new Uint8Array()
+				const buf = Buffer.alloc(length)
+				await handle.read(buf, 0, length, start)
+				return new Uint8Array(buf)
+			} finally {
+				await handle.close()
+			}
 		},
 		async listFiles() {
 			const out: string[] = []
@@ -206,4 +253,16 @@ export function resolveSafeImportPath(dir: string, relPath: string): string {
 		throw new Error("path escapes import directory")
 	}
 	return candidate
+}
+
+function assertReadSize(path: string, sizeBytes: number, max: number): void {
+	if (sizeBytes > max) {
+		throw new Error(
+			`readFile("${path}") requests ${sizeBytes} bytes, exceeding the per-call limit of ${max} bytes — pass a byte range or use readFileChunks()`,
+		)
+	}
+}
+
+function toUint8Array(buf: Buffer): Uint8Array {
+	return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
 }

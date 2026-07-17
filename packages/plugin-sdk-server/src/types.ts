@@ -18,6 +18,16 @@ export type ImageInfo = {
 	readonly height?: number
 }
 
+/**
+ * Byte range for {@link ResourceAPI.readFile}: `start` inclusive (default
+ * 0), `end` exclusive (default end of file). Hosts clamp the range to the
+ * file size; a range at or past the end resolves to an empty result.
+ */
+export type ReadFileRange = {
+	readonly start?: number
+	readonly end?: number
+}
+
 /** Video probe result. */
 export type VideoInfo = {
 	readonly width?: number
@@ -43,8 +53,17 @@ export type ResourceAPI = {
 	readonly logError: (message: string, data?: Record<string, unknown>) => void
 	/** List all regular-file names (flat list), sorted. */
 	readonly listFiles: () => Promise<readonly string[]>
-	/** Read a regular file relative to the resource root. */
-	readonly readFile: (path: string) => Promise<Uint8Array>
+	/**
+	 * Read a regular file relative to the resource root.
+	 *
+	 * Without `range` the whole file is returned; hosts may reject
+	 * oversized full reads — pass a range (or use `readFileChunks` from
+	 * `@hoardodile/plugin-sdk-server/helpers`) for large files.
+	 */
+	readonly readFile: (
+		path: string,
+		range?: ReadFileRange,
+	) => Promise<Uint8Array>
 	/**
 	 * Return the byte size of `path` without reading the file contents.
 	 * Resolves to `undefined` when the file does not exist or the artifact

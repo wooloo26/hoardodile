@@ -28,7 +28,11 @@ function createStubApi(overrides: Partial<ResourceAPI> = {}): ResourceAPI {
 		logWarn() {},
 		logError() {},
 		listFiles: async () => ["a.jpg", "b.jpg"],
-		readFile: async () => new Uint8Array([1, 2, 3, 4, 250]),
+		readFile: async (_path, range) => {
+			const bytes = new Uint8Array([1, 2, 3, 4, 250])
+			if (range === undefined) return bytes
+			return bytes.slice(range.start ?? 0, range.end)
+		},
 		statFile: async () => ({ sizeBytes: 42 }),
 		probeImage: async () => ({ width: 10, height: 20 }),
 		probeVideo: async () => undefined,
@@ -152,6 +156,18 @@ describe("plugin sandbox", () => {
 		await expect(plugin?.detect(api)).resolves.toEqual({
 			ok: false,
 			reasons: ["api said: no such file"],
+		})
+	})
+
+	test("byte-range arguments cross the RPC boundary", async () => {
+		sandbox = createPluginSandbox()
+		const plugin = await sandbox.loadPlugin({
+			id: "range",
+			mainPath: fixture("range-plugin.mjs"),
+			eager: true,
+		})
+		await expect(plugin?.sourceMeta?.(createStubApi())).resolves.toEqual({
+			bytes: [2, 3, 4],
 		})
 	})
 

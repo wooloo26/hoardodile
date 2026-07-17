@@ -34,6 +34,7 @@ function mockZipView(
 		artifactPath: "/fake/source.hoard",
 		listEntries: async () => ["clip.mp4"],
 		readEntry: async () => Buffer.alloc(0),
+		readEntrySlice: async () => Buffer.alloc(0),
 		openEntryStream: async () => ({ stream, size: 100 }),
 		withMaterializedEntry: async (_rel, fn) => fn("/tmp/clip.mp4"),
 		withSeekableEntry: async (_rel, fn) => fn("/tmp/clip.mp4"),
