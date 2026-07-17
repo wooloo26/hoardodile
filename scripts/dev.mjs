@@ -1,6 +1,6 @@
 import { execSync, spawn } from "node:child_process"
-import { existsSync, readdirSync, readFileSync } from "node:fs"
-import { dirname, join, resolve } from "node:path"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { basename, dirname, join, resolve } from "node:path"
 import process from "node:process"
 import { fileURLToPath } from "node:url"
 
@@ -65,6 +65,36 @@ function pluginNamesFromEnv() {
 		.filter((s) => s.length > 0)
 }
 
+/**
+ * Resolve a DEV_PLUGINS entry that is not an in-repo plugin name as a path to
+ * an external plugin repository (absolute, or relative to the workspace root).
+ * The directory must contain a manifest.json. Returns undefined when the entry
+ * is not a usable external plugin directory.
+ */
+function externalPluginFromPath(entry) {
+	const dirPath = resolve(WORKSPACE_ROOT, entry)
+	if (!existsSync(dirPath) || !statSync(dirPath).isDirectory()) return undefined
+	const manifestPath = join(dirPath, "manifest.json")
+	if (!existsSync(manifestPath)) return undefined
+	try {
+		const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"))
+		let hasWatch = false
+		const pkgPath = join(dirPath, "package.json")
+		if (existsSync(pkgPath)) {
+			const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"))
+			hasWatch = typeof pkg.scripts?.watch === "string"
+		}
+		return {
+			name: basename(dirPath),
+			label: manifest.name ?? basename(dirPath),
+			distPath: join(dirPath, "dist"),
+			external: { dirPath, hasWatch },
+		}
+	} catch {
+		return undefined
+	}
+}
+
 function selectPlugins(allPlugins) {
 	const fromEnv = pluginNamesFromEnv()
 	if (fromEnv === undefined) {
@@ -77,6 +107,11 @@ function selectPlugins(allPlugins) {
 		const found = allPlugins.find((pl) => pl.name === name)
 		if (found) {
 			selected.push(found)
+			continue
+		}
+		const external = externalPluginFromPath(name)
+		if (external !== undefined) {
+			selected.push(external)
 		} else {
 			console.warn(`[dev] unknown plugin: ${name}`)
 		}
@@ -93,15 +128,38 @@ function buildServices(selectedPlugins) {
 	})
 
 	for (const pl of selectedPlugins) {
-		svcs.push({
-			name: `plugin:${pl.name}`,
-			command: `pnpm -F @hoardodile/plugin-${pl.name} watch`,
-		})
+		if (pl.external !== undefined) {
+			if (!pl.external.hasWatch) {
+				console.log(
+					`[dev] ${pl.name}: no watch script found, loading ${pl.distPath} without a watcher.`,
+				)
+				continue
+			}
+			svcs.push({
+				name: `plugin:${pl.name}`,
+				command: `pnpm --dir "${pl.external.dirPath}" watch`,
+			})
+		} else {
+			svcs.push({
+				name: `plugin:${pl.name}`,
+				command: `pnpm -F @hoardodile/plugin-${pl.name} watch`,
+			})
+		}
 	}
 
 	// file is the fallback builtin; only it should use BUILTIN_PATH
 	const filePlugin = selectedPlugins.find((p) => p.name === "file")
 	const devPlugins = selectedPlugins.filter((p) => p.name !== "file")
+
+	// Extra dist directories from the environment are appended to the mapping:
+	// the server loads them as-is, but no watcher is started for them.
+	const extraDevPaths = (process.env.DEV_PLUGIN_PATHS ?? "")
+		.split(",")
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0)
+	const devPluginPaths = [
+		...new Set([...devPlugins.map((pl) => pl.distPath), ...extraDevPaths]),
+	]
 
 	const serverEnv = {
 		STORAGE_ROOT:
@@ -115,9 +173,7 @@ function buildServices(selectedPlugins) {
 			(filePlugin !== undefined
 				? filePlugin.distPath
 				: resolve(WORKSPACE_ROOT, "packages", "plugin-file", "dist")),
-		DEV_PLUGIN_PATHS:
-			process.env.DEV_PLUGIN_PATHS ??
-			devPlugins.map((pl) => pl.distPath).join(","),
+		DEV_PLUGIN_PATHS: devPluginPaths.join(","),
 	}
 
 	svcs.push({
@@ -136,14 +192,18 @@ function showHelp() {
 		"Usage:",
 		"  pnpm dev",
 		"  DEV_PLUGINS=gallery,manga pnpm dev",
+		"  DEV_PLUGINS=C:/path/to/my-plugin pnpm dev",
 		"",
 		"Environment:",
-		"  DEV_PLUGINS          Comma-separated plugin names to develop (no plugin watches when unset).",
+		"  DEV_PLUGINS          Comma-separated plugin names or external plugin directories to",
+		"                       develop (no plugin watches when unset). External directories must",
+		"                       contain a manifest.json; their `watch` script runs when present.",
+		"  DEV_PLUGIN_PATHS     Extra dev plugin dist directories, appended to the DEV_PLUGINS",
+		"                       mapping (loaded by the server as-is, no watcher started).",
 		"  STORAGE_ROOT         Storage root for the dev server.",
 		"  HOST                 Bind host for the dev server.",
 		"  APP_WEB_ROOT         Pre-built web assets directory.",
 		"  BUILTIN_PATH         Builtin plugin directory.",
-		"  DEV_PLUGIN_PATHS     Dev plugin directories (overrides DEV_PLUGINS mapping).",
 	].join("\n")
 	console.log(HELP)
 }

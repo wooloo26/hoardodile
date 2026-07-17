@@ -9,8 +9,8 @@
 		"./main": "./src/main.ts"
 	},
 	"scripts": {
-		"build": "node ../../scripts/build-plugin.mjs",
-		"watch": "node ../../scripts/build-plugin.mjs --watch",
+		"build": "hoardodile-plugin-build",
+		"watch": "hoardodile-plugin-build --watch",
 		"lint": "tsc --noEmit",
 		"test": "vitest run"
 	},

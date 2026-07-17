@@ -14,16 +14,17 @@ Privacy-first, self-hosted archiving app for personal media and documents (galle
 
 Prerequisites: Node.js 24 and pnpm via corepack (`corepack enable`; the version is pinned by the `packageManager` field), then `pnpm install`.
 
-- `pnpm dev` — start web + server + selected plugin watches. Set `DEV_PLUGINS=gallery,manga` to select plugins; when omitted, no plugin watches start.
+- `pnpm dev` — start web + server + selected plugin watches. Set `DEV_PLUGINS=gallery,manga` to select plugins; entries may also be paths to external plugin directories (their `watch` script is started when present); when omitted, no plugin watches start. `DEV_PLUGIN_PATHS` lists extra pre-built dist dirs to load (appended, no watchers).
 - `pnpm test` / `pnpm lint` — run all tests / biome check + per-package `tsc --noEmit`. Both use Turborepo under the hood; repeat runs hit the local cache and are near-instant.
 - `pnpm format` — run biome check + format with write.
 - `pnpm build` — build all plugins, then the server (embeds web dist, plugin dists, migrations, assets).
 - `pnpm db:generate` — generate Drizzle migrations from domain schemas.
+- `pnpm sdks:pack` — pack the plugin SDK packages into `tmp/sdks/*.tgz` for out-of-tree plugin development (rewrites `workspace:*`/`catalog:` specs).
 - `pnpm -F @hoardodile/server setup:dev` — one-shot setup: write admin password and optionally restore a snapshot (`RESTORE_FROM`). The production binary exposes `app-server-setup`.
 - `pnpm -F @hoardodile/docs dev` — run the Nextra docs site locally (`http://localhost:3000`).
 - Git hooks (lefthook): commit-msg runs commitlint (Conventional Commits enforced); pre-commit runs lint-staged (biome on staged files) + `scripts/guard-versions.mjs --staged`; pre-push runs `pnpm lint` + `pnpm test` + `pnpm version:check`.
 - CI: `.github/workflows/ci.yml` runs `pnpm lint`, `pnpm test`, `pnpm licenses:check`, `pnpm version:check`, and `pnpm build` in the `check` job, plus a Playwright `e2e` job — all on an ubuntu + windows matrix, on push/PR to `main`. Releases are cut locally with `pnpm release` only (no CI release workflow). Dependabot (`.github/dependabot.yml`) opens weekly grouped PRs for npm and GitHub Actions updates; `typescript` major bumps are ignored because `apps/docs` must stay on TS 5.9 (nextra's twoslash peer allows only `^5.5 || ^6.0`), so docs pins its own `next`/`typescript` instead of the catalog. The docs site is deployed to GitHub Pages by `.github/workflows/docs.yml` on pushes to `main` that touch `apps/docs/` (requires repo Settings → Pages → Source = "GitHub Actions"; served at the custom domain `docs.hoardodile.com` via `apps/docs/public/CNAME`).
-- **Versioning:** one unified app version, owned by the root `package.json`. Cut releases with `pnpm release` (release-it): it bumps the version, syncs every `plugins/*/manifest.json` via `scripts/sync-version.mjs`, then commits, tags, pushes, and creates the GitHub Release (needs a `GITHUB_TOKEN` env var). Release notes are generated from Conventional Commits via `@release-it/conventional-changelog`, which also recommends the bump level. Never hand-edit a `version` field — `pnpm version:check` enforces the sync in CI and pre-push. Other workspace packages stay `0.0.0` (never published). The `plugin-sdk-*` packages are intended for future npm publication — keep their public API surface deliberate.
+- **Versioning:** one unified app version, owned by the root `package.json`. Cut releases with `pnpm release` (release-it): it bumps the version, syncs the official plugin manifests via `scripts/sync-version.mjs`, then commits, tags, pushes, and creates the GitHub Release (needs a `GITHUB_TOKEN` env var). Release notes are generated from Conventional Commits via `@release-it/conventional-changelog`, which also recommends the bump level. Never hand-edit a `version` field — `pnpm version:check` enforces the sync in CI and pre-push. Other workspace packages stay `0.0.0` (never published). The `plugin-sdk-*` packages are intended for future npm publication — keep their public API surface deliberate.
 
 The server has no CLI flags; all runtime configuration comes from environment variables validated by `apps/server/src/config/env.ts`.
 
@@ -82,11 +83,11 @@ packages/
   ui/         shadcn/ui + Radix + Base UI primitives, theme, hooks, components
   plugin-file/        Built-in fallback plugin for unknown file types
   plugin-sdk-types/   Shared plugin runtime types
-  plugin-sdk-server/  Server-side plugin contract + helpers
+  plugin-sdk-server/  Server-side plugin contract + helpers + build CLI (`hoardodile-plugin-build`)
   plugin-sdk-web/     Framework-agnostic iframe/postMessage runtime
   plugin-sdk-react/   React bindings for iframe plugins
-plugins/       Content plugins (gallery, manga, novel)
-scripts/       Root dev/build/license/guard scripts
+plugins/       Content plugins (gallery, manga, novel) + template (starting point for third-party plugins; never bundled into the server build)
+scripts/       Root dev/license/guard/version scripts
 ```
 
 ## Architecture
@@ -94,7 +95,7 @@ scripts/       Root dev/build/license/guard scripts
 - **Domain-driven:** each domain follows `schema.ts` → `repo.ts` → `service.ts` → `router.ts`; plugin-exposing domains add `plugin.ts`.
 - **Service factory:** `create*Service(deps)` — DI via closures, no classes.
 - **Plugins:** `manifest.json` (UUID, permissions, i18n, UI templates) + server `main.js` (`createPlugin(api)`) + client iframe renderer.
-  - Server plugins implement `ContentPlugin` from `@hoardodile/plugin-sdk-server`; prefer `definePlugin()` for a declarative, composable definition.
+  - Server plugins default-export a declarative `definePlugin()` definition (`detect` plus optional hooks) from `@hoardodile/plugin-sdk-server`. Third-party plugins live out of tree and join the dev loop via `DEV_PLUGINS` paths — see `plugins/template` and the docs' Plugin Development page.
   - Client plugins run inside a sandboxed iframe. Framework-agnostic code uses `@hoardodile/plugin-sdk-web`; React plugins use `@hoardodile/plugin-sdk-react` (`createPluginRoot`, `usePluginAPI`, `useVisibility`).
 - **Storage:** all server paths come from `apps/server/src/infra/storage/paths.ts`.
   - `{storage}/app.sqlite` — live runtime DB, not synced.

@@ -1,0 +1,134 @@
+# Plugin Development
+
+hoardodile content plugins can live **outside the main repository** — in a separate directory or their own git repo — and still take part in the dev loop. This page covers the plugin contract and the out-of-tree workflow. For an architecture overview see [Plugins](/plugins).
+
+## Anatomy
+
+A content plugin is a directory with:
+
+- **`manifest.json`** — UUID `id`, `name`, `description`, `version`, `permissions` (`sourceMeta`, `searchMeta`, `danmaku`, `message`), optional `i18n` strings and `ui` templates
+- **`src/main.ts`** (optional) — server side, built to `dist/main.js` and loaded by the server via dynamic import
+- **`index.html` + `src/render.tsx`** (optional) — client side, built to `dist/` and rendered inside a sandboxed iframe
+
+The build produces `dist/{manifest.json, main.js, index.html, assets/*}`.
+
+## Server contract
+
+`src/main.ts` default-exports a declarative definition via `definePlugin()` from `@hoardodile/plugin-sdk-server`:
+
+```ts
+import { definePlugin, hasExt } from "@hoardodile/plugin-sdk-server"
+
+export default definePlugin({
+	detect: hasExt(new Set([".hdtpl"])),
+	sourceMeta: async (api) => ({ files: await api.listFiles() }),
+})
+```
+
+| Hook         | Required | Purpose                                                            |
+| ------------ | -------- | ------------------------------------------------------------------ |
+| `detect`     | yes      | Decide whether the plugin applies to a resource                    |
+| `sourceMeta` | no       | Source metadata shown by the host (requires `sourceMeta` permission) |
+| `searchMeta` | no       | Search facets (requires `searchMeta` permission)                   |
+| `coverLocal` | no       | Resolve a local cover file                                         |
+| `listFiles`  | no       | Custom typed file list (host falls back to bare filenames)         |
+
+Every hook receives a `ResourceAPI` (`listFiles`, `readFile`, `statFile`, `probeImage`/`probeVideo`/`probeAudio`, `isAnimatedImage`, cover writers, scoped logging). Composable detectors (`hasExt`, `hasName`, `minFiles`, `all`, `any`, `not`) and probe helpers (`@hoardodile/plugin-sdk-server/helpers`) cover the common cases; `createResourceAPIFixture` builds a stub `ResourceAPI` for unit tests.
+
+## Client contract
+
+React plugins use `@hoardodile/plugin-sdk-react`; framework-agnostic ones use `@hoardodile/plugin-sdk-web` directly:
+
+```tsx
+// src/hooks.ts — typed API pair, schema shared with the server side
+export const { PluginAPIProvider, usePluginAPI } = definePluginAPI<MySchema>()
+
+// src/render.tsx
+createPluginRoot({ provider: PluginAPIProvider, render: MyView })
+```
+
+The iframe is sandboxed (opaque origin, no cookies) and talks to the host over `postMessage`. `usePluginAPI()` exposes the resource context (`api.resource.sourceMeta`, `fileToken`, …), file URLs (`resolveFileUrl`), preferences/cache, messages/danmaku (with the matching permissions), and reactive hooks. `useVisibility()` reports whether the iframe is on screen.
+
+## Build tooling
+
+The `hoardodile-plugin-build` CLI ships with `@hoardodile/plugin-sdk-server`:
+
+```jsonc
+// package.json
+{
+	"scripts": {
+		"build": "hoardodile-plugin-build",
+		"watch": "hoardodile-plugin-build --watch"
+	}
+}
+```
+
+It builds the client (Vite + React + Tailwind v4, relative asset URLs), the server bundle (`dist/main.js`, node24, fully self-contained), and copies `manifest.json` into `dist/`. `--watch` rebuilds all three on change.
+
+## Start from the template
+
+`plugins/template` is a minimal end-to-end example (detect → sourceMeta → iframe render) that CI keeps compiling:
+
+1. Copy `plugins/template` to your own location, e.g. `C:/dev/my-plugin`.
+2. **Generate a fresh UUID** for `manifest.json` → `id` (`node -e "console.log(crypto.randomUUID())"`). Never ship the template's UUID.
+3. In the hoardodile repo, pack the SDKs: `pnpm sdks:pack` → tarballs land in `<hoardodile>/tmp/sdks/`. Plain `file:` directory dependencies do **not** work: the SDK manifests use `workspace:*`/`catalog:` specs that only resolve inside the monorepo, while `pnpm pack` rewrites them to concrete versions.
+4. In your plugin's `package.json`, replace the `workspace:*` SDK deps with the tarballs and the `catalog:` versions with concrete ones (note the added `@types/react-dom`):
+
+```jsonc
+{
+	"dependencies": {
+		"@hoardodile/consts": "file:<hoardodile>/tmp/sdks/hoardodile-consts-0.0.0.tgz",
+		"@hoardodile/plugin-sdk-react": "file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-react-0.0.0.tgz",
+		"@hoardodile/plugin-sdk-server": "file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-server-0.0.0.tgz",
+		"@hoardodile/plugin-sdk-types": "file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-types-0.0.0.tgz",
+		"@hoardodile/plugin-sdk-web": "file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-web-0.0.0.tgz",
+		"react": "^19.2.7"
+	},
+	"devDependencies": {
+		"@types/react": "^19.2.17",
+		"@types/react-dom": "^19.2.3",
+		"jsdom": "^29.1.1",
+		"typescript": "^7.0.2",
+		"vite": "^8.1.5",
+		"vitest": "^4.1.10"
+	}
+}
+```
+
+5. Add a `pnpm-workspace.yaml` to your repo root. It makes your repo its own workspace root and redirects the cross-SDK `0.0.0` specs (created by packing) to the sibling tarballs:
+
+```yaml
+overrides:
+  '@hoardodile/consts': file:<hoardodile>/tmp/sdks/hoardodile-consts-0.0.0.tgz
+  '@hoardodile/plugin-sdk-react': file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-react-0.0.0.tgz
+  '@hoardodile/plugin-sdk-server': file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-server-0.0.0.tgz
+  '@hoardodile/plugin-sdk-types': file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-types-0.0.0.tgz
+  '@hoardodile/plugin-sdk-web': file:<hoardodile>/tmp/sdks/hoardodile-plugin-sdk-web-0.0.0.tgz
+```
+
+6. `pnpm install`, then `pnpm build` — you should get `dist/` with `main.js`, `index.html`, and `assets/`.
+
+The template's `tsconfig.json` is standalone (no `extends` into the monorepo), so it works as-is in an external repo. The `plugin-sdk-*` packages are not published to npm yet; packed tarballs + overrides are the supported way to consume them. Re-run `pnpm sdks:pack` (and `pnpm install` in your repo) whenever you pull SDK changes.
+
+## Join the dev loop
+
+`pnpm dev` accepts external plugin directories in `DEV_PLUGINS` — names of in-repo plugins and filesystem paths can be mixed:
+
+```ini
+# hoardodile/.env
+DEV_PLUGINS=gallery,C:/dev/my-plugin
+```
+
+For each path entry, the dev script starts the plugin's own `watch` script (when its `package.json` has one) and points the server at its `dist/`. Alternatively, `DEV_PLUGIN_PATHS` lists already-built `dist` directories to load without starting a watcher; entries are appended to the `DEV_PLUGINS` mapping.
+
+Dev plugins are always enabled and **override an installed plugin with the same UUID**, so you can iterate on a replacement for a bundled plugin by reusing its UUID.
+
+Reload expectations:
+
+- **Client code** (`render.tsx`, views, CSS) — served with `no-cache`; reload the page or reopen the preview.
+- **`manifest.json`** — re-copied to `dist/` by the watcher; use **Settings → Plugins → Rescan** or restart the server.
+- **Server code** (`main.ts`) — rebuilt by the watcher, but the server caches ESM imports; restart the dev server to pick changes up.
+
+## Ship it
+
+Zip the **contents** of `dist/` (with `manifest.json` at the zip root) and upload it in **Settings → Plugins**. The app validates the manifest, installs into `{storage}/local/plugins/<uuid>/`, and rescans automatically.

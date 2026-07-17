@@ -1,13 +1,9 @@
 {
-	"name": "@hoardodile/plugin-novel",
+	"name": "@hoardodile/plugin-template",
 	"version": "0.0.0",
 	"private": true,
 	"license": "GPL-3.0",
 	"type": "module",
-	"exports": {
-		"./main": "./src/main.ts",
-		".": "./src/index.ts"
-	},
 	"scripts": {
 		"build": "hoardodile-plugin-build",
 		"watch": "hoardodile-plugin-build --watch",
@@ -15,24 +11,15 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@hoardodile/consts": "workspace:*",
 		"@hoardodile/plugin-sdk-react": "workspace:*",
 		"@hoardodile/plugin-sdk-server": "workspace:*",
 		"@hoardodile/plugin-sdk-types": "workspace:*",
-		"@hoardodile/plugin-sdk-web": "workspace:*",
-		"@hoardodile/ui": "workspace:*",
-		"lucide-react": "catalog:",
 		"react": "catalog:"
 	},
 	"devDependencies": {
-		"@testing-library/jest-dom": "catalog:",
-		"@testing-library/react": "catalog:",
-		"@tailwindcss/vite": "catalog:",
-		"@types/node": "catalog:",
 		"@types/react": "catalog:",
-		"@vitejs/plugin-react": "catalog:",
+		"@types/react-dom": "catalog:",
 		"jsdom": "catalog:",
-		"tailwindcss": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"

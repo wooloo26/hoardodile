@@ -3,5 +3,6 @@ export default {
 	"getting-started": "Getting Started",
 	configuration: "Configuration",
 	plugins: "Plugins",
+	"plugin-development": "Plugin Development",
 	development: "Development",
 }

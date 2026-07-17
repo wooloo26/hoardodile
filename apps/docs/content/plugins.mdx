@@ -13,10 +13,12 @@ Content types are handled by plugins. Three ship built-in, and unknown file type
 A content plugin is made of three parts:
 
 - **`manifest.json`** — declares the plugin's UUID, permissions, i18n strings, and UI templates
-- **Server side** — a `main.js` exposing `createPlugin(api)`, implementing the `ContentPlugin` contract from `@hoardodile/plugin-sdk-server` (prefer `definePlugin()` for a declarative definition)
+- **Server side** — a `main.js` default-exporting a declarative `definePlugin()` definition (`detect` plus optional metadata hooks) from `@hoardodile/plugin-sdk-server`
 - **Client side** — a renderer that runs inside a sandboxed iframe and talks to the host app over `postMessage`
 
 The server loads each plugin's `dist/main.js` via dynamic import. On the client, framework-agnostic plugins use `@hoardodile/plugin-sdk-web`; React plugins use `@hoardodile/plugin-sdk-react` (`createPluginRoot`, `usePluginAPI`, `useVisibility`).
+
+To build your own plugin, see [Plugin Development](/plugin-development) and the `plugins/template` starting point.
 
 ## Plugin SDK packages
 

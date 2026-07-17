@@ -27,6 +27,7 @@
 		"lint": "biome check . && turbo run lint",
 		"format": "biome check --write",
 		"db:generate": "pnpm -F @hoardodile/server db:generate",
+		"sdks:pack": "node scripts/pack-sdks.mjs",
 		"deps:update": "pnpm up -L && pnpm -r up -L",
 		"licenses:check": "node scripts/generate-licenses.mjs --check",
 		"licenses:generate": "node scripts/generate-licenses.mjs",

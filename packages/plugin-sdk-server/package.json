@@ -4,6 +4,9 @@
 	"private": true,
 	"license": "GPL-3.0",
 	"type": "module",
+	"bin": {
+		"hoardodile-plugin-build": "./bin/build-plugin.mjs"
+	},
 	"exports": {
 		".": "./src/index.ts",
 		"./helpers": "./src/helpers.ts",
@@ -15,7 +18,10 @@
 	},
 	"dependencies": {
 		"@hoardodile/consts": "workspace:*",
-		"@hoardodile/plugin-sdk-types": "workspace:*"
+		"@hoardodile/plugin-sdk-types": "workspace:*",
+		"@tailwindcss/vite": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"vite": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

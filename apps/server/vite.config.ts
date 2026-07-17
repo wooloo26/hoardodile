@@ -79,6 +79,9 @@ function copyPluginDistPlugin(): Plugin {
 				return
 			}
 			for (const name of readdirSync(pluginsRoot)) {
+				// The template plugin is a starting point for third-party
+				// plugins, not a shipped builtin — never bundle it.
+				if (name === "template") continue
 				const pluginDir = path.join(pluginsRoot, name)
 				const pluginDist = path.join(pluginDir, "dist")
 				if (!statSync(pluginDir).isDirectory()) continue
