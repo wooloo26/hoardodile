@@ -2,7 +2,11 @@
 
 [简体中文](README.zh-CN.md) | [Docs](https://docs.hoardodile.com/)
 
+[![Release](https://img.shields.io/github/v/release/wooloo26/hoardodile)](https://github.com/wooloo26/hoardodile/releases)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+
+[![Node.js >=24](https://img.shields.io/badge/node-%3E%3D24-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![pnpm](https://img.shields.io/badge/pnpm-11-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 
 hoardodile is a privacy-first, self-hosted archiving app for your personal media and documents. It is single-user by design, stores everything on your own machine, and keeps immutable, versioned snapshots of your archive so you can sync and migrate hosts with any file-sync tool.
 
