@@ -11,13 +11,10 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 		defineHandler(
 			pluginMethods.listDanmaku,
 			z.object({
+				// Filter keys are plugin-defined vocabulary; matching is
+				// generic strict equality against the anchor's data.
 				filter: z
-					.object({
-						kind: z.string().optional(),
-						filename: z.string().optional(),
-						page: z.number().optional(),
-						paragraph: z.number().optional(),
-					})
+					.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
 					.optional(),
 			}),
 			async (ctx, params) => {

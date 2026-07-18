@@ -8,16 +8,15 @@ export type ResourceId = string & { readonly __brand: "ResourceId" }
 export type DanmakuMode = "scroll" | "top" | "bottom"
 
 /**
- * Client-side danmaku list filter, matched against the anchor's
- * plugin-defined `data` fields (e.g. `{ kind: "videoTime", filename }`).
- * Declared fields must all equal the anchor data's values.
+ * Client-side danmaku list filter: every entry is matched by strict
+ * equality against the same key in the danmaku's anchor `data`. Keys are
+ * plugin-defined vocabulary (e.g. `{ kind: "videoTime", filename }` in
+ * the gallery plugin) — the SDK only defines the matching semantics,
+ * not which keys exist.
  */
-export type DanmakuListFilter = {
-	readonly kind?: string
-	readonly filename?: string
-	readonly page?: number
-	readonly paragraph?: number
-}
+export type DanmakuListFilter = Readonly<
+	Record<string, string | number | boolean>
+>
 
 /** Web plugin anchor for messages and danmaku. */
 export type ResAnchor = {

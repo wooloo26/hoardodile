@@ -120,12 +120,10 @@ function useDanmakuList(host: Host, filter?: DanmakuListFilter) {
 		method: "listDanmaku",
 		params: { filter },
 		invalidateKey: "danmaku:invalidate",
-		extraDeps: [
-			filter?.kind,
-			filter?.filename,
-			filter?.page,
-			filter?.paragraph,
-		],
+		// The filter object is a fresh literal on every render; a stable
+		// serialization keeps the effect from refetching in a loop while
+		// still refetching when any filter value actually changes.
+		extraDeps: [filter === undefined ? undefined : JSON.stringify(filter)],
 	})
 }
 
