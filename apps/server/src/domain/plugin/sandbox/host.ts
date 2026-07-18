@@ -38,8 +38,9 @@ export type PluginSandboxConfig = {
 	readonly maxOldSpaceMb: number
 	/**
 	 * Max worker spawns per plugin within {@link respawnWindowMs} before the
-	 * plugin is degraded (all invocations reject) until the next rescan or
-	 * disable/enable cycle.
+	 * plugin is degraded (all invocations reject). The plugin recovers
+	 * automatically once the crash window slides clean; `unloadPlugin`
+	 * (disable or rescan) resets the budget immediately.
 	 */
 	readonly maxRespawns: number
 	readonly respawnWindowMs: number
@@ -286,9 +287,19 @@ export function createPluginSandbox(
 			throw new Error(`plugin ${state.id} sandbox disposed`)
 		}
 		if (state.degraded) {
-			throw new Error(
-				`plugin ${state.id} unavailable: worker crashed repeatedly`,
+			// Auto-recover once every crash in the budget has aged out of the
+			// respawn window — spawnAndLoad would accept a spawn again anyway.
+			const now = Date.now()
+			state.respawnTimes = state.respawnTimes.filter(
+				(t) => now - t < config.respawnWindowMs,
 			)
+			if (state.respawnTimes.length === 0) {
+				state.degraded = false
+			} else {
+				throw new Error(
+					`plugin ${state.id} unavailable: worker crashed repeatedly`,
+				)
+			}
 		}
 		await ensureLoaded(state)
 		const worker = state.worker

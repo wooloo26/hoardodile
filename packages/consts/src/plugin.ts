@@ -14,7 +14,8 @@ export const PLUGIN_READ_FILE_MAX_BYTES = 128 * 1024 * 1024
 /**
  * Kill a plugin worker when an invocation neither returns nor shows
  * resource-API activity for this long. Hooks that keep calling the API
- * reset the watchdog continuously and never trip it.
+ * reset the watchdog continuously and never trip it; time spent inside a
+ * host-side API call does not count as inactivity.
  */
 export const PLUGIN_WATCHDOG_TIMEOUT_MS = 60_000
 
@@ -26,7 +27,8 @@ export const PLUGIN_WORKER_MAX_OLD_SPACE_MB = 512
 
 /**
  * Max worker spawns per plugin within {@link PLUGIN_WORKER_RESPAWN_WINDOW_MS}
- * before the plugin is degraded until the next rescan.
+ * before the plugin is degraded. It recovers automatically once the crash
+ * window slides clean, or immediately on disable/rescan.
  */
 export const PLUGIN_WORKER_MAX_RESPAWNS = 3
 

@@ -288,7 +288,27 @@ describe("plugin sandbox", () => {
 		await expect(plugin.detect(createStubApi())).rejects.toThrow(/exited/i)
 		// Second spawn is still within budget and crashes again.
 		await expect(plugin.detect(createStubApi())).rejects.toThrow(/exited/i)
-		// Budget exhausted — the plugin is degraded until rescan/enable.
+		// Budget exhausted — the plugin is degraded while the window is open.
 		await expect(plugin.detect(createStubApi())).rejects.toThrow(/unavailable/i)
+	})
+
+	test("a degraded plugin recovers once the crash window slides clean", async () => {
+		// Pin the clock — crash timing must not depend on machine load.
+		const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000)
+		sandbox = createPluginSandbox(
+			fastConfig({ maxRespawns: 2, respawnWindowMs: 300 }),
+		)
+		const plugin = await sandbox.loadPlugin({
+			id: "exit",
+			mainPath: fixture("exit-plugin.mjs"),
+			eager: true,
+		})
+		if (plugin === undefined) throw new Error("plugin load failed")
+		await expect(plugin.detect(createStubApi())).rejects.toThrow(/exited/i)
+		await expect(plugin.detect(createStubApi())).rejects.toThrow(/exited/i)
+		await expect(plugin.detect(createStubApi())).rejects.toThrow(/unavailable/i)
+		// The window slides clean — the next call gets a fresh worker again.
+		nowSpy.mockReturnValue(1_000_000 + 301)
+		await expect(plugin.detect(createStubApi())).rejects.toThrow(/exited/i)
 	})
 })
