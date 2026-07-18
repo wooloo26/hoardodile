@@ -14,6 +14,7 @@ import type {
 } from "@hoardodile/schemas"
 import sharp from "sharp"
 import type { PluginHooks } from "src/domain/plugin/hooks.ts"
+import { createConcurrencyLimiter } from "src/infra/concurrency-limiter.ts"
 import { createKeyedTaskQueue } from "src/infra/keyed-task-queue.ts"
 import { probeImageSource, probeVideo } from "src/infra/probes/probes.ts"
 import { fitInsideArea } from "src/infra/thumb/pipeline.ts"
@@ -26,6 +27,13 @@ import {
 } from "./repo.ts"
 import { aggregateSourceFiles } from "./source-meta.ts"
 import type { SourceArtifactView } from "./source-view.ts"
+
+/**
+ * Upper bound on meta rebuilds running at once across all resources.
+ * Each rebuild fans out RPC + host probes on a single per-plugin worker,
+ * so bursts are queued rather than parallel.
+ */
+const MAX_CONCURRENT_META_REBUILDS = 4
 
 export type ResMetaOpsDeps = {
 	readonly repo: ResRepository
@@ -76,6 +84,10 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 	const fileStatsQueue = createKeyedTaskQueue()
 	const pluginMetaQueue = createKeyedTaskQueue()
 	const coverMetaQueue = createKeyedTaskQueue()
+	// The keyed queues serialize per resource but not across resources — a
+	// cold-start page list can enqueue hundreds of rebuilds at once. Bound
+	// the total so they don't stampede the single per-plugin worker.
+	const rebuildSlots = createConcurrencyLimiter(MAX_CONCURRENT_META_REBUILDS)
 
 	// -- Unified patch + notify wrapper --
 
@@ -428,31 +440,37 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 
 	function enqueueFileStatsRebuild(id: string): void {
 		fileStatsQueue.enqueue(id, () =>
-			rebuildFileStats(id).catch((err) => {
-				console.warn(
-					`[meta-ops] fileStats rebuild for ${id} failed: ${err instanceof Error ? err.message : String(err)}`,
-				)
-			}),
+			rebuildSlots
+				.run(() => rebuildFileStats(id))
+				.catch((err) => {
+					console.warn(
+						`[meta-ops] fileStats rebuild for ${id} failed: ${err instanceof Error ? err.message : String(err)}`,
+					)
+				}),
 		)
 	}
 
 	function enqueuePluginMetaRebuild(id: string): void {
 		pluginMetaQueue.enqueue(id, () =>
-			rebuildPluginMeta(id).catch((err) => {
-				console.warn(
-					`[meta-ops] pluginMeta rebuild for ${id} failed: ${err instanceof Error ? err.message : String(err)}`,
-				)
-			}),
+			rebuildSlots
+				.run(() => rebuildPluginMeta(id))
+				.catch((err) => {
+					console.warn(
+						`[meta-ops] pluginMeta rebuild for ${id} failed: ${err instanceof Error ? err.message : String(err)}`,
+					)
+				}),
 		)
 	}
 
 	function enqueueCoverMetaRebuild(id: string): void {
 		coverMetaQueue.enqueue(id, () =>
-			rebuildCoverMeta(id).catch((err) => {
-				console.warn(
-					`[meta-ops] coverMeta rebuild for ${id} failed: ${err instanceof Error ? err.message : String(err)}`,
-				)
-			}),
+			rebuildSlots
+				.run(() => rebuildCoverMeta(id))
+				.catch((err) => {
+					console.warn(
+						`[meta-ops] coverMeta rebuild for ${id} failed: ${err instanceof Error ? err.message : String(err)}`,
+					)
+				}),
 		)
 	}
 

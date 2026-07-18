@@ -235,3 +235,80 @@ describe("buildResMetaOps cover meta", () => {
 		})
 	})
 })
+
+describe("buildResMetaOps global rebuild concurrency", () => {
+	test("enqueued rebuilds across resources stay within the global cap", async () => {
+		const registry = createTestRegistry()
+		const rows = new Map<string, ResRow>()
+		for (let i = 0; i < 10; i++) {
+			const id = `res-${i}`
+			rows.set(id, makeRow({ id }))
+		}
+
+		let inFlight = 0
+		let maxInFlight = 0
+		async function track<T>(fn: () => Promise<T>): Promise<T> {
+			inFlight++
+			maxInFlight = Math.max(maxInFlight, inFlight)
+			try {
+				await new Promise((resolve) => setTimeout(resolve, 5))
+				return await fn()
+			} finally {
+				inFlight--
+			}
+		}
+
+		const view = mockZipView()
+		const api: ResourceAPI = {
+			logInfo() {},
+			logWarn() {},
+			logError() {},
+			async listFiles() {
+				return ["clip.mp4"]
+			},
+			async readFile() {
+				return new Uint8Array()
+			},
+			async statFile() {
+				return { sizeBytes: 1 }
+			},
+			async probeImage() {
+				return undefined
+			},
+			async probeVideo() {
+				return undefined
+			},
+			async probeAudio() {
+				return undefined
+			},
+			async isAnimatedImage() {
+				return false
+			},
+			async setCover() {},
+			async clearCover() {},
+			async setLocalCover() {},
+		}
+		const ops = buildResMetaOps({
+			repo: {
+				findById: (id: string) => {
+					const row = rows.get(id)
+					if (row === undefined) throw new Error(`missing row ${id}`)
+					return row
+				},
+				patchMeta: () => {},
+			} as never,
+			now: () => 1,
+			pluginHooks: createTestHooks(registry),
+			createResourceAPI: () => track(async () => api),
+			resolveSourceView: () => track(async () => view),
+			findCover: async () => undefined,
+		})
+
+		// 10 resources × 3 rebuild queues — a cold-start-style burst.
+		for (const id of rows.keys()) ops.enqueueFullMetaRebuild(id)
+		await ops.drainQueue()
+
+		expect(maxInFlight).toBeGreaterThan(1)
+		expect(maxInFlight).toBeLessThanOrEqual(4)
+	})
+})
