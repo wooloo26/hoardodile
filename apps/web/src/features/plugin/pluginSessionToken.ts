@@ -5,26 +5,32 @@ const REFRESH_AFTER_MS = TOKEN_TTL_MS - 60 * 60 * 1_000
 
 type CacheEntry = { readonly token: string; readonly fetchedAt: number }
 
-let cached: CacheEntry | null = null
-let pending: Promise<string> | null = null
+// File tokens are scoped to a single resource, so the cache is keyed by
+// resId. Entries are independent: one resource's token rotating does not
+// invalidate the others.
+const cached = new Map<string, CacheEntry>()
+const pending = new Map<string, Promise<string>>()
 
-export function fetchPluginSessionToken(): Promise<string> {
+export function fetchPluginSessionToken(resId: string): Promise<string> {
 	const now = Date.now()
-	if (cached !== null && now - cached.fetchedAt < REFRESH_AFTER_MS) {
-		return Promise.resolve(cached.token)
+	const entry = cached.get(resId)
+	if (entry !== undefined && now - entry.fetchedAt < REFRESH_AFTER_MS) {
+		return Promise.resolve(entry.token)
 	}
-	if (pending !== null) return pending
-	pending = trpcQuery("resource", "pluginSessionToken")
-	pending.then(
+	const inFlight = pending.get(resId)
+	if (inFlight !== undefined) return inFlight
+	const request = trpcQuery("resource", "pluginSessionToken", { resId })
+	request.then(
 		function settleCache(token: string) {
-			cached = { token, fetchedAt: Date.now() }
+			cached.set(resId, { token, fetchedAt: Date.now() })
 		},
 		function clearPendingOnError() {
 			/* best-effort — caller handles failure via its own try/catch */
 		},
 	)
-	pending.finally(function dropPending() {
-		pending = null
+	request.finally(function dropPending() {
+		pending.delete(resId)
 	})
-	return pending
+	pending.set(resId, request)
+	return request
 }

@@ -38,6 +38,11 @@ async function protectedHttpPluginImpl(app: FastifyInstance): Promise<void> {
 		// endpoints. The regex must run against the path alone: req.url
 		// includes the query string, which would otherwise let a crafted
 		// query (?x=/files/<token>/) smuggle token auth into any route.
+		// Tokens are additionally scoped to a single resource id, which
+		// must match the route's :id param - a leaked token then only
+		// exposes that one resource, and routes without :id (e.g. trash
+		// file previews, a cookie-authenticated app feature) are not
+		// token-authenticated at all.
 		const pathname = req.url.split("?", 1)[0] ?? ""
 		const pathMatch =
 			req.method === "GET" || req.method === "HEAD"
@@ -47,7 +52,10 @@ async function protectedHttpPluginImpl(app: FastifyInstance): Promise<void> {
 			const pathToken = pathMatch[1]
 			if (pathToken !== undefined && pathToken.length > 0) {
 				const verified = await app.sessions.verifyToken(pathToken)
-				if (verified !== undefined) {
+				const routeResId = (
+					req.params as Record<string, string | undefined> | undefined
+				)?.["id"]
+				if (verified !== undefined && verified.resId === routeResId) {
 					const wildcard = (req.params as Record<string, string> | undefined)?.[
 						"*"
 					]

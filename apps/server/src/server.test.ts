@@ -161,7 +161,7 @@ describe("server", () => {
 	})
 
 	test("path token authenticates GET file routes, even with a query string", async () => {
-		const { sealed } = await built.app.sessions.createToken(86_400)
+		const { sealed } = await built.app.sessions.createToken(86_400, "res-1")
 		const res = await built.app.inject({
 			method: "GET",
 			url: `/api/resources/res-1/files/${sealed}/foo.png?download=1`,
@@ -172,8 +172,18 @@ describe("server", () => {
 		expect(res.statusCode).not.toBe(401)
 	})
 
+	test("path token scoped to one resource is rejected for another", async () => {
+		const { sealed } = await built.app.sessions.createToken(86_400, "res-1")
+		const res = await built.app.inject({
+			method: "GET",
+			url: `/api/resources/res-2/files/${sealed}/foo.png`,
+			remoteAddress: "127.0.0.1",
+		})
+		expect(res.statusCode).toBe(401)
+	})
+
 	test("path token in the query string is not honoured on GET routes", async () => {
-		const { sealed } = await built.app.sessions.createToken(86_400)
+		const { sealed } = await built.app.sessions.createToken(86_400, "res-1")
 		const res = await built.app.inject({
 			method: "GET",
 			url: `/api/cache/trash?x=/files/${sealed}/`,
@@ -183,7 +193,7 @@ describe("server", () => {
 	})
 
 	test("path token in the query string is not honoured on write routes", async () => {
-		const { sealed } = await built.app.sessions.createToken(86_400)
+		const { sealed } = await built.app.sessions.createToken(86_400, "res-1")
 		for (const url of [
 			`/api/plugin-upload?x=/files/${sealed}/`,
 			`/api/resources/res-1/cover?x=/frame/${sealed}/`,

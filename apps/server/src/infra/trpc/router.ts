@@ -173,16 +173,21 @@ export function buildDomainRouter(services: RouterServices) {
 							}
 							return report
 						}),
-					pluginSessionToken: authedProcedure.query(async ({ ctx }) => {
-						const session = await services.sessions.read(
-							ctx.req.cookies[ctx.env.SESSION_COOKIE_NAME],
-						)
-						if (session === undefined) {
-							throw new TRPCError({ code: "UNAUTHORIZED" })
-						}
-						const token = await services.sessions.createToken(86400)
-						return token.sealed
-					}),
+					pluginSessionToken: authedProcedure
+						.input(z.object({ resId: z.string().min(1) }))
+						.query(async ({ ctx, input }) => {
+							const session = await services.sessions.read(
+								ctx.req.cookies[ctx.env.SESSION_COOKIE_NAME],
+							)
+							if (session === undefined) {
+								throw new TRPCError({ code: "UNAUTHORIZED" })
+							}
+							const token = await services.sessions.createToken(
+								86400,
+								input.resId,
+							)
+							return token.sealed
+						}),
 				}),
 			),
 			character: buildCharacterRouter({

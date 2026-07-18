@@ -226,7 +226,7 @@ export function usePluginContext(opts: {
 				const preloadedCache = getCachedForPlugin(resId, pluginId)
 				const [prefEntries, sessionToken] = await Promise.all([
 					trpcQuery("pluginPreference", "listByPlugin", { pluginId }),
-					fetchPluginSessionToken(),
+					fetchPluginSessionToken(resId),
 				])
 				if (!mounted) return
 				for (const entry of prefEntries) {
