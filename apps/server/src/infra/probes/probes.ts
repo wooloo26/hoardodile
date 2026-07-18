@@ -1,10 +1,10 @@
 import { extname } from "node:path"
 import type { Readable } from "node:stream"
-import { buffer } from "node:stream/consumers"
 import {
 	extToFfmpegInputFormat,
 	IMAGE_EXTS,
 } from "@hoardodile/consts/media-exts"
+import { THUMB_BUFFER_MAX_BYTES } from "@hoardodile/consts/res-consts"
 import type { ImageInfo, VideoInfo } from "@hoardodile/plugin-sdk-server"
 import sharp, {
 	type Metadata,
@@ -104,6 +104,30 @@ export function needsFullAnimationScan(
 }
 
 /**
+ * Buffer a probe stream with a hard byte cap. Probing only needs metadata,
+ * so an entry bigger than the cap is treated as unprobed rather than
+ * buffered whole into host memory.
+ */
+async function bufferCapped(
+	input: Readable,
+	maxBytes: number,
+): Promise<Buffer> {
+	const chunks: Uint8Array[] = []
+	let total = 0
+	for await (const chunk of input) {
+		const bytes: Uint8Array =
+			typeof chunk === "string" ? Buffer.from(chunk) : chunk
+		total += bytes.byteLength
+		if (total > maxBytes) {
+			input.destroy()
+			throw new Error(`probe input exceeds the ${maxBytes}-byte cap`)
+		}
+		chunks.push(bytes)
+	}
+	return Buffer.concat(chunks)
+}
+
+/**
  * Read image metadata with layered animation detection: static sources
  * stop after a single-page read; animated containers escalate to
  * `{ pages: -1 }` only when the shallow probe signals multi-frame input.
@@ -127,7 +151,7 @@ export async function readImageMetadata(
 		return { meta: fullMeta, animated: (fullMeta.pages ?? 1) > 1 }
 	}
 	if (isReadable(input)) {
-		const data = await buffer(input)
+		const data = await bufferCapped(input, THUMB_BUFFER_MAX_BYTES)
 		return readImageMetadata(data, ext)
 	}
 	const shallow = sharp(input, sharpImageInputOpts(input, ext, 1))

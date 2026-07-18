@@ -1,6 +1,8 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { Readable } from "node:stream"
+import { THUMB_BUFFER_MAX_BYTES } from "@hoardodile/consts"
 import sharp from "sharp"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 import {
@@ -41,6 +43,27 @@ describe("probeImageSource", () => {
 			height: 32,
 			animated: false,
 		})
+	})
+
+	test("stream input within the cap probes normally", async () => {
+		const png = await sharp({
+			create: {
+				width: 16,
+				height: 8,
+				channels: 3,
+				background: { r: 1, g: 2, b: 3 },
+			},
+		})
+			.png()
+			.toBuffer()
+		const probe = await probeImageSource(Readable.from(png), ".png")
+		expect(probe).toEqual({ width: 16, height: 8, animated: false })
+	})
+
+	test("stream input beyond the byte cap degrades to undefined", async () => {
+		const oversized = Buffer.alloc(THUMB_BUFFER_MAX_BYTES + 1, 0xab)
+		const probe = await probeImageSource(Readable.from(oversized), ".png")
+		expect(probe).toBeUndefined()
 	})
 })
 
