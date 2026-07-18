@@ -21,7 +21,7 @@
 		"privacy"
 	],
 	"scripts": {
-		"dev": "node scripts/dev.mjs",
+		"dev": "pnpm build:pkgs && node scripts/dev.mjs",
 		"build": "turbo run build",
 		"build:pkgs": "turbo run build --filter=!./apps/*",
 		"test": "turbo run test --concurrency=4",
