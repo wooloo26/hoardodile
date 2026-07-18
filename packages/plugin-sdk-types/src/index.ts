@@ -13,6 +13,13 @@ export type ResAnchor = {
 	readonly data?: unknown
 }
 
+/**
+ * Anchor as supplied by plugin code: only the plugin-defined location
+ * data. The SDK injects the iframe's own resource id before the anchor
+ * reaches the host — plugins never pass a resId.
+ */
+export type AnchorData = Omit<ResAnchor, "resId">
+
 /** Web plugin message shape. */
 export type Message = {
 	readonly id: string

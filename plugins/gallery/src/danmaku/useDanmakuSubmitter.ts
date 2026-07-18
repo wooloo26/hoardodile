@@ -4,7 +4,6 @@ import { usePluginAPI } from "../hooks"
 import { useTranslation } from "../i18n"
 
 type SubmitterDeps = {
-	readonly resId: string
 	readonly filename: string
 	readonly getCurrentMs: () => number
 	readonly onEmit?: (created: DanmakuRecord) => void
@@ -17,7 +16,7 @@ type SubmitterAPI = {
 
 export function useDanmakuSubmitter(deps: SubmitterDeps): SubmitterAPI {
 	const api = usePluginAPI()
-	const { resId, filename, getCurrentMs, onEmit } = deps
+	const { filename, getCurrentMs, onEmit } = deps
 	const { t } = useTranslation()
 	const { mutate: createDanmaku, isPending } = api.useCreateDanmaku()
 
@@ -29,7 +28,6 @@ export function useDanmakuSubmitter(deps: SubmitterDeps): SubmitterAPI {
 		createDanmaku({
 			text: trimmed,
 			anchor: {
-				resId,
 				data: { kind: "videoTime", filename, timeMs },
 			},
 			mode: "scroll",

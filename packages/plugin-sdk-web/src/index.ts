@@ -1,4 +1,5 @@
 export type {
+	AnchorData,
 	Danmaku,
 	DanmakuMode,
 	FileStats,

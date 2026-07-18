@@ -74,6 +74,7 @@ export function createPluginRoot<TSchema extends PluginSchema = PluginSchema>(
 			const api: WebPluginAPI<TSchema> = {
 				...baseApi,
 				...createPluginQueryAPI(host, {
+					resId: ctx.resId,
 					resolvedTheme: ctx.resolvedTheme,
 					palette: ctx.palette,
 				}),

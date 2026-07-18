@@ -31,7 +31,6 @@ export function NovelReader(props: { readonly open: boolean }) {
 	const { open } = props
 	const api = usePluginAPI()
 	const { t } = useTranslation()
-	const resId = api.resource.id
 
 	const filesQuery = api.useFileList()
 	const txtFile = (filesQuery.data ?? []).find(function isTxt(f) {
@@ -87,7 +86,7 @@ export function NovelReader(props: { readonly open: boolean }) {
 	useEffect(() => {
 		let cancelled = false
 		api
-			.listMessages(resId)
+			.listMessages()
 			.then(function got(rows) {
 				if (cancelled) return
 				setComments(rows)
@@ -99,7 +98,7 @@ export function NovelReader(props: { readonly open: boolean }) {
 		return () => {
 			cancelled = true
 		}
-	}, [api, resId])
+	}, [api])
 	const commentsByParagraph = useMemo(
 		() => buildCommentsByParagraph(comments),
 		[comments],

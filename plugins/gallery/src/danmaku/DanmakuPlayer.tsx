@@ -285,7 +285,7 @@ function EnhancedPlayerInner(
 		}
 	}, [resId, filename])
 
-	const danmakuListQ = api.useDanmakuList(resId, {
+	const danmakuListQ = api.useDanmakuList({
 		kind: "videoTime",
 		filename,
 	})
@@ -448,7 +448,6 @@ function EnhancedPlayerInner(
 	}
 
 	const externalSubmitter = useDanmakuSubmitter({
-		resId,
 		filename,
 		getCurrentMs: () => currentMs,
 		onEmit: handleEmitDanmaku,
@@ -596,7 +595,6 @@ function EnhancedPlayerInner(
 			</EnhancedVideoPlayer.Container>
 			{hideSendBar ? undefined : (
 				<DanmakuSendBar
-					resId={resId}
 					filename={filename}
 					getCurrentMs={() => currentMs}
 					onEmit={handleEmitDanmaku}

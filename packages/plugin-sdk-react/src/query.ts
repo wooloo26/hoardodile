@@ -1,4 +1,5 @@
 import type {
+	AnchorData,
 	Danmaku,
 	DanmakuMode,
 	Message,
@@ -151,26 +152,39 @@ function useHostMutation<
 
 function useCreateMessage(
 	host: Host,
+	resId: string,
 ): MutationState<
-	{ readonly body: string; readonly anchor?: ResAnchor },
+	{ readonly body: string; readonly anchor?: AnchorData },
 	Message
 > {
-	return useHostMutation<
+	const base = useHostMutation<
 		"createMessage",
 		{ readonly body: string; readonly anchor?: ResAnchor },
 		Message
 	>(host, "createMessage")
+	return {
+		mutate: (args) =>
+			base.mutate({
+				body: args.body,
+				anchor:
+					args.anchor === undefined ? undefined : { ...args.anchor, resId },
+			}),
+		isPending: base.isPending,
+	}
 }
 
-function useCreateDanmaku(host: Host): MutationState<
+function useCreateDanmaku(
+	host: Host,
+	resId: string,
+): MutationState<
 	{
 		readonly text: string
-		readonly anchor: ResAnchor
+		readonly anchor: AnchorData
 		readonly mode?: DanmakuMode
 	},
 	Danmaku
 > {
-	return useHostMutation<
+	const base = useHostMutation<
 		"createDanmaku",
 		{
 			readonly text: string
@@ -179,6 +193,15 @@ function useCreateDanmaku(host: Host): MutationState<
 		},
 		Danmaku
 	>(host, "createDanmaku")
+	return {
+		mutate: (args) =>
+			base.mutate({
+				text: args.text,
+				anchor: { ...args.anchor, resId },
+				mode: args.mode,
+			}),
+		isPending: base.isPending,
+	}
 }
 
 // ── Preferences hook ─────────────────────────────────────────────────────
@@ -281,7 +304,11 @@ export function createPluginQueryAPI<
 	TSchema extends PluginSchema = PluginSchema,
 >(
 	host: Host,
-	ctx: { readonly resolvedTheme: string; readonly palette: string },
+	ctx: {
+		readonly resId: string
+		readonly resolvedTheme: string
+		readonly palette: string
+	},
 ): Pick<
 	WebPluginAPI<TSchema>,
 	| "useFileList"
@@ -295,11 +322,11 @@ export function createPluginQueryAPI<
 	return {
 		useFileList: () =>
 			useFileList(host) as QueryState<readonly TSchema["file"][]>,
-		useMessageList: (resId: string) => useMessageList(host, resId),
-		useCreateMessage: () => useCreateMessage(host),
-		useDanmakuList: (resId: string, filter?: unknown) =>
-			useDanmakuList(host, resId, filter),
-		useCreateDanmaku: () => useCreateDanmaku(host),
+		useMessageList: () => useMessageList(host, ctx.resId),
+		useCreateMessage: () => useCreateMessage(host, ctx.resId),
+		useDanmakuList: (filter?: unknown) =>
+			useDanmakuList(host, ctx.resId, filter),
+		useCreateDanmaku: () => useCreateDanmaku(host, ctx.resId),
 		usePref: <T>(key: string, defaultValue: T, codec?: Codec<T>) =>
 			usePref(host, key, defaultValue, codec),
 		useTheme: () => useTheme(host, ctx.resolvedTheme, ctx.palette),

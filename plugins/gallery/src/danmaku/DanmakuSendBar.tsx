@@ -11,7 +11,6 @@ import type { DanmakuSettings } from "./types"
 import { useDanmakuSubmitter } from "./useDanmakuSubmitter"
 
 type SendBarProps = {
-	readonly resId: string
 	readonly filename: string
 	readonly getCurrentMs: () => number
 	readonly onEmit: (d: DanmakuRecord) => void
@@ -20,12 +19,10 @@ type SendBarProps = {
 }
 
 export function DanmakuSendBar(props: SendBarProps) {
-	const { resId, filename, getCurrentMs, onEmit, settings, onSettingsChange } =
-		props
+	const { filename, getCurrentMs, onEmit, settings, onSettingsChange } = props
 	const { t } = useTranslation()
 	const [text, setText] = useState("")
 	const { submit, isPending } = useDanmakuSubmitter({
-		resId,
 		filename,
 		getCurrentMs,
 		onEmit: (created) => {

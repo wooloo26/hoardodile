@@ -24,7 +24,6 @@ export function NovelParagraphCommentDialog(props: {
 		await createMessage.mutate({
 			body,
 			anchor: {
-				resId: api.resource.id,
 				data: { paragraphIndex, filename },
 			},
 		})

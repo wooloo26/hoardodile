@@ -32,7 +32,6 @@ export function MangaCommentSendBar(props: {
 			.mutate({
 				body: trimmed,
 				anchor: {
-					resId: api.resource.id,
 					data: { filename, page },
 				},
 			})

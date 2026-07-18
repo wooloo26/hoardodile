@@ -21,13 +21,13 @@ import {
 	snapshotCacheEntries,
 } from "./stores.ts"
 import type {
+	AnchorData,
 	Codec,
 	Danmaku,
 	DanmakuMode,
 	Message,
 	MutationState,
 	QueryState,
-	ResAnchor,
 	Theme,
 	WebPluginAPI,
 } from "./types.ts"
@@ -241,27 +241,37 @@ export function createIframeHostAPI<
 		return buildFrameUrl(ctx.resId, filename, timeMs, ctx.fileToken)
 	}
 
-	function listMessages(resId: string): Promise<readonly Message[]> {
-		return host.request("listMessages", { resId })
+	function listMessages(): Promise<readonly Message[]> {
+		return host.request("listMessages", { resId: ctx.resId })
 	}
 
 	function createMessage(input: {
 		readonly body: string
-		readonly anchor?: ResAnchor
+		readonly anchor?: AnchorData
 	}): Promise<Message> {
-		return host.request("createMessage", input)
+		return host.request("createMessage", {
+			body: input.body,
+			anchor:
+				input.anchor === undefined
+					? undefined
+					: { ...input.anchor, resId: ctx.resId },
+		})
 	}
 
-	function listDanmaku(resId: string): Promise<readonly Danmaku[]> {
-		return host.request("listDanmaku", { resId })
+	function listDanmaku(): Promise<readonly Danmaku[]> {
+		return host.request("listDanmaku", { resId: ctx.resId })
 	}
 
 	function createDanmaku(input: {
 		readonly text: string
-		readonly anchor: ResAnchor
+		readonly anchor: AnchorData
 		readonly mode?: DanmakuMode
 	}): Promise<Danmaku> {
-		return host.request("createDanmaku", input)
+		return host.request("createDanmaku", {
+			text: input.text,
+			anchor: { ...input.anchor, resId: ctx.resId },
+			mode: input.mode,
+		})
 	}
 
 	function getPref(key: string): string | undefined {
@@ -317,7 +327,7 @@ export function createIframeHostAPI<
 	}
 
 	function useCreateMessage(): MutationState<
-		{ readonly body: string; readonly anchor?: ResAnchor },
+		{ readonly body: string; readonly anchor?: AnchorData },
 		Message
 	> {
 		throw new Error("useCreateMessage must be provided by a framework adapter")
@@ -330,7 +340,7 @@ export function createIframeHostAPI<
 	function useCreateDanmaku(): MutationState<
 		{
 			readonly text: string
-			readonly anchor: ResAnchor
+			readonly anchor: AnchorData
 			readonly mode?: DanmakuMode
 		},
 		Danmaku

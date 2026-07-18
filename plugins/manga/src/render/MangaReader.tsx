@@ -96,11 +96,11 @@ export function MangaReader() {
 		readonly Message[] | undefined
 	>(undefined)
 	useEffect(() => {
-		api.listMessages(resId).then(setCommentsData)
-	}, [api, resId])
+		api.listMessages().then(setCommentsData)
+	}, [api])
 	const refreshComments = useCallback(() => {
-		api.listMessages(resId).then(setCommentsData)
-	}, [api, resId])
+		api.listMessages().then(setCommentsData)
+	}, [api])
 	const perPageComments = useMemo(
 		() => buildPerPageComments(commentsData ?? []),
 		[commentsData],

@@ -1,10 +1,10 @@
 import type {
+	AnchorData,
 	Danmaku,
 	DanmakuMode,
 	FileStats,
 	Message,
 	PluginSchema,
-	ResAnchor,
 } from "@hoardodile/plugin-sdk-types"
 import type { InvalidateTarget } from "./protocol.ts"
 
@@ -92,17 +92,17 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	readonly resolveFrameUrl: (filename: string, timeMs: number) => string
 
 	/** Messages. */
-	readonly listMessages: (resId: string) => Promise<readonly Message[]>
+	readonly listMessages: () => Promise<readonly Message[]>
 	readonly createMessage: (input: {
 		readonly body: string
-		readonly anchor?: ResAnchor
+		readonly anchor?: AnchorData
 	}) => Promise<Message>
 
 	/** Danmaku. */
-	readonly listDanmaku: (resId: string) => Promise<readonly Danmaku[]>
+	readonly listDanmaku: () => Promise<readonly Danmaku[]>
 	readonly createDanmaku: (input: {
 		readonly text: string
-		readonly anchor: ResAnchor
+		readonly anchor: AnchorData
 		readonly mode?: DanmakuMode
 	}) => Promise<Danmaku>
 
@@ -126,19 +126,18 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 
 	/** Reactive hooks. */
 	readonly useFileList: () => QueryState<readonly TSchema["file"][]>
-	readonly useMessageList: (resId: string) => QueryState<readonly Message[]>
+	readonly useMessageList: () => QueryState<readonly Message[]>
 	readonly useCreateMessage: () => MutationState<
-		{ readonly body: string; readonly anchor?: ResAnchor },
+		{ readonly body: string; readonly anchor?: AnchorData },
 		Message
 	>
 	readonly useDanmakuList: (
-		resId: string,
 		filter?: DanmakuListFilter,
 	) => QueryState<readonly Danmaku[]>
 	readonly useCreateDanmaku: () => MutationState<
 		{
 			readonly text: string
-			readonly anchor: ResAnchor
+			readonly anchor: AnchorData
 			readonly mode?: DanmakuMode
 		},
 		Danmaku
@@ -159,6 +158,7 @@ export type PluginErrorInfo = {
 }
 
 export type {
+	AnchorData,
 	Danmaku,
 	DanmakuMode,
 	Message,
