@@ -118,9 +118,6 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 		readonly value: string
 	}[]
 
-	/** Cover. */
-	readonly uploadCover: (blob: Blob) => Promise<void>
-
 	/** Invalidation. */
 	readonly invalidate: (target: InvalidateTarget) => Promise<void>
 

@@ -124,9 +124,6 @@ describe("buildResMetaOps cover meta", () => {
 			async isAnimatedImage() {
 				return false
 			},
-			async setCover() {},
-			async clearCover() {},
-			async setLocalCover() {},
 		}
 		return buildResMetaOps({
 			repo: repo as never,
@@ -204,9 +201,6 @@ describe("buildResMetaOps cover meta", () => {
 			async isAnimatedImage() {
 				return false
 			},
-			async setCover() {},
-			async clearCover() {},
-			async setLocalCover() {},
 		}
 		const ops = buildResMetaOps({
 			repo: repo as never,
@@ -284,9 +278,6 @@ describe("buildResMetaOps global rebuild concurrency", () => {
 			async isAnimatedImage() {
 				return false
 			},
-			async setCover() {},
-			async clearCover() {},
-			async setLocalCover() {},
 		}
 		const ops = buildResMetaOps({
 			repo: {

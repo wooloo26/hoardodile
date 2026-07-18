@@ -26,9 +26,6 @@ const API_METHOD_NAMES = [
 	"probeVideo",
 	"probeAudio",
 	"isAnimatedImage",
-	"setCover",
-	"clearCover",
-	"setLocalCover",
 ]
 
 const LOG_METHOD_NAMES = new Set(["logInfo", "logWarn", "logError"])

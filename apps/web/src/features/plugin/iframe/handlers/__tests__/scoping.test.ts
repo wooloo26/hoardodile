@@ -12,16 +12,10 @@ vi.mock("@/features/plugin/iframe/iframe-pool", () => ({
 	broadcastToAll: vi.fn(),
 }))
 
-vi.mock("@/features/res/api", () => ({
-	invalidateResources: vi.fn(async () => {}),
-}))
-
-import { invalidateResources } from "@/features/res/api"
 import { trpcMutate, trpcQuery } from "@/trpc/factory"
 import { createHandlers as createCommentHandlers } from "../comment"
 import { createHandlers as createDanmakuHandlers } from "../danmaku"
 import { createHandlers as createPreferenceHandlers } from "../preference"
-import { createHandlers as createUploadHandlers } from "../upload"
 
 const ctx = {
 	source: {} as Window,
@@ -38,7 +32,6 @@ function handlerOf(entries: readonly HandlerEntry[], method: string) {
 const commentHandlers = createCommentHandlers(new QueryClient())
 const danmakuHandlers = createDanmakuHandlers(new QueryClient())
 const preferenceHandlers = createPreferenceHandlers(new QueryClient())
-const uploadHandlers = createUploadHandlers(new QueryClient())
 
 beforeEach(() => {
 	vi.clearAllMocks()
@@ -128,17 +121,5 @@ describe("bridge resource scoping", () => {
 			key: "position",
 			value: "12",
 		})
-	})
-
-	it("notifyUploadComplete ignores a foreign fileId", async () => {
-		const handler = handlerOf(
-			uploadHandlers,
-			pluginMethods.notifyUploadComplete,
-		)
-		await handler(ctx, { fileId: "other" })
-		expect(invalidateResources).toHaveBeenCalledWith(
-			expect.any(QueryClient),
-			"r-1",
-		)
 	})
 })

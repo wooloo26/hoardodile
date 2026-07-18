@@ -71,7 +71,6 @@ export function createWebPluginAPIStub(
 		getCache: () => undefined,
 		setCache: () => {},
 		listCache: () => [],
-		uploadCover: async () => {},
 		invalidate: async () => {},
 		useFileList: () => ({
 			data: [],

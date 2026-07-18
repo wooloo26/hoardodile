@@ -98,9 +98,6 @@ export function createResourceAPIFixture(
 		async isAnimatedImage(path) {
 			return resolveValue(path, config.probes?.isAnimated, false) ?? false
 		},
-		async setCover() {},
-		async clearCover() {},
-		async setLocalCover() {},
 	}
 
 	return { api, setConfig }

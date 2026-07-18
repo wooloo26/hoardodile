@@ -300,20 +300,6 @@ export function createIframeHostAPI<
 		return snapshotCacheEntries()
 	}
 
-	async function uploadCover(blob: Blob): Promise<void> {
-		const result = await host.request("getUploadUrl")
-		const response = await fetch(result.uploadUrl, {
-			method: "PUT",
-			body: blob,
-		})
-		if (!response.ok) {
-			throw new Error(
-				`Upload failed: ${response.status} ${response.statusText}`,
-			)
-		}
-		await host.request("notifyUploadComplete", { fileId: result.fileId })
-	}
-
 	function invalidate(target: InvalidateTarget): Promise<void> {
 		return host.request("invalidate", { target })
 	}
@@ -387,7 +373,6 @@ export function createIframeHostAPI<
 		getCache,
 		setCache,
 		listCache,
-		uploadCover,
 		invalidate,
 		useFileList,
 		useMessageList,

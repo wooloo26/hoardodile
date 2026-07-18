@@ -33,7 +33,7 @@ export default definePlugin({
 | `coverLocal` | no       | Resolve a local cover file                                         |
 | `listFiles`  | no       | Custom typed file list (host falls back to bare filenames)         |
 
-Every hook receives a `ResourceAPI` (`listFiles`, `readFile`, `statFile`, `probeImage`/`probeVideo`/`probeAudio`, `isAnimatedImage`, cover writers, scoped logging). `readFile(path, { start, end })` accepts an optional byte range (start inclusive, end exclusive, clamped to the file size); a single call — full or ranged — is capped at 128 MiB, so read large files via ranges or the `readFileChunks` helper (`@hoardodile/plugin-sdk-server/helpers`), which streams the file in fixed-size chunks. Composable detectors (`hasExt`, `hasName`, `minFiles`, `all`, `any`, `not`) and probe helpers cover the common cases; `createResourceAPIFixture` builds a stub `ResourceAPI` for unit tests.
+Every hook receives a `ResourceAPI` (`listFiles`, `readFile`, `statFile`, `probeImage`/`probeVideo`/`probeAudio`, `isAnimatedImage`, scoped logging). `readFile(path, { start, end })` accepts an optional byte range (start inclusive, end exclusive, clamped to the file size); a single call — full or ranged — is capped at 128 MiB, so read large files via ranges or the `readFileChunks` helper (`@hoardodile/plugin-sdk-server/helpers`), which streams the file in fixed-size chunks. Composable detectors (`hasExt`, `hasName`, `minFiles`, `all`, `any`, `not`) and probe helpers cover the common cases; `createResourceAPIFixture` builds a stub `ResourceAPI` for unit tests.
 
 ## Client contract
 

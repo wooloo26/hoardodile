@@ -4,7 +4,7 @@ import { pluginMethods } from "../methods"
 import { defineHandler, type HandlerEntry } from "./registry"
 
 const schema = z.object({
-	msg: z.string().optional(),
+	message: z.string().optional(),
 	data: z.any().optional(),
 })
 

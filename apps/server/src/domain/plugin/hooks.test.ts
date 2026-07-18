@@ -122,9 +122,6 @@ function createAPI(files: readonly string[]): ResourceAPI {
 		probeVideo: async () => undefined,
 		probeAudio: async () => undefined,
 		isAnimatedImage: async () => false,
-		setCover: async () => {},
-		clearCover: async () => {},
-		setLocalCover: async () => {},
 	}
 }
 

@@ -23,10 +23,6 @@ export const pluginMethods = {
 	setPref: "setPref",
 	setCache: "setCache",
 
-	// Upload
-	getUploadUrl: "getUploadUrl",
-	notifyUploadComplete: "notifyUploadComplete",
-
 	// Cache invalidation
 	invalidate: "invalidate",
 
@@ -36,8 +32,9 @@ export const pluginMethods = {
 	dialogAlert: "dialog.alert",
 	dialogOpenFile: "dialog.openFile",
 
-	// Logging
-	logInfo: "log.info",
-	logWarn: "log.warn",
-	logError: "log.error",
+	// Logging — must match the SDK's PluginRequests keys exactly,
+	// otherwise plugin log calls are silently swallowed.
+	logInfo: "logInfo",
+	logWarn: "logWarn",
+	logError: "logError",
 } as const

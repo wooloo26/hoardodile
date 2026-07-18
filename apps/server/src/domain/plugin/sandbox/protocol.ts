@@ -28,9 +28,6 @@ export const API_METHOD_NAMES = [
 	"probeVideo",
 	"probeAudio",
 	"isAnimatedImage",
-	"setCover",
-	"clearCover",
-	"setLocalCover",
 ] as const
 
 export type ApiMethodName = (typeof API_METHOD_NAMES)[number]

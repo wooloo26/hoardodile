@@ -64,11 +64,6 @@ function buildHandlers() {
 		})),
 		defineHandler(pluginMethods.setPref, async () => undefined),
 		defineHandler(pluginMethods.setCache, async () => undefined),
-		defineHandler(pluginMethods.getUploadUrl, async () => ({
-			uploadUrl: "https://example.com/upload",
-			fileId: "f-1",
-		})),
-		defineHandler(pluginMethods.notifyUploadComplete, async () => undefined),
 		defineHandler(pluginMethods.invalidate, async () => undefined),
 		defineHandler(pluginMethods.dialogConfirm, async () => true),
 		defineHandler(pluginMethods.dialogPrompt, async () => "input"),
@@ -230,35 +225,6 @@ describe("createHostMessageHandler", () => {
 			await vi.waitFor(() => {
 				expect(source.postMessage).toHaveBeenCalled()
 			})
-		})
-
-		it("routes getUploadUrl and returns url+fileId", async () => {
-			const handler = createHostMessageHandler(buildHandlers())
-			const source = fakeWindow()
-			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
-
-			handler(
-				fakeMessageEvent(
-					{ type: "request", id: 5, method: pluginMethods.getUploadUrl },
-					source,
-				),
-			)
-
-			await vi.waitFor(() => {
-				expect(source.postMessage).toHaveBeenCalled()
-			})
-			expect(source.postMessage).toHaveBeenCalledWith(
-				{
-					type: "response",
-					id: 5,
-					ok: true,
-					data: {
-						uploadUrl: "https://example.com/upload",
-						fileId: "f-1",
-					},
-				},
-				"*",
-			)
 		})
 	})
 

@@ -76,9 +76,6 @@ function createTestResourceAPI(dir: string): ResourceAPI {
 		async isAnimatedImage() {
 			return false
 		},
-		async setCover() {},
-		async clearCover() {},
-		async setLocalCover() {},
 	}
 }
 

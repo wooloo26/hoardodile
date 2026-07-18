@@ -136,14 +136,6 @@ export type PluginRequests = {
 		}
 		readonly output: undefined
 	}
-	getUploadUrl: {
-		readonly input: undefined
-		readonly output: { readonly uploadUrl: string; readonly fileId: string }
-	}
-	notifyUploadComplete: {
-		readonly input: { readonly fileId: string }
-		readonly output: undefined
-	}
 	invalidate: {
 		readonly input: { readonly target: InvalidateTarget }
 		readonly output: undefined

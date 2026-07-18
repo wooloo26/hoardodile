@@ -80,9 +80,6 @@ function createStubApi(overrides: Partial<ResourceAPI> = {}): ResourceAPI {
 		probeVideo: async () => undefined,
 		probeAudio: async () => undefined,
 		isAnimatedImage: async () => false,
-		setCover: async () => {},
-		clearCover: async () => {},
-		setLocalCover: async () => {},
 		...overrides,
 	}
 }

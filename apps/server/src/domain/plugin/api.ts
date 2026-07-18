@@ -184,9 +184,6 @@ export function createPluginResourceAPI(
 		probeVideo: probeVideoScoped,
 		probeAudio: probeAudioScoped,
 		isAnimatedImage: isAnimatedImageScoped,
-		setCover: async () => {},
-		clearCover: async () => {},
-		setLocalCover: async () => {},
 	}
 }
 
@@ -267,9 +264,6 @@ export function createImportResourceAPI(
 		async isAnimatedImage() {
 			return false
 		},
-		async setCover() {},
-		async clearCover() {},
-		async setLocalCover() {},
 	}
 }
 

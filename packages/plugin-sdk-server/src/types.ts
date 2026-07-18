@@ -97,12 +97,6 @@ export type ResourceAPI = {
 	 * animated" the same way.
 	 */
 	readonly isAnimatedImage: (path: string) => Promise<boolean>
-	/** Write a cover image to the shared resource directory. Cover meta auto-generates. */
-	readonly setCover: (data: Uint8Array, ext: string) => Promise<void>
-	/** Remove the cover image from the shared resource directory. */
-	readonly clearCover: () => Promise<void>
-	/** Write a local cover image (machine-specific, not synced). Cover meta auto-generates. */
-	readonly setLocalCover: (data: Uint8Array, ext: string) => Promise<void>
 }
 
 /**
