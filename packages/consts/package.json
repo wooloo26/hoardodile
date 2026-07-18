@@ -8,7 +8,7 @@
 		".": "./src/index.ts",
 		"./media-exts": "./src/media-exts.ts",
 		"./plugin": "./src/plugin.ts",
-		"./res-consts": "./src/res-consts.ts",
+		"./res": "./src/res.ts",
 		"./text-limits": "./src/text-limits.ts",
 		"./timezone": "./src/timezone.ts",
 		"./page": "./src/page.ts"

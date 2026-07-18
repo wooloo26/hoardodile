@@ -6,7 +6,7 @@ import {
 	CHARACTER_FULLBODY_MAX_AREA,
 	RESOURCE_COVER_MAX_AREA,
 	RESOURCE_PREVIEW_MAX_AREA,
-} from "@hoardodile/consts/res-consts"
+} from "@hoardodile/consts/res"
 import type { ResPreviewSource } from "src/domain/res/service.ts"
 import type { SourceArtifactView } from "src/domain/res/source-view.ts"
 import type { StoragePaths } from "src/infra/storage/paths.ts"

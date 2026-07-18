@@ -4,7 +4,7 @@ import {
 	extToFfmpegInputFormat,
 	IMAGE_EXTS,
 } from "@hoardodile/consts/media-exts"
-import { THUMB_BUFFER_MAX_BYTES } from "@hoardodile/consts/res-consts"
+import { THUMB_BUFFER_MAX_BYTES } from "@hoardodile/consts/res"
 import type { ImageInfo, VideoInfo } from "@hoardodile/plugin-sdk-server"
 import sharp, {
 	type Metadata,

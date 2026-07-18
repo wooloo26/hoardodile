@@ -1,4 +1,4 @@
-import { fileNeedsPreview } from "@hoardodile/consts/res-consts"
+import { fileNeedsPreview } from "@hoardodile/consts/res"
 import type { ResourceAPI } from "./types.ts"
 
 /** Return the lower-cased extension from the last dot, or `""` when there is none. */

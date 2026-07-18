@@ -4,7 +4,7 @@ import { extToMediaType } from "@hoardodile/consts/media-exts"
 import {
 	ANIMATED_AREA_DIVISOR,
 	RESOURCE_COVER_MAX_AREA,
-} from "@hoardodile/consts/res-consts"
+} from "@hoardodile/consts/res"
 import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
 import type {
 	CoverKind,

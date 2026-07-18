@@ -3,7 +3,7 @@ import { mkdir, readdir, rename, rm } from "node:fs/promises"
 import { dirname, extname, join } from "node:path"
 import type { Readable } from "node:stream"
 import { extToFfmpegInputFormat } from "@hoardodile/consts/media-exts"
-import { ANIMATED_AREA_DIVISOR } from "@hoardodile/consts/res-consts"
+import { ANIMATED_AREA_DIVISOR } from "@hoardodile/consts/res"
 import sharp, { type Sharp } from "sharp"
 import {
 	readImageMetadata,

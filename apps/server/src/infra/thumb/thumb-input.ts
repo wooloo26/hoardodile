@@ -1,7 +1,7 @@
 import { extname } from "node:path"
 import type { Readable } from "node:stream"
 import { IMAGE_EXTS, VIDEO_EXTS } from "@hoardodile/consts/media-exts"
-import { THUMB_BUFFER_MAX_BYTES } from "@hoardodile/consts/res-consts"
+import { THUMB_BUFFER_MAX_BYTES } from "@hoardodile/consts/res"
 import { notFound } from "@hoardodile/shared"
 import type { SourceArtifactView } from "src/domain/res/source-view.ts"
 import type { ImageThumbInput } from "./pipeline.ts"
