@@ -1,8 +1,15 @@
 import { SEARCH_META_VERSION } from "@hoardodile/consts"
 import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
 import { definePlugin } from "@hoardodile/plugin-sdk-server"
-import { extname, naturalSort } from "@hoardodile/plugin-sdk-server/helpers"
+import {
+	extname,
+	mapConcurrent,
+	naturalSort,
+} from "@hoardodile/plugin-sdk-server/helpers"
 import type { FileEntry, FileSchema } from "./shared"
+
+/** statFile is cheap host-side, but still one RPC per file — fan out bounded. */
+const STAT_CONCURRENCY = 8
 
 export default definePlugin<FileSchema>({
 	detect: async () => ({ ok: true }) as const,
@@ -29,14 +36,16 @@ async function searchMeta(
 
 async function listFiles(api: ResourceAPI): Promise<readonly FileEntry[]> {
 	const files = await api.listFiles()
-	const result: FileEntry[] = []
-	for (const filename of naturalSort(files)) {
-		const stat = await api.statFile(filename)
-		result.push({
-			filename,
-			ext: extname(filename) || undefined,
-			sizeBytes: stat?.sizeBytes,
-		})
-	}
-	return result
+	return mapConcurrent(
+		naturalSort(files),
+		STAT_CONCURRENCY,
+		async (filename) => {
+			const stat = await api.statFile(filename)
+			return {
+				filename,
+				ext: extname(filename) || undefined,
+				sizeBytes: stat?.sizeBytes,
+			}
+		},
+	)
 }

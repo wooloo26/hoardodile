@@ -8,6 +8,7 @@ import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
 import { definePlugin } from "@hoardodile/plugin-sdk-server"
 import {
 	extname,
+	mapConcurrent,
 	naturalSort,
 	probeImageFile,
 	probeVideoFile,
@@ -18,6 +19,13 @@ import type {
 	GallerySearchMeta,
 	GallerySourceMeta,
 } from "./shared"
+
+/** Host-side probes fan out across the archive; keep them bounded. */
+const IMAGE_PROBE_CONCURRENCY = 8
+/** ffprobe spawns a process per call — bound videos tighter than images. */
+const VIDEO_PROBE_CONCURRENCY = 4
+/** Animation scan batch size — early-exit is checked between batches. */
+const ANIMATION_SCAN_BATCH = 8
 
 export default definePlugin<GallerySchema>({
 	detect: galleryDetect,
@@ -90,18 +98,25 @@ async function searchMeta(
 		video: false,
 		audio: false,
 	}
-	for (const filename of files) {
-		const ext = extname(filename)
-		if (IMAGE_EXTS.has(ext)) {
-			presence.image = true
-			if (!presence.animation && (await api.isAnimatedImage(filename))) {
-				presence.animation = true
-			}
-		} else if (VIDEO_EXTS.has(ext)) {
-			presence.video = true
-		} else if (AUDIO_EXTS.has(ext)) {
-			presence.audio = true
-		}
+	// Batched fan-out: probes run concurrently within a batch, and the
+	// early-exit check between batches keeps the "all facets found" short path.
+	for (let i = 0; i < files.length; i += ANIMATION_SCAN_BATCH) {
+		const batch = files.slice(i, i + ANIMATION_SCAN_BATCH)
+		await Promise.all(
+			batch.map(async (filename) => {
+				const ext = extname(filename)
+				if (IMAGE_EXTS.has(ext)) {
+					presence.image = true
+					if (!presence.animation && (await api.isAnimatedImage(filename))) {
+						presence.animation = true
+					}
+				} else if (VIDEO_EXTS.has(ext)) {
+					presence.video = true
+				} else if (AUDIO_EXTS.has(ext)) {
+					presence.audio = true
+				}
+			}),
+		)
 		if (
 			presence.image &&
 			presence.animation &&
@@ -133,18 +148,38 @@ async function buildFileList(
 	api: ResourceAPI,
 ): Promise<readonly GalleryFile[]> {
 	const files = await api.listFiles()
-	const result: GalleryFile[] = []
-	for (const filename of naturalSort(files)) {
+	const sorted = naturalSort(files)
+	const entries = new Map<string, GalleryFile>()
+	const images: string[] = []
+	const videos: string[] = []
+	for (const filename of sorted) {
 		const ext = extname(filename)
-		if (IMAGE_EXTS.has(ext)) {
-			const probed = await probeImageFile(api, filename)
-			result.push({ filename, ...probed })
-		} else if (VIDEO_EXTS.has(ext)) {
-			const probed = await probeVideoFile(api, filename)
-			result.push({ filename, ...probed })
-		} else if (AUDIO_EXTS.has(ext)) {
-			result.push({ filename, type: "audio" as const })
+		if (IMAGE_EXTS.has(ext)) images.push(filename)
+		else if (VIDEO_EXTS.has(ext)) videos.push(filename)
+		else if (AUDIO_EXTS.has(ext)) {
+			entries.set(filename, { filename, type: "audio" as const })
 		}
+	}
+	// Images and videos probe in parallel lanes (videos bound ffprobe spawns
+	// tighter); results are reassembled in natural-sort order.
+	await Promise.all([
+		mapConcurrent(images, IMAGE_PROBE_CONCURRENCY, async (filename) => {
+			entries.set(filename, {
+				filename,
+				...(await probeImageFile(api, filename)),
+			})
+		}),
+		mapConcurrent(videos, VIDEO_PROBE_CONCURRENCY, async (filename) => {
+			entries.set(filename, {
+				filename,
+				...(await probeVideoFile(api, filename)),
+			})
+		}),
+	])
+	const result: GalleryFile[] = []
+	for (const filename of sorted) {
+		const entry = entries.get(filename)
+		if (entry !== undefined) result.push(entry)
 	}
 	return result
 }

@@ -15,6 +15,35 @@ export function naturalSort(files: readonly string[]): string[] {
 	)
 }
 
+/**
+ * Map items with at most `limit` promises in flight. Results keep input
+ * order; the first rejection aborts the map (in-flight calls settle).
+ * Probe loops use this to fan out across the host's concurrent API
+ * dispatch instead of trickling one RPC at a time.
+ */
+export async function mapConcurrent<T, R>(
+	items: readonly T[],
+	limit: number,
+	fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+	const results: R[] = new Array(items.length)
+	let next = 0
+	async function lane(): Promise<void> {
+		for (;;) {
+			const index = next++
+			if (index >= items.length) return
+			const item = items[index]
+			if (item === undefined) continue
+			results[index] = await fn(item, index)
+		}
+	}
+	const lanes = Math.max(1, Math.min(limit, items.length))
+	const runners: Promise<void>[] = []
+	for (let i = 0; i < lanes; i++) runners.push(lane())
+	await Promise.all(runners)
+	return results
+}
+
 /** Probe an image file and return a file-item shaped object. */
 export async function probeImageFile(
 	api: ResourceAPI,

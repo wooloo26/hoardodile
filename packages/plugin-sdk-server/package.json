@@ -13,7 +13,8 @@
 	},
 	"scripts": {
 		"build": "tsc --noEmit",
-		"lint": "tsc --noEmit"
+		"lint": "tsc --noEmit",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@hoardodile/consts": "workspace:*",
@@ -24,6 +25,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	}
 }

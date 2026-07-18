@@ -7,12 +7,17 @@ import {
 } from "@hoardodile/plugin-sdk-server"
 import {
 	extname,
+	mapConcurrent,
 	naturalSort,
 	probeImageFile,
 } from "@hoardodile/plugin-sdk-server/helpers"
 import type { MangaSchema, MangaSearchMeta, MangaSourceMeta } from "./shared"
 
 const PREVIEW_COUNT = 3
+/** Host-side probes fan out across the archive; keep them bounded. */
+const PROBE_CONCURRENCY = 8
+/** Animation scan batch size — early-exit is checked between batches. */
+const ANIMATION_SCAN_BATCH = 8
 
 export default definePlugin<MangaSchema>({
 	detect,
@@ -64,12 +69,19 @@ async function searchMeta(
 	const files = await api.listFiles()
 	if (files.length === 0) return undefined
 	const presence = { image: false, animation: false }
-	for (const filename of files) {
-		if (!IMAGE_EXTS.has(extname(filename))) continue
-		presence.image = true
-		if (!presence.animation && (await api.isAnimatedImage(filename))) {
-			presence.animation = true
-		}
+	// Batched fan-out: probes run concurrently within a batch, and the
+	// early-exit check between batches keeps the "found animation" short path.
+	for (let i = 0; i < files.length; i += ANIMATION_SCAN_BATCH) {
+		const batch = files.slice(i, i + ANIMATION_SCAN_BATCH)
+		await Promise.all(
+			batch.map(async (filename) => {
+				if (!IMAGE_EXTS.has(extname(filename))) return
+				presence.image = true
+				if (!presence.animation && (await api.isAnimatedImage(filename))) {
+					presence.animation = true
+				}
+			}),
+		)
 		if (presence.image && presence.animation) break
 	}
 	if (!presence.image && !presence.animation) return undefined
@@ -88,11 +100,11 @@ async function fileList(
 	api: ResourceAPI,
 ): Promise<readonly MangaSchema["file"][]> {
 	const files = await api.listFiles()
-	const result: MangaSchema["file"][] = []
-	for (const filename of naturalSort(files)) {
-		if (!IMAGE_EXTS.has(extname(filename))) continue
+	const pages = naturalSort(files).filter((name) =>
+		IMAGE_EXTS.has(extname(name)),
+	)
+	return mapConcurrent(pages, PROBE_CONCURRENCY, async (filename) => {
 		const probed = await probeImageFile(api, filename)
-		result.push({ filename, ...probed })
-	}
-	return result
+		return { filename, ...probed }
+	})
 }
