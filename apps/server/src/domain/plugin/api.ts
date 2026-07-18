@@ -10,6 +10,7 @@ import type {
 	ResourceAPI,
 	VideoInfo,
 } from "@hoardodile/plugin-sdk-server"
+import type { PluginProbeCache } from "./probe-cache.ts"
 
 /**
  * Minimal structural view of a resource's source archive required by
@@ -53,6 +54,17 @@ export type CreatePluginResourceAPIDeps = {
 	readonly isAnimatedImage: (source: string | Readable) => Promise<boolean>
 	/** Per-call `readFile` byte cap. Defaults to {@link PLUGIN_READ_FILE_MAX_BYTES}. */
 	readonly maxReadFileBytes?: number
+	/**
+	 * Process-wide probe cache. Only active together with
+	 * {@link cacheScope}; without it every probe opens a fresh stream.
+	 */
+	readonly probeCache?: PluginProbeCache
+	/**
+	 * Cache namespace for this API instance, typically
+	 * `${resId}:${fileVersion}`. Archives are immutable per version, so
+	 * cached probe results never need explicit invalidation.
+	 */
+	readonly cacheScope?: string
 }
 
 export function createPluginResourceAPI(
@@ -88,39 +100,67 @@ export function createPluginResourceAPI(
 		return view.listEntries()
 	}
 
+	/**
+	 * Run `compute` through the shared probe cache when configured. The
+	 * cache key carries the probe kind — an image metadata probe and an
+	 * animation probe of the same entry are different computations.
+	 */
+	function cached<T extends object | boolean | undefined>(
+		kind: string,
+		path: string,
+		compute: () => Promise<T>,
+	): Promise<T> {
+		if (deps.probeCache === undefined || deps.cacheScope === undefined) {
+			return compute()
+		}
+		return deps.probeCache.getOrCompute(
+			`${deps.cacheScope}:${kind}:${path}`,
+			compute,
+		)
+	}
+
 	async function probeImageScoped(
 		path: string,
 	): Promise<ImageInfo | undefined> {
-		const { stream } = await view.openEntryStream(path)
-		return deps.probeImage(stream)
+		return cached("image", path, async () => {
+			const { stream } = await view.openEntryStream(path)
+			return deps.probeImage(stream)
+		})
 	}
 
 	async function probeVideoScoped(
 		path: string,
 	): Promise<VideoInfo | undefined> {
-		const { stream } = await view.openEntryStream(path)
-		return deps.probeVideo(stream, extname(path).toLowerCase())
+		return cached("video", path, async () => {
+			const { stream } = await view.openEntryStream(path)
+			return deps.probeVideo(stream, extname(path).toLowerCase())
+		})
 	}
 
 	async function probeAudioScoped(
 		path: string,
 	): Promise<AudioInfo | undefined> {
-		if (deps.probeAudio === undefined) return undefined
-		const { stream } = await view.openEntryStream(path)
-		return deps.probeAudio(stream)
+		const probeAudio = deps.probeAudio
+		if (probeAudio === undefined) return undefined
+		return cached("audio", path, async () => {
+			const { stream } = await view.openEntryStream(path)
+			return probeAudio(stream)
+		})
 	}
 
 	async function isAnimatedImageScoped(path: string): Promise<boolean> {
 		if (!IMAGE_EXTS.has(extname(path).toLowerCase())) return false
-		try {
-			const { stream } = await view.openEntryStream(path)
-			return deps.isAnimatedImage(stream)
-		} catch (err) {
-			console.warn(
-				`[isAnimatedImageScoped] path=${path} threw: ${err instanceof Error ? err.message : String(err)}`,
-			)
-			return false
-		}
+		return cached("animated", path, async () => {
+			try {
+				const { stream } = await view.openEntryStream(path)
+				return await deps.isAnimatedImage(stream)
+			} catch (err) {
+				console.warn(
+					`[isAnimatedImageScoped] path=${path} threw: ${err instanceof Error ? err.message : String(err)}`,
+				)
+				return false
+			}
+		})
 	}
 
 	async function statFileScoped(

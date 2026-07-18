@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { Readable } from "node:stream"
 import { createResourceAPIFixture } from "@hoardodile/plugin-sdk-server"
 import { readFileChunks } from "@hoardodile/plugin-sdk-server/helpers"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
@@ -9,6 +10,7 @@ import {
 	createPluginResourceAPI,
 	type PluginSourceView,
 } from "./api.ts"
+import { createProbeCache } from "./probe-cache.ts"
 
 describe("createImportResourceAPI", () => {
 	let rootDir: string
@@ -171,6 +173,104 @@ describe("createPluginResourceAPI ranged reads", () => {
 	test("full read above the byte cap is rejected", async () => {
 		const api = stubApi([1, 2, 3, 4, 250], 4)
 		await expect(api.readFile("blob.bin")).rejects.toThrow(/byte range/)
+	})
+})
+
+describe("createPluginResourceAPI probe caching", () => {
+	function stubViewWithStream(): PluginSourceView {
+		return {
+			listEntries: async () => ["a.jpg"],
+			readEntry: async () => Buffer.alloc(0),
+			readEntrySlice: async () => Buffer.alloc(0),
+			openEntryStream: async (relPath: string) => ({
+				stream: Readable.from([Buffer.from(relPath)]),
+				size: relPath.length,
+			}),
+			resolveByteRange: async () => ({ size: 0 }),
+		}
+	}
+
+	test("repeated probes of the same entry compute once", async () => {
+		let imageCalls = 0
+		const api = createPluginResourceAPI({
+			view: stubViewWithStream(),
+			probeImage: async () => {
+				imageCalls++
+				return { width: 10, height: 20 }
+			},
+			probeVideo: async () => undefined,
+			isAnimatedImage: async () => false,
+			probeCache: createProbeCache(),
+			cacheScope: "res-1:0",
+		})
+		await expect(api.probeImage("a.jpg")).resolves.toEqual({
+			width: 10,
+			height: 20,
+		})
+		await expect(api.probeImage("a.jpg")).resolves.toEqual({
+			width: 10,
+			height: 20,
+		})
+		expect(imageCalls).toBe(1)
+	})
+
+	test("different probe kinds of the same entry compute separately", async () => {
+		let imageCalls = 0
+		let animatedCalls = 0
+		const api = createPluginResourceAPI({
+			view: stubViewWithStream(),
+			probeImage: async () => {
+				imageCalls++
+				return { width: 1, height: 1 }
+			},
+			probeVideo: async () => undefined,
+			isAnimatedImage: async () => {
+				animatedCalls++
+				return true
+			},
+			probeCache: createProbeCache(),
+			cacheScope: "res-1:0",
+		})
+		await api.probeImage("a.jpg")
+		await api.isAnimatedImage("a.jpg")
+		expect(imageCalls).toBe(1)
+		expect(animatedCalls).toBe(1)
+	})
+
+	test("a different cache scope recomputes", async () => {
+		let imageCalls = 0
+		const cache = createProbeCache()
+		const build = (scope: string) =>
+			createPluginResourceAPI({
+				view: stubViewWithStream(),
+				probeImage: async () => {
+					imageCalls++
+					return { width: 1, height: 1 }
+				},
+				probeVideo: async () => undefined,
+				isAnimatedImage: async () => false,
+				probeCache: cache,
+				cacheScope: scope,
+			})
+		await build("res-1:0").probeImage("a.jpg")
+		await build("res-1:1").probeImage("a.jpg")
+		expect(imageCalls).toBe(2)
+	})
+
+	test("without cache deps every probe computes", async () => {
+		let imageCalls = 0
+		const api = createPluginResourceAPI({
+			view: stubViewWithStream(),
+			probeImage: async () => {
+				imageCalls++
+				return undefined
+			},
+			probeVideo: async () => undefined,
+			isAnimatedImage: async () => false,
+		})
+		await api.probeImage("a.jpg")
+		await api.probeImage("a.jpg")
+		expect(imageCalls).toBe(2)
 	})
 })
 

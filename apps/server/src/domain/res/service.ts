@@ -13,6 +13,7 @@ import type { ListPageInput, ListPageResult } from "@hoardodile/shared"
 import { conflict, isDomainError } from "@hoardodile/shared"
 import { createPluginResourceAPI } from "src/domain/plugin/api.ts"
 import type { PluginHooks } from "src/domain/plugin/hooks.ts"
+import { createProbeCache } from "src/domain/plugin/probe-cache.ts"
 import type { SqliteDb } from "src/infra/db/connection.ts"
 import {
 	probeAnimatedImage,
@@ -215,6 +216,11 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 	// matches the cache-hit path afterwards.
 	const listFilesInflight = new Map<string, Promise<SerializedFileList>>()
 
+	// Process-wide probe result cache, scoped per (resId, fileVersion) at
+	// construction time in buildResourceAPI. Source archives are immutable
+	// per version, so entries never need explicit invalidation.
+	const probeCache = createProbeCache()
+
 	async function buildResourceView(
 		resId: string,
 		fileVersion: number,
@@ -235,6 +241,8 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 			probeImage,
 			probeVideo,
 			isAnimatedImage: probeAnimatedImage,
+			probeCache,
+			cacheScope: `${resId}:${fileVersion}`,
 		})
 	}
 
