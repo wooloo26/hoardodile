@@ -16,11 +16,6 @@ export type PluginResource<TSchema extends PluginSchema = PluginSchema> = {
 	readonly searchMeta: TSchema["searchMeta"]
 	readonly fileStats: FileStats | undefined
 	readonly contentPluginId: string
-	/**
-	 * Short-lived token appended to resource file URLs so the sandboxed
-	 * iframe can fetch binaries without a session cookie.
-	 */
-	readonly fileToken: string
 }
 
 /** Encode/decode pair for typed preference values. */

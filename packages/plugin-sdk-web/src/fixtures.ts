@@ -51,7 +51,6 @@ export function createWebPluginAPIStub(
 			searchMeta: undefined,
 			fileStats: undefined,
 			contentPluginId: "p-test",
-			fileToken: "tok-test",
 		},
 		listFiles: async () => [],
 		readFile: async () => new ArrayBuffer(0),

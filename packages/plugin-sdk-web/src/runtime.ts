@@ -242,24 +242,18 @@ export function createIframeHostAPI<
 	}
 
 	function listMessages(): Promise<readonly Message[]> {
-		return host.request("listMessages", { resId: ctx.resId })
+		return host.request("listMessages")
 	}
 
 	function createMessage(input: {
 		readonly body: string
 		readonly anchor?: AnchorData
 	}): Promise<Message> {
-		return host.request("createMessage", {
-			body: input.body,
-			anchor:
-				input.anchor === undefined
-					? undefined
-					: { ...input.anchor, resId: ctx.resId },
-		})
+		return host.request("createMessage", input)
 	}
 
 	function listDanmaku(): Promise<readonly Danmaku[]> {
-		return host.request("listDanmaku", { resId: ctx.resId })
+		return host.request("listDanmaku")
 	}
 
 	function createDanmaku(input: {
@@ -267,11 +261,7 @@ export function createIframeHostAPI<
 		readonly anchor: AnchorData
 		readonly mode?: DanmakuMode
 	}): Promise<Danmaku> {
-		return host.request("createDanmaku", {
-			text: input.text,
-			anchor: { ...input.anchor, resId: ctx.resId },
-			mode: input.mode,
-		})
+		return host.request("createDanmaku", input)
 	}
 
 	function getPref(key: string): string | undefined {
@@ -290,7 +280,7 @@ export function createIframeHostAPI<
 
 	function setCache(key: string, value: string): void {
 		setPluginCache(key, value)
-		host.request("setCache", { resId: ctx.resId, key, value }).catch(() => {})
+		host.request("setCache", { key, value }).catch(() => {})
 	}
 
 	function listCache(): readonly {
@@ -357,7 +347,6 @@ export function createIframeHostAPI<
 			searchMeta: ctx.searchMeta as TSchema["searchMeta"],
 			fileStats: ctx.fileStats,
 			contentPluginId: ctx.contentPluginId,
-			fileToken: ctx.fileToken,
 		},
 		listFiles,
 		readFile,

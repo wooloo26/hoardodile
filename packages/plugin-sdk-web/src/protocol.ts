@@ -102,24 +102,24 @@ export type PluginRequests = {
 		readonly output: ArrayBuffer
 	}
 	listMessages: {
-		readonly input: { readonly resId: string }
+		readonly input: undefined
 		readonly output: readonly import("@hoardodile/plugin-sdk-types").Message[]
 	}
 	createMessage: {
 		readonly input: {
 			readonly body: string
-			readonly anchor?: import("@hoardodile/plugin-sdk-types").ResAnchor
+			readonly anchor?: import("@hoardodile/plugin-sdk-types").AnchorData
 		}
 		readonly output: import("@hoardodile/plugin-sdk-types").Message
 	}
 	listDanmaku: {
-		readonly input: { readonly resId: string }
+		readonly input: undefined
 		readonly output: readonly import("@hoardodile/plugin-sdk-types").Danmaku[]
 	}
 	createDanmaku: {
 		readonly input: {
 			readonly text: string
-			readonly anchor: import("@hoardodile/plugin-sdk-types").ResAnchor
+			readonly anchor: import("@hoardodile/plugin-sdk-types").AnchorData
 			readonly mode?: import("@hoardodile/plugin-sdk-types").DanmakuMode
 		}
 		readonly output: import("@hoardodile/plugin-sdk-types").Danmaku
@@ -130,7 +130,6 @@ export type PluginRequests = {
 	}
 	setCache: {
 		readonly input: {
-			readonly resId: string
 			readonly key: string
 			readonly value: string
 		}

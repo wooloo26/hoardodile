@@ -4,7 +4,6 @@ import type {
 	DanmakuMode,
 	Message,
 	PluginSchema,
-	ResAnchor,
 } from "@hoardodile/plugin-sdk-types"
 import type {
 	Codec,
@@ -105,23 +104,21 @@ function useFileList(host: Host) {
 
 // ── Message queries ──────────────────────────────────────────────────────
 
-function useMessageList(host: Host, resId: string) {
+function useMessageList(host: Host) {
 	return useHostQuery<"listMessages", readonly Message[]>(host, {
 		method: "listMessages",
-		params: { resId },
+		params: undefined,
 		invalidateKey: "messages:invalidate",
-		extraDeps: [resId],
 	})
 }
 
 // ── Danmaku queries ───────────────────────────────────────────────────────
 
-function useDanmakuList(host: Host, resId: string, _filter?: unknown) {
+function useDanmakuList(host: Host, _filter?: unknown) {
 	return useHostQuery<"listDanmaku", readonly Danmaku[]>(host, {
 		method: "listDanmaku",
-		params: { resId },
+		params: undefined,
 		invalidateKey: "danmaku:invalidate",
-		extraDeps: [resId],
 	})
 }
 
@@ -152,31 +149,18 @@ function useHostMutation<
 
 function useCreateMessage(
 	host: Host,
-	resId: string,
 ): MutationState<
 	{ readonly body: string; readonly anchor?: AnchorData },
 	Message
 > {
-	const base = useHostMutation<
+	return useHostMutation<
 		"createMessage",
-		{ readonly body: string; readonly anchor?: ResAnchor },
+		{ readonly body: string; readonly anchor?: AnchorData },
 		Message
 	>(host, "createMessage")
-	return {
-		mutate: (args) =>
-			base.mutate({
-				body: args.body,
-				anchor:
-					args.anchor === undefined ? undefined : { ...args.anchor, resId },
-			}),
-		isPending: base.isPending,
-	}
 }
 
-function useCreateDanmaku(
-	host: Host,
-	resId: string,
-): MutationState<
+function useCreateDanmaku(host: Host): MutationState<
 	{
 		readonly text: string
 		readonly anchor: AnchorData
@@ -184,24 +168,15 @@ function useCreateDanmaku(
 	},
 	Danmaku
 > {
-	const base = useHostMutation<
+	return useHostMutation<
 		"createDanmaku",
 		{
 			readonly text: string
-			readonly anchor: ResAnchor
+			readonly anchor: AnchorData
 			readonly mode?: DanmakuMode
 		},
 		Danmaku
 	>(host, "createDanmaku")
-	return {
-		mutate: (args) =>
-			base.mutate({
-				text: args.text,
-				anchor: { ...args.anchor, resId },
-				mode: args.mode,
-			}),
-		isPending: base.isPending,
-	}
 }
 
 // ── Preferences hook ─────────────────────────────────────────────────────
@@ -304,11 +279,7 @@ export function createPluginQueryAPI<
 	TSchema extends PluginSchema = PluginSchema,
 >(
 	host: Host,
-	ctx: {
-		readonly resId: string
-		readonly resolvedTheme: string
-		readonly palette: string
-	},
+	ctx: { readonly resolvedTheme: string; readonly palette: string },
 ): Pick<
 	WebPluginAPI<TSchema>,
 	| "useFileList"
@@ -322,11 +293,10 @@ export function createPluginQueryAPI<
 	return {
 		useFileList: () =>
 			useFileList(host) as QueryState<readonly TSchema["file"][]>,
-		useMessageList: () => useMessageList(host, ctx.resId),
-		useCreateMessage: () => useCreateMessage(host, ctx.resId),
-		useDanmakuList: (filter?: unknown) =>
-			useDanmakuList(host, ctx.resId, filter),
-		useCreateDanmaku: () => useCreateDanmaku(host, ctx.resId),
+		useMessageList: () => useMessageList(host),
+		useCreateMessage: () => useCreateMessage(host),
+		useDanmakuList: (filter?: unknown) => useDanmakuList(host, filter),
+		useCreateDanmaku: () => useCreateDanmaku(host),
 		usePref: <T>(key: string, defaultValue: T, codec?: Codec<T>) =>
 			usePref(host, key, defaultValue, codec),
 		useTheme: () => useTheme(host, ctx.resolvedTheme, ctx.palette),

@@ -35,7 +35,6 @@ describe("manga render", () => {
 				searchMeta: undefined,
 				fileStats: { count: 200 },
 				contentPluginId: "p-test",
-				fileToken: "tok-test",
 			},
 			useFileList: () => ({
 				data: undefined,
@@ -82,7 +81,6 @@ describe("manga render", () => {
 				searchMeta: undefined,
 				fileStats: { count: 200 },
 				contentPluginId: "p-test",
-				fileToken: "tok-test",
 			},
 			useFileList: () => ({
 				data: undefined,

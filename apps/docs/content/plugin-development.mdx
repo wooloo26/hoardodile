@@ -47,7 +47,7 @@ export const { PluginAPIProvider, usePluginAPI } = definePluginAPI<MySchema>()
 createPluginRoot({ provider: PluginAPIProvider, render: MyView })
 ```
 
-The iframe is sandboxed (opaque origin, no cookies) and talks to the host over `postMessage`. `usePluginAPI()` exposes the resource context (`api.resource.sourceMeta`, `fileToken`, …), file URLs (`resolveFileUrl`), preferences/cache, messages/danmaku (with the matching permissions), and reactive hooks. `useVisibility()` reports whether the iframe is on screen.
+The iframe is sandboxed (opaque origin, no cookies) and talks to the host over `postMessage`. `usePluginAPI()` exposes the resource context (`api.resource.sourceMeta`, …), file URLs (`resolveFileUrl`), preferences/cache, messages/danmaku (with the matching permissions), and reactive hooks. The SDK injects resource scoping, tokens, and URL details automatically — plugin code never handles a resId or builds host URLs by hand. `useVisibility()` reports whether the iframe is on screen.
 
 ## Build tooling
 

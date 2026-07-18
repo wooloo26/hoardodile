@@ -1,4 +1,4 @@
-import type { z } from "zod"
+import { z } from "zod"
 
 // ── Handler context ────────────────────────────────────────────────────────
 
@@ -7,6 +7,18 @@ export type HandlerContext = {
 	readonly resId: string
 	readonly pluginId: string
 }
+
+/**
+ * Wire shape of a message/danmaku anchor. Current SDKs omit resId
+ * entirely; older plugin builds may still send it — either way the host
+ * overwrites it with the iframe's registered resource before use.
+ */
+export const wireAnchor = z
+	.object({
+		resId: z.string().min(1).optional(),
+		data: z.unknown().optional(),
+	})
+	.loose()
 
 // ── Handler entry ──────────────────────────────────────────────────────────
 

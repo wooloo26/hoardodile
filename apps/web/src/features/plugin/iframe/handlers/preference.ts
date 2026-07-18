@@ -27,10 +27,7 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 
 		defineHandler(
 			pluginMethods.setCache,
-			// resId is accepted for wire compatibility but never read; the
-			// cache of any other resource is unreachable from this iframe.
 			z.object({
-				resId: z.string().min(1).optional(),
 				key: z.string().min(1),
 				value: z.string(),
 			}),
