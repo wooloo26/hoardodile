@@ -27,6 +27,13 @@ export const RESOURCE_PREVIEW_SIZE_THRESHOLD = 1_000_000
 export const THUMB_BUFFER_MAX_BYTES = 32 * 1024 * 1024
 
 /**
+ * Upper bound on meta rebuilds running at once across all resources.
+ * Each rebuild fans out RPC + host probes on a single per-plugin
+ * worker, so bursts are queued rather than parallel.
+ */
+export const RESOURCE_META_REBUILD_CONCURRENCY = 4
+
+/**
  * True when an image file should be served through the preview pipeline.
  * Preview is triggered when the image exceeds the pixel-area cap **or**
  * the byte-size threshold.

@@ -4,6 +4,7 @@ import { extToMediaType } from "@hoardodile/consts/media-exts"
 import {
 	ANIMATED_AREA_DIVISOR,
 	RESOURCE_COVER_MAX_AREA,
+	RESOURCE_META_REBUILD_CONCURRENCY,
 } from "@hoardodile/consts/res"
 import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
 import type {
@@ -27,13 +28,6 @@ import {
 } from "./repo.ts"
 import { aggregateSourceFiles } from "./source-meta.ts"
 import type { SourceArtifactView } from "./source-view.ts"
-
-/**
- * Upper bound on meta rebuilds running at once across all resources.
- * Each rebuild fans out RPC + host probes on a single per-plugin worker,
- * so bursts are queued rather than parallel.
- */
-const MAX_CONCURRENT_META_REBUILDS = 4
 
 export type ResMetaOpsDeps = {
 	readonly repo: ResRepository
@@ -87,7 +81,9 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 	// The keyed queues serialize per resource but not across resources — a
 	// cold-start page list can enqueue hundreds of rebuilds at once. Bound
 	// the total so they don't stampede the single per-plugin worker.
-	const rebuildSlots = createConcurrencyLimiter(MAX_CONCURRENT_META_REBUILDS)
+	const rebuildSlots = createConcurrencyLimiter(
+		RESOURCE_META_REBUILD_CONCURRENCY,
+	)
 
 	// -- Unified patch + notify wrapper --
 

@@ -1,4 +1,9 @@
-import { IMAGE_EXTS, SEARCH_META_VERSION } from "@hoardodile/consts"
+import {
+	IMAGE_EXTS,
+	PLUGIN_ANIMATION_SCAN_BATCH,
+	PLUGIN_IMAGE_PROBE_CONCURRENCY,
+	SEARCH_META_VERSION,
+} from "@hoardodile/consts"
 import {
 	type Detection,
 	definePlugin,
@@ -14,10 +19,6 @@ import {
 import type { MangaSchema, MangaSearchMeta, MangaSourceMeta } from "./shared"
 
 const PREVIEW_COUNT = 3
-/** Host-side probes fan out across the archive; keep them bounded. */
-const PROBE_CONCURRENCY = 8
-/** Animation scan batch size — early-exit is checked between batches. */
-const ANIMATION_SCAN_BATCH = 8
 
 export default definePlugin<MangaSchema>({
 	detect,
@@ -71,8 +72,8 @@ async function searchMeta(
 	const presence = { image: false, animation: false }
 	// Batched fan-out: probes run concurrently within a batch, and the
 	// early-exit check between batches keeps the "found animation" short path.
-	for (let i = 0; i < files.length; i += ANIMATION_SCAN_BATCH) {
-		const batch = files.slice(i, i + ANIMATION_SCAN_BATCH)
+	for (let i = 0; i < files.length; i += PLUGIN_ANIMATION_SCAN_BATCH) {
+		const batch = files.slice(i, i + PLUGIN_ANIMATION_SCAN_BATCH)
 		await Promise.all(
 			batch.map(async (filename) => {
 				if (!IMAGE_EXTS.has(extname(filename))) return
@@ -103,8 +104,12 @@ async function fileList(
 	const pages = naturalSort(files).filter((name) =>
 		IMAGE_EXTS.has(extname(name)),
 	)
-	return mapConcurrent(pages, PROBE_CONCURRENCY, async (filename) => {
-		const probed = await probeImageFile(api, filename)
-		return { filename, ...probed }
-	})
+	return mapConcurrent(
+		pages,
+		PLUGIN_IMAGE_PROBE_CONCURRENCY,
+		async (filename) => {
+			const probed = await probeImageFile(api, filename)
+			return { filename, ...probed }
+		},
+	)
 }

@@ -1,3 +1,5 @@
+import { PLUGIN_PROBE_CACHE_MAX_ENTRIES } from "@hoardodile/consts/plugin"
+
 /**
  * Process-wide LRU cache for host-side probe results (image/video/audio
  * metadata and animation flags). Source archives are immutable per
@@ -19,7 +21,9 @@ export type PluginProbeCache = {
 	) => Promise<T>
 }
 
-export function createProbeCache(maxEntries = 512): PluginProbeCache {
+export function createProbeCache(
+	maxEntries = PLUGIN_PROBE_CACHE_MAX_ENTRIES,
+): PluginProbeCache {
 	// Promise-valued cells: a miss is stored before it settles, so
 	// concurrent probes for the same key single-flight through one
 	// computation.

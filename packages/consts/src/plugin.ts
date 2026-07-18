@@ -34,3 +34,28 @@ export const PLUGIN_WORKER_MAX_RESPAWNS = 3
 
 /** Sliding window for {@link PLUGIN_WORKER_MAX_RESPAWNS}. */
 export const PLUGIN_WORKER_RESPAWN_WINDOW_MS = 60_000
+
+/**
+ * Parallel image probes a plugin hook may fan out across the host.
+ * Host-side probes run sharp concurrently; keep them bounded.
+ */
+export const PLUGIN_IMAGE_PROBE_CONCURRENCY = 8
+
+/**
+ * Parallel video probes a plugin hook may fan out. Each spawns an
+ * ffprobe process host-side, so videos are bound tighter than images.
+ */
+export const PLUGIN_VIDEO_PROBE_CONCURRENCY = 4
+
+/** Parallel `statFile` calls a plugin hook may fan out across the host. */
+export const PLUGIN_STAT_CONCURRENCY = 8
+
+/**
+ * Batch size for animation scans in `searchMeta` hooks: probes run
+ * concurrently within a batch, and the early-exit check happens between
+ * batches.
+ */
+export const PLUGIN_ANIMATION_SCAN_BATCH = 8
+
+/** Process-wide bound (entries) for the host-side probe result cache. */
+export const PLUGIN_PROBE_CACHE_MAX_ENTRIES = 512

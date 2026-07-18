@@ -1,6 +1,9 @@
 import {
 	AUDIO_EXTS,
 	IMAGE_EXTS,
+	PLUGIN_ANIMATION_SCAN_BATCH,
+	PLUGIN_IMAGE_PROBE_CONCURRENCY,
+	PLUGIN_VIDEO_PROBE_CONCURRENCY,
 	SEARCH_META_VERSION,
 	VIDEO_EXTS,
 } from "@hoardodile/consts"
@@ -19,13 +22,6 @@ import type {
 	GallerySearchMeta,
 	GallerySourceMeta,
 } from "./shared"
-
-/** Host-side probes fan out across the archive; keep them bounded. */
-const IMAGE_PROBE_CONCURRENCY = 8
-/** ffprobe spawns a process per call — bound videos tighter than images. */
-const VIDEO_PROBE_CONCURRENCY = 4
-/** Animation scan batch size — early-exit is checked between batches. */
-const ANIMATION_SCAN_BATCH = 8
 
 export default definePlugin<GallerySchema>({
 	detect: galleryDetect,
@@ -100,8 +96,8 @@ async function searchMeta(
 	}
 	// Batched fan-out: probes run concurrently within a batch, and the
 	// early-exit check between batches keeps the "all facets found" short path.
-	for (let i = 0; i < files.length; i += ANIMATION_SCAN_BATCH) {
-		const batch = files.slice(i, i + ANIMATION_SCAN_BATCH)
+	for (let i = 0; i < files.length; i += PLUGIN_ANIMATION_SCAN_BATCH) {
+		const batch = files.slice(i, i + PLUGIN_ANIMATION_SCAN_BATCH)
 		await Promise.all(
 			batch.map(async (filename) => {
 				const ext = extname(filename)
@@ -163,13 +159,13 @@ async function buildFileList(
 	// Images and videos probe in parallel lanes (videos bound ffprobe spawns
 	// tighter); results are reassembled in natural-sort order.
 	await Promise.all([
-		mapConcurrent(images, IMAGE_PROBE_CONCURRENCY, async (filename) => {
+		mapConcurrent(images, PLUGIN_IMAGE_PROBE_CONCURRENCY, async (filename) => {
 			entries.set(filename, {
 				filename,
 				...(await probeImageFile(api, filename)),
 			})
 		}),
-		mapConcurrent(videos, VIDEO_PROBE_CONCURRENCY, async (filename) => {
+		mapConcurrent(videos, PLUGIN_VIDEO_PROBE_CONCURRENCY, async (filename) => {
 			entries.set(filename, {
 				filename,
 				...(await probeVideoFile(api, filename)),
