@@ -267,7 +267,17 @@
 		"clearAllPluginCacheDescription": "删除所有插件的缓存数据（如阅读进度）。",
 		"clearAllPluginCacheSuccess": "所有插件缓存已清空",
 		"clearAllPluginCacheConfirmTitle": "清空全部插件缓存？",
-		"clearAllPluginCacheConfirmDescription": "这将删除所有插件的缓存数据，包括阅读进度。此操作无法撤销。"
+		"clearAllPluginCacheConfirmDescription": "这将删除所有插件的缓存数据，包括阅读进度。此操作无法撤销。",
+		"installConfirmTitle": "安装这个插件？",
+		"install": "安装",
+		"installConfirmRisk": "插件的服务端代码以与本应用相同的权限运行：可以读取和修改你的全部数据，也可以访问网络。上方声明的权限仅是宿主功能开关，并不代表沙箱限制。请只安装来源可信的插件。",
+		"uploadInvalidPlugin": "不是有效的插件包（缺失或非法的 manifest.json）。",
+		"permissions": {
+			"sourceMeta": "来源元数据",
+			"searchMeta": "搜索元数据",
+			"danmaku": "弹幕",
+			"message": "留言"
+		}
 	},
 	"overview": {
 		"libraryOverview": {

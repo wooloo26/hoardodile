@@ -267,7 +267,17 @@
 		"clearAllPluginCacheDescription": "Delete all cached data (e.g. resume positions) for every plugin.",
 		"clearAllPluginCacheSuccess": "All plugin cache has been cleared",
 		"clearAllPluginCacheConfirmTitle": "Clear all plugin cache?",
-		"clearAllPluginCacheConfirmDescription": "This will delete every plugin's cached data including resume positions. This cannot be undone."
+		"clearAllPluginCacheConfirmDescription": "This will delete every plugin's cached data including resume positions. This cannot be undone.",
+		"installConfirmTitle": "Install this plugin?",
+		"install": "Install",
+		"installConfirmRisk": "A plugin runs server-side code with the same privileges as this app: it can read and modify all of your data and make network requests. The declared permissions only toggle host features — they do not sandbox the plugin. Only install plugins from sources you trust.",
+		"uploadInvalidPlugin": "Not a valid plugin package (missing or invalid manifest.json).",
+		"permissions": {
+			"sourceMeta": "Source metadata",
+			"searchMeta": "Search metadata",
+			"danmaku": "Danmaku",
+			"message": "Messages"
+		}
 	},
 	"overview": {
 		"libraryOverview": {

@@ -68,6 +68,7 @@ import {
 	resolveManifestDescription,
 	resolveManifestName,
 } from "./manifestText"
+import { PluginPermissionBadges } from "./PluginPermissionBadges"
 import {
 	pluginCacheRemoveAllByPluginMutation,
 	pluginCacheRemoveAllMutation,
@@ -81,6 +82,7 @@ import {
 	systemPrefRemoveAllMutation,
 	uploadPlugin,
 } from "./pluginApi"
+import { previewPluginZip } from "./previewPluginZip"
 
 export function PluginSettingsPanel() {
 	const { t, i18n } = useTranslation()
@@ -183,6 +185,10 @@ export function PluginSettingsPanel() {
 	const resetSysPrefConfirm = useConfirmDialog<true>()
 	const resetAllPluginPrefConfirm = useConfirmDialog<true>()
 	const clearAllPluginCacheConfirm = useConfirmDialog<true>()
+	const installConfirm = useConfirmDialog<{
+		file: File
+		manifest: PluginManifest
+	}>()
 
 	function handleToggleEnabled(id: string, enabled: boolean) {
 		updateMut.mutate({ id, enabled })
@@ -220,20 +226,36 @@ export function PluginSettingsPanel() {
 	async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0]
 		if (file === undefined) return
+		// Reset immediately so picking the same file again (e.g. after
+		// cancelling the dialog) re-triggers onChange.
+		if (fileInputRef.current !== null) {
+			fileInputRef.current.value = ""
+		}
+		// Preview the manifest and ask for explicit consent first: a plugin
+		// is server-side code, so installing must never be one-click.
+		try {
+			const manifest = await previewPluginZip(file)
+			installConfirm.open({ file, manifest })
+		} catch {
+			toast.error(t("plugins.uploadInvalidPlugin"))
+		}
+	}
+
+	async function handleInstallConfirm() {
+		const target = installConfirm.target
+		if (target === undefined) return
 		setUploading(true)
 		try {
 			const form = new FormData()
-			form.append("archive", file)
+			form.append("archive", target.file)
 			await uploadPlugin(form)
 			await qc.invalidateQueries({ queryKey: pluginKeys.all })
 			toast.success(t("plugins.uploadPluginSuccess"))
+			installConfirm.close()
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : t("common.error"))
 		} finally {
 			setUploading(false)
-			if (fileInputRef.current !== null) {
-				fileInputRef.current.value = ""
-			}
 		}
 	}
 
@@ -471,6 +493,43 @@ export function PluginSettingsPanel() {
 				isPending={pluginCacheClearAllMut.isPending}
 				destructive
 				onConfirm={() => pluginCacheClearAllMut.mutate(undefined)}
+			/>
+
+			<ConfirmDialog
+				open={installConfirm.isOpen}
+				onOpenChange={installConfirm.onOpenChange}
+				title={t("plugins.installConfirmTitle")}
+				confirmLabel={t("plugins.install")}
+				pendingLabel={t("plugins.uploading")}
+				isPending={isUploading}
+				onConfirm={() => void handleInstallConfirm()}
+				confirmTestId="plugin-install-confirm"
+				body={
+					installConfirm.target !== undefined ? (
+						<div className="flex flex-col gap-3">
+							<div className="flex flex-col gap-0.5">
+								<span className="text-sm font-medium">
+									{resolveManifestName(
+										installConfirm.target.manifest,
+										i18n.language,
+									)}
+									<span className="ml-2 text-xs font-normal text-muted-foreground">
+										v{installConfirm.target.manifest.version}
+									</span>
+								</span>
+								<span className="font-mono text-xs text-muted-foreground">
+									{installConfirm.target.manifest.id}
+								</span>
+							</div>
+							<PluginPermissionBadges
+								permissions={installConfirm.target.manifest.permissions}
+							/>
+							<p className="text-xs leading-relaxed text-muted-foreground">
+								{t("plugins.installConfirmRisk")}
+							</p>
+						</div>
+					) : undefined
+				}
 			/>
 		</div>
 	)
