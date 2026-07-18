@@ -219,7 +219,17 @@ describe("resource service", () => {
 	afterEach(async () => {
 		await svc.drainMetaQueue()
 		dbh.close()
-		rmSync(root, { recursive: true, force: true })
+		// Windows holds sharp/archive file handles briefly after the
+		// awaited work settles — retry the cleanup instead of flaking.
+		for (let attempt = 0; ; attempt++) {
+			try {
+				rmSync(root, { recursive: true, force: true })
+				break
+			} catch (err) {
+				if (attempt >= 4) throw err
+				await new Promise((resolve) => setTimeout(resolve, 100))
+			}
+		}
 	})
 
 	test("create persists the row and creates the resource folder", async () => {
