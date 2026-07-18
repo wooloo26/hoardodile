@@ -583,6 +583,9 @@ describe("buildServer lifecycle (9a)", () => {
 			})
 			expect(rootRes.statusCode).toBe(200)
 			expect(rootRes.body).toContain("data-testid=spa")
+			expect(rootRes.headers["content-security-policy"]).toBe(
+				"frame-ancestors 'self'",
+			)
 
 			const assetRes = await built.app.inject({
 				method: "GET",
@@ -599,6 +602,9 @@ describe("buildServer lifecycle (9a)", () => {
 			})
 			expect(deepRes.statusCode).toBe(200)
 			expect(deepRes.body).toContain("data-testid=spa")
+			expect(deepRes.headers["content-security-policy"]).toBe(
+				"frame-ancestors 'self'",
+			)
 
 			// API/trpc routes are unaffected by the SPA fallback.
 			const health = await built.app.inject({
@@ -611,6 +617,74 @@ describe("buildServer lifecycle (9a)", () => {
 		} finally {
 			await built.close()
 		}
+	})
+})
+
+describe("plugin asset security headers", () => {
+	const PLUGIN_ID = "11111111-1111-4111-8111-111111111111"
+	let root: string
+	let built: BuiltServer
+	let consoleWarnSpy: ReturnType<typeof vi.spyOn> | undefined
+	let consoleInfoSpy: ReturnType<typeof vi.spyOn> | undefined
+
+	beforeEach(async () => {
+		consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+		consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {})
+		root = mkdtempSync(join(tmpdir(), "plugin-asset-headers-"))
+		const pluginDir = join(root, "local", "plugins", PLUGIN_ID)
+		mkdirSync(pluginDir, { recursive: true })
+		writeFileSync(
+			join(pluginDir, "manifest.json"),
+			JSON.stringify({
+				id: PLUGIN_ID,
+				name: "header-test",
+				description: "header test fixture",
+				version: "0.0.0",
+				permissions: {},
+			}),
+		)
+		writeFileSync(
+			join(pluginDir, "index.html"),
+			"<!doctype html><html><body>plugin</body></html>",
+		)
+		writeFileSync(join(pluginDir, "main.js"), "export default {}\n")
+		const env = loadEnv({
+			NODE_ENV: "test",
+			LOG_LEVEL: "silent",
+			STORAGE_ROOT: root,
+		} satisfies NodeJS.ProcessEnv)
+		built = await buildServer({ env })
+		await built.app.ready()
+	})
+
+	afterEach(async () => {
+		await built.close()
+		rmSync(root, { recursive: true, force: true })
+		consoleWarnSpy?.mockRestore()
+		consoleInfoSpy?.mockRestore()
+	})
+
+	test("plugin HTML pages are served with a CSP sandbox and frame-ancestors", async () => {
+		const res = await built.app.inject({
+			method: "GET",
+			url: `/api/plugins/${PLUGIN_ID}/index.html`,
+			remoteAddress: "127.0.0.1",
+		})
+		expect(res.statusCode).toBe(200)
+		const csp = res.headers["content-security-policy"]
+		expect(csp).toContain("sandbox allow-scripts allow-forms allow-downloads")
+		expect(csp).toContain("frame-ancestors 'self'")
+	})
+
+	test("plugin non-HTML assets carry no CSP but keep nosniff", async () => {
+		const res = await built.app.inject({
+			method: "GET",
+			url: `/api/plugins/${PLUGIN_ID}/main.js`,
+			remoteAddress: "127.0.0.1",
+		})
+		expect(res.statusCode).toBe(200)
+		expect(res.headers["content-security-policy"]).toBeUndefined()
+		expect(res.headers["x-content-type-options"]).toBe("nosniff")
 	})
 })
 describe("read-only archive mode", () => {

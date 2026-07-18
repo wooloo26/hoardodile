@@ -387,6 +387,9 @@ async function registerStaticAssets(
 	})
 
 	app.get("/", (_, reply) => {
+		// Clickjacking guard for the SPA shell; plugin pages get their own
+		// stricter CSP from the plugin-render route.
+		reply.header("content-security-policy", "frame-ancestors 'self'")
 		return sendFile(reply, join(webRoot, "index.html"), {
 			contentType: "text/html",
 			cacheControl: "no-cache",
@@ -413,6 +416,7 @@ async function registerStaticAssets(
 			return
 		}
 		reply.header("cache-control", "no-cache")
+		reply.header("content-security-policy", "frame-ancestors 'self'")
 		void reply.sendFile("index.html")
 	})
 }

@@ -80,11 +80,22 @@ async function servePluginFile(
 	if (ext === "html") {
 		const html = readFileSync(fullPath, "utf-8")
 		const injected = wrapHtml(html)
-		return reply
-			.type(contentType)
-			.header("cache-control", cacheControl)
-			.header("x-content-type-options", "nosniff")
-			.send(injected)
+		return (
+			reply
+				.type(contentType)
+				.header("cache-control", cacheControl)
+				.header("x-content-type-options", "nosniff")
+				// The host embeds plugin pages in a sandboxed iframe (no
+				// allow-same-origin). Mirroring the same sandbox via CSP keeps
+				// the page in an opaque origin even when a user is lured into
+				// opening it top-level, where the iframe attribute would no
+				// longer apply; frame-ancestors restricts embedding to the app.
+				.header(
+					"content-security-policy",
+					"sandbox allow-scripts allow-forms allow-downloads; frame-ancestors 'self'",
+				)
+				.send(injected)
+		)
 	}
 
 	return reply
