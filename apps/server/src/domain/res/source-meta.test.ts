@@ -1,14 +1,9 @@
-import {
-	mkdirSync,
-	mkdtempSync,
-	rmSync,
-	statSync,
-	writeFileSync,
-} from "node:fs"
+import { mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
+import type { PluginSourceView } from "src/domain/plugin/api.ts"
 import { describe, expect, test } from "vitest"
 import { aggregateSourceFiles } from "./source-meta.ts"
 import { createTestRegistry, TEST_BUILTIN_ID } from "./test-registry.ts"
@@ -90,66 +85,60 @@ function createTestResourceAPI(dir: string): ResourceAPI {
 const registry = createTestRegistry()
 
 describe("aggregateSourceFiles", () => {
-	test("sums top-level file sizes and counts", async () => {
-		const dir = mkdtempSync(join(tmpdir(), "app-fs-"))
-		try {
-			writeFileSync(join(dir, "1.png"), "AAAA")
-			writeFileSync(join(dir, "2.png"), "BB")
-			const api = createTestResourceAPI(dir)
-			const meta = await aggregateSourceFiles(api)
-			expect(meta).toEqual({ sizeBytes: 6, count: 2 })
-		} finally {
-			rmSync(dir, { recursive: true, force: true })
+	function stubView(
+		entries: Readonly<Record<string, number>>,
+	): Pick<PluginSourceView, "listEntries" | "resolveByteRange"> {
+		return {
+			listEntries: async () => Object.keys(entries),
+			resolveByteRange: async (relPath: string) => {
+				const size = entries[relPath]
+				return size === undefined ? undefined : { size }
+			},
 		}
+	}
+
+	test("sums entry sizes and counts", async () => {
+		const meta = await aggregateSourceFiles(
+			stubView({ "1.png": 4, "sub/2.png": 2 }),
+		)
+		expect(meta).toEqual({ sizeBytes: 6, count: 2 })
 	})
 
-	test("empty folder returns zero stats", async () => {
-		const dir = mkdtempSync(join(tmpdir(), "app-fs-"))
-		try {
-			const api = createTestResourceAPI(dir)
-			const meta = await aggregateSourceFiles(api)
-			expect(meta).toEqual({ sizeBytes: 0, count: 0 })
-		} finally {
-			rmSync(dir, { recursive: true, force: true })
-		}
+	test("empty archive returns zero stats", async () => {
+		const meta = await aggregateSourceFiles(stubView({}))
+		expect(meta).toEqual({ sizeBytes: 0, count: 0 })
 	})
 
-	test("hidden / .uploading-* files are skipped", async () => {
-		const dir = mkdtempSync(join(tmpdir(), "app-fs-"))
-		try {
-			writeFileSync(join(dir, ".cover.png"), "ignored-1")
-			writeFileSync(join(dir, "x.uploading-123.png"), "ignored-2")
-			writeFileSync(join(dir, "real.png"), "ABC")
-			const api = createTestResourceAPI(dir)
-			const meta = await aggregateSourceFiles(api)
-			expect(meta).toEqual({ sizeBytes: 3, count: 1 })
-		} finally {
-			rmSync(dir, { recursive: true, force: true })
+	test("entries without a byte range are skipped", async () => {
+		const view = {
+			listEntries: async () => ["a.png", "gone.png"],
+			resolveByteRange: async (relPath: string) =>
+				relPath === "gone.png" ? undefined : { size: 3 },
 		}
+		const meta = await aggregateSourceFiles(view)
+		expect(meta).toEqual({ sizeBytes: 3, count: 2 })
 	})
 
-	test("sizeBytes recursively sums files across nested folders", async () => {
-		const dir = mkdtempSync(join(tmpdir(), "app-fs-"))
-		try {
-			writeFileSync(join(dir, "top.txt"), "AAAA") // 4
-			mkdirSync(join(dir, "sub", "deep"), { recursive: true })
-			writeFileSync(join(dir, "sub", "a.txt"), "BB") // 2
-			writeFileSync(join(dir, "sub", "deep", "b.txt"), "CCCCCC") // 6
-			writeFileSync(join(dir, "sub", ".meta"), "ignore-me")
-			writeFileSync(
-				join(dir, "sub", "deep", "x.uploading-9.bin"),
-				"ignore-me-2",
-			)
-			const api = createTestResourceAPI(dir)
-			const meta = await aggregateSourceFiles(api)
-			// SourceArtifactView returns every entry from the canonical
-			// artifact (zip CD) as a flat list — entries with `/`
-			// are still single entries. Sizes and counts now come straight
-			// from `listFiles`.
-			expect(meta).toEqual({ sizeBytes: 12, count: 3 })
-		} finally {
-			rmSync(dir, { recursive: true, force: true })
+	test("unreadable entries are skipped without failing the aggregate", async () => {
+		const view = {
+			listEntries: async () => ["a.png", "bad.png"],
+			resolveByteRange: async (relPath: string) => {
+				if (relPath === "bad.png") throw new Error("non-STORED entry")
+				return { size: 3 }
+			},
 		}
+		const meta = await aggregateSourceFiles(view)
+		expect(meta).toEqual({ sizeBytes: 3, count: 2 })
+	})
+
+	test("returns undefined when the archive cannot be listed", async () => {
+		const view = {
+			listEntries: async (): Promise<readonly string[]> => {
+				throw new Error("archive missing")
+			},
+			resolveByteRange: async () => ({ size: 0 }),
+		}
+		await expect(aggregateSourceFiles(view)).resolves.toBeUndefined()
 	})
 })
 

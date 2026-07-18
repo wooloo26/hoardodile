@@ -169,9 +169,9 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 
 	async function computeFileStats(
 		row: ResRow,
-		api: ResourceAPI,
+		view: SourceArtifactView,
 	): Promise<Record<string, string | null>> {
-		const partial = await aggregateSourceFiles(api)
+		const partial = await aggregateSourceFiles(view)
 		if (partial === undefined) return {}
 		const existing = parseFileStats(row.fileStats) ?? {}
 		const merged: FileStats = {
@@ -290,8 +290,8 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 	async function rebuildFileStats(id: string): Promise<void> {
 		const row = repo.findById(id)
 		if (row.contentPluginId === null) return
-		const api = await createResourceAPI(id, row.fileVersion)
-		const patch = await computeFileStats(row, api)
+		const view = await resolveSourceView(id)
+		const patch = await computeFileStats(row, view)
 		applyMetaPatch(id, patch)
 	}
 
@@ -327,6 +327,7 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 		}
 
 		const api = await createResourceAPI(id, row.fileVersion)
+		const view = await resolveSourceView(id)
 		const patch: Record<string, string | null> = {}
 
 		const run = async (
@@ -342,7 +343,7 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 			}
 		}
 
-		await run("fileStats", () => computeFileStats(row, api))
+		await run("fileStats", () => computeFileStats(row, view))
 		await run("pluginMeta", () => computePluginMeta(row, api))
 		await run("coverMeta", () => computeCoverMeta(id, row, api))
 
@@ -362,6 +363,7 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 		}
 
 		const api = await createResourceAPI(id, row.fileVersion)
+		const view = await resolveSourceView(id)
 		const patch: Record<string, string | null> = {}
 
 		const run = async (
@@ -377,7 +379,7 @@ export function buildResMetaOps(deps: ResMetaOpsDeps): ResMetaOps {
 			}
 		}
 
-		await run("fileStats", () => computeFileStats(row, api))
+		await run("fileStats", () => computeFileStats(row, view))
 		await run("pluginMeta", () => computePluginMeta(row, api))
 		applyMetaPatch(id, patch)
 	}
