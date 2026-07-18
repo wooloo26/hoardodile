@@ -25,7 +25,12 @@ describe("readFileRange", () => {
 		}
 	})
 
-	test("reads bytes beyond the Int32 position limit", async () => {
+	// Generous timeout: on Windows (NTFS without the sparse flag), the
+	// positional write past the 2 GiB mark zero-fills the gap synchronously,
+	// which can exceed the default 30 s on slow CI disks.
+	test("reads bytes beyond the Int32 position limit", {
+		timeout: 120_000,
+	}, async () => {
 		const path = join(tmpdir(), `hoard-read-range-${Date.now()}.bin`)
 		paths.push(path)
 		const fd = openSync(path, "w")
