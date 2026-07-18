@@ -3,15 +3,16 @@ import type { QueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { trpcMutate, trpcQuery } from "@/trpc/factory"
 import { pluginMethods } from "../methods"
-import { assertOwnResource, defineHandler, type HandlerEntry } from "./registry"
+import { defineHandler, type HandlerEntry } from "./registry"
 
 export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 	return [
 		defineHandler(
 			pluginMethods.listMessages,
-			z.object({ resId: z.string().min(1) }),
-			async (ctx, params) => {
-				assertOwnResource(ctx, params.resId)
+			// resId is accepted for wire compatibility with older plugin
+			// builds but never read: the iframe can only see its own resource.
+			z.object({ resId: z.string().min(1).optional() }),
+			async (ctx, _params) => {
 				const r = await trpcQuery("comment", "list", { resId: ctx.resId })
 				return r.rows
 			},
@@ -21,13 +22,16 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 			pluginMethods.createMessage,
 			z.object({ body: z.string().min(1), anchor: resAnchor.optional() }),
 			async (ctx, params) => {
-				if (params.anchor !== undefined) {
-					assertOwnResource(ctx, params.anchor.resId)
-				}
+				// The anchor's resId is forced to the iframe's own resource; a
+				// plugin-supplied value is overridden, never trusted.
+				const anchor =
+					params.anchor === undefined
+						? undefined
+						: { ...params.anchor, resId: ctx.resId }
 				return trpcMutate("comment", "create", {
 					body: params.body,
-					anchor: params.anchor,
-					resIds: params.anchor !== undefined ? [params.anchor.resId] : [],
+					anchor,
+					resIds: anchor !== undefined ? [anchor.resId] : [],
 				})
 			},
 		),

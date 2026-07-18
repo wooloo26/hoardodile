@@ -3,15 +3,16 @@ import type { QueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { trpcMutate, trpcQuery } from "@/trpc/factory"
 import { pluginMethods } from "../methods"
-import { assertOwnResource, defineHandler, type HandlerEntry } from "./registry"
+import { defineHandler, type HandlerEntry } from "./registry"
 
 export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 	return [
 		defineHandler(
 			pluginMethods.listDanmaku,
-			z.object({ resId: z.string().min(1) }),
-			async (ctx, params) => {
-				assertOwnResource(ctx, params.resId)
+			// resId is accepted for wire compatibility with older plugin
+			// builds but never read: the iframe can only see its own resource.
+			z.object({ resId: z.string().min(1).optional() }),
+			async (ctx, _params) => {
 				return trpcQuery("danmaku", "list", { anchor: { resId: ctx.resId } })
 			},
 		),
@@ -24,10 +25,9 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 				mode: z.string().optional(),
 			}),
 			async (ctx, params) => {
-				assertOwnResource(ctx, params.anchor.resId)
 				return trpcMutate("danmaku", "create", {
 					text: params.text,
-					anchor: params.anchor,
+					anchor: { ...params.anchor, resId: ctx.resId },
 					mode: params.mode as DanmakuMode,
 				})
 			},

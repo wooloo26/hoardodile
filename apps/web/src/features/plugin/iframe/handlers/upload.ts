@@ -17,8 +17,10 @@ export function createHandlers(qc: QueryClient): HandlerEntry[] {
 		defineHandler(
 			pluginMethods.notifyUploadComplete,
 			z.object({ fileId: z.string().min(1) }),
-			async (_ctx, params) => {
-				await invalidateResources(qc, params.fileId)
+			async (ctx, _params) => {
+				// fileId is the resource id echoed back from getUploadUrl;
+				// the iframe can only ever affect its own resource.
+				await invalidateResources(qc, ctx.resId)
 			},
 		),
 	]

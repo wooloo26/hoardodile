@@ -12,10 +12,16 @@ vi.mock("@/features/plugin/iframe/iframe-pool", () => ({
 	broadcastToAll: vi.fn(),
 }))
 
+vi.mock("@/features/res/api", () => ({
+	invalidateResources: vi.fn(async () => {}),
+}))
+
+import { invalidateResources } from "@/features/res/api"
 import { trpcMutate, trpcQuery } from "@/trpc/factory"
 import { createHandlers as createCommentHandlers } from "../comment"
 import { createHandlers as createDanmakuHandlers } from "../danmaku"
 import { createHandlers as createPreferenceHandlers } from "../preference"
+import { createHandlers as createUploadHandlers } from "../upload"
 
 const ctx = {
 	source: {} as Window,
@@ -32,11 +38,16 @@ function handlerOf(entries: readonly HandlerEntry[], method: string) {
 const commentHandlers = createCommentHandlers(new QueryClient())
 const danmakuHandlers = createDanmakuHandlers(new QueryClient())
 const preferenceHandlers = createPreferenceHandlers(new QueryClient())
+const uploadHandlers = createUploadHandlers(new QueryClient())
 
 beforeEach(() => {
 	vi.clearAllMocks()
 })
 
+// Bridge handlers never trust a resId taken from message params: the
+// iframe's registered resource (ctx.resId) is authoritative. A plugin
+// that sends a foreign resId is not rejected — the value is simply
+// ignored/overridden.
 describe("bridge resource scoping", () => {
 	it("listMessages serves the iframe's own resource", async () => {
 		const handler = handlerOf(commentHandlers, pluginMethods.listMessages)
@@ -46,21 +57,33 @@ describe("bridge resource scoping", () => {
 		})
 	})
 
-	it("listMessages rejects a foreign resource id", async () => {
+	it("listMessages ignores a foreign resId", async () => {
 		const handler = handlerOf(commentHandlers, pluginMethods.listMessages)
-		await expect(handler(ctx, { resId: "other" })).rejects.toThrow(
-			/does not match/,
-		)
-		expect(trpcQuery).not.toHaveBeenCalled()
+		await handler(ctx, { resId: "other" })
+		expect(trpcQuery).toHaveBeenCalledWith("comment", "list", {
+			resId: "r-1",
+		})
 	})
 
-	it("createMessage with an own-resource anchor is forwarded", async () => {
+	it("createMessage forwards an anchor on the iframe's resource", async () => {
 		const handler = handlerOf(commentHandlers, pluginMethods.createMessage)
-		const anchor = { resId: "r-1", data: { paragraphIndex: 2 } }
-		await handler(ctx, { body: "hello", anchor })
+		await handler(ctx, {
+			body: "hello",
+			anchor: { resId: "r-1", data: { paragraphIndex: 2 } },
+		})
 		expect(trpcMutate).toHaveBeenCalledWith("comment", "create", {
 			body: "hello",
-			anchor,
+			anchor: { resId: "r-1", data: { paragraphIndex: 2 } },
+			resIds: ["r-1"],
+		})
+	})
+
+	it("createMessage overrides a foreign anchor resId", async () => {
+		const handler = handlerOf(commentHandlers, pluginMethods.createMessage)
+		await handler(ctx, { body: "hi", anchor: { resId: "other" } })
+		expect(trpcMutate).toHaveBeenCalledWith("comment", "create", {
+			body: "hi",
+			anchor: { resId: "r-1" },
 			resIds: ["r-1"],
 		})
 	})
@@ -75,41 +98,30 @@ describe("bridge resource scoping", () => {
 		})
 	})
 
-	it("createMessage rejects an anchor on a foreign resource", async () => {
-		const handler = handlerOf(commentHandlers, pluginMethods.createMessage)
-		await expect(
-			handler(ctx, { body: "hi", anchor: { resId: "other" } }),
-		).rejects.toThrow(/does not match/)
-		expect(trpcMutate).not.toHaveBeenCalled()
-	})
-
-	it("listDanmaku serves the iframe's own resource", async () => {
+	it("listDanmaku ignores a foreign resId", async () => {
 		const handler = handlerOf(danmakuHandlers, pluginMethods.listDanmaku)
-		await handler(ctx, { resId: "r-1" })
+		await handler(ctx, { resId: "other" })
 		expect(trpcQuery).toHaveBeenCalledWith("danmaku", "list", {
 			anchor: { resId: "r-1" },
 		})
 	})
 
-	it("listDanmaku rejects a foreign resource id", async () => {
-		const handler = handlerOf(danmakuHandlers, pluginMethods.listDanmaku)
-		await expect(handler(ctx, { resId: "other" })).rejects.toThrow(
-			/does not match/,
-		)
-		expect(trpcQuery).not.toHaveBeenCalled()
-	})
-
-	it("createDanmaku rejects an anchor on a foreign resource", async () => {
+	it("createDanmaku overrides a foreign anchor resId", async () => {
 		const handler = handlerOf(danmakuHandlers, pluginMethods.createDanmaku)
-		await expect(
-			handler(ctx, { text: "hi", anchor: { resId: "other" } }),
-		).rejects.toThrow(/does not match/)
-		expect(trpcMutate).not.toHaveBeenCalled()
+		await handler(ctx, {
+			text: "hi",
+			anchor: { resId: "other", data: { timeMs: 1 } },
+		})
+		expect(trpcMutate).toHaveBeenCalledWith("danmaku", "create", {
+			text: "hi",
+			anchor: { resId: "r-1", data: { timeMs: 1 } },
+			mode: undefined,
+		})
 	})
 
-	it("setCache serves the iframe's own resource", async () => {
+	it("setCache ignores a foreign resId", async () => {
 		const handler = handlerOf(preferenceHandlers, pluginMethods.setCache)
-		await handler(ctx, { resId: "r-1", key: "position", value: "12" })
+		await handler(ctx, { resId: "other", key: "position", value: "12" })
 		expect(trpcMutate).toHaveBeenCalledWith("pluginPreference", "cacheSet", {
 			pluginId: "p-1",
 			resId: "r-1",
@@ -118,11 +130,15 @@ describe("bridge resource scoping", () => {
 		})
 	})
 
-	it("setCache rejects a foreign resource id", async () => {
-		const handler = handlerOf(preferenceHandlers, pluginMethods.setCache)
-		await expect(
-			handler(ctx, { resId: "other", key: "position", value: "12" }),
-		).rejects.toThrow(/does not match/)
-		expect(trpcMutate).not.toHaveBeenCalled()
+	it("notifyUploadComplete ignores a foreign fileId", async () => {
+		const handler = handlerOf(
+			uploadHandlers,
+			pluginMethods.notifyUploadComplete,
+		)
+		await handler(ctx, { fileId: "other" })
+		expect(invalidateResources).toHaveBeenCalledWith(
+			expect.any(QueryClient),
+			"r-1",
+		)
 	})
 })

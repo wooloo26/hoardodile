@@ -4,7 +4,7 @@ import { broadcastToAll } from "@/features/plugin/iframe/iframe-pool"
 import { hostPushKeys } from "@/lib/keys"
 import { trpcMutate } from "@/trpc/factory"
 import { pluginMethods } from "../methods"
-import { assertOwnResource, defineHandler, type HandlerEntry } from "./registry"
+import { defineHandler, type HandlerEntry } from "./registry"
 
 export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 	return [
@@ -27,13 +27,14 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 
 		defineHandler(
 			pluginMethods.setCache,
+			// resId is accepted for wire compatibility but never read; the
+			// cache of any other resource is unreachable from this iframe.
 			z.object({
-				resId: z.string().min(1),
+				resId: z.string().min(1).optional(),
 				key: z.string().min(1),
 				value: z.string(),
 			}),
 			async (ctx, params) => {
-				assertOwnResource(ctx, params.resId)
 				await trpcMutate("pluginPreference", "cacheSet", {
 					pluginId: ctx.pluginId,
 					resId: ctx.resId,

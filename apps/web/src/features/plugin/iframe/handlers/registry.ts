@@ -18,20 +18,6 @@ export type HandlerEntry = {
 
 // ── Factories ──────────────────────────────────────────────────────────────
 
-/**
- * Throws when a plugin iframe targets a resource other than the one it is
- * rendering. `ctx.resId` comes from the host-side iframe registry, so it
- * cannot be forged by the plugin; bridge methods must not trust a resId
- * taken from message params.
- */
-export function assertOwnResource(ctx: HandlerContext, resId: string): void {
-	if (resId !== ctx.resId) {
-		throw new Error(
-			"resource id does not match the resource this iframe renders",
-		)
-	}
-}
-
 export function defineHandler<TReturn>(
 	method: string,
 	handler: (ctx: HandlerContext) => Promise<TReturn> | TReturn,
