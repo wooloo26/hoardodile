@@ -249,13 +249,25 @@ export function createPluginHooks(deps: PluginHooksDeps): PluginHooks {
 			guard.check(entry.manifest, "sourceMeta") &&
 			entry.plugin.sourceMeta !== undefined
 		) {
-			results.sourceMeta = { value: await entry.plugin.sourceMeta(api) }
+			try {
+				results.sourceMeta = { value: await entry.plugin.sourceMeta(api) }
+			} catch (err) {
+				console.error(
+					`[plugin-hooks] sourceMeta failed for plugin ${pluginId}: ${err instanceof Error ? err.message : String(err)}`,
+				)
+			}
 		}
 		if (
 			guard.check(entry.manifest, "searchMeta") &&
 			entry.plugin.searchMeta !== undefined
 		) {
-			results.searchMeta = { value: await entry.plugin.searchMeta(api) }
+			try {
+				results.searchMeta = { value: await entry.plugin.searchMeta(api) }
+			} catch (err) {
+				console.error(
+					`[plugin-hooks] searchMeta failed for plugin ${pluginId}: ${err instanceof Error ? err.message : String(err)}`,
+				)
+			}
 		}
 		return results
 	}

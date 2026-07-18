@@ -417,7 +417,7 @@ export function createPluginSandbox(
 				const call = state.pending.get(msg.callId)
 				if (call === undefined) return
 				if (call.apiInFlight === 0) armWatchdog(state, worker, msg.callId, call)
-				dispatchLog(call.api, msg.method, msg.args)
+				dispatchLog(state.id, msg.method, msg.args)
 				return
 			}
 		}
@@ -468,17 +468,25 @@ export function createPluginSandbox(
 		}
 	}
 
+	/**
+	 * Plugin log sink. The worker-side proxy forwards log calls here, where
+	 * the owning plugin id is known — ResourceAPI.log* stay no-ops because a
+	 * shared API instance (e.g. one detect pass fanning out to every plugin)
+	 * cannot attribute a log line to the plugin that emitted it.
+	 */
 	function dispatchLog(
-		api: ResourceAPI,
+		pluginId: string,
 		method: "logInfo" | "logWarn" | "logError",
 		args: readonly unknown[],
 	): void {
 		const message = typeof args[0] === "string" ? args[0] : String(args[0])
 		const data = isPlainRecord(args[1]) ? args[1] : undefined
+		const line = `[plugin:${pluginId}] ${message}`
+		const extra = data === undefined ? [] : [data]
 		try {
-			if (method === "logInfo") api.logInfo(message, data)
-			else if (method === "logWarn") api.logWarn(message, data)
-			else api.logError(message, data)
+			if (method === "logInfo") console.log(line, ...extra)
+			else if (method === "logWarn") console.warn(line, ...extra)
+			else console.error(line, ...extra)
 		} catch {
 			// Logging must never break the host.
 		}

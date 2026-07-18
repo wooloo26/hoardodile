@@ -3,7 +3,7 @@ import type {
 	ResourceAPI,
 } from "@hoardodile/plugin-sdk-server"
 import type { PluginManifestId } from "@hoardodile/schemas"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 import type { PluginRegistry } from "./api-types.ts"
 import { createPluginHooks } from "./hooks.ts"
 import { buildRegistry } from "./loader.ts"
@@ -275,6 +275,47 @@ describe("plugin hooks: runMetaHooks", () => {
 			"99999999-9999-4999-8999-999999999999" as PluginManifestId,
 		)
 		expect(results).toEqual({})
+	})
+
+	test("a failing meta hook is logged and skipped without blocking the other", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+		const id = "55555555-5555-4555-8555-555555555555" as PluginManifestId
+		const registry = buildRegistry([
+			{
+				id,
+				manifest: manifestFor(id, "Meta", {
+					sourceMeta: true,
+					searchMeta: true,
+				}),
+				enabled: true,
+				priority: 10,
+				pinned: false,
+				color: "",
+				missing: false,
+				builtin: false,
+				dev: false,
+				plugin: {
+					detect: async () => ({ ok: true }),
+					sourceMeta: async () => {
+						throw new Error("sourceMeta exploded")
+					},
+					searchMeta: async () => ({ tags: ["a"] }),
+				},
+			},
+		])
+		try {
+			const results = await createHooks(registry).runMetaHooks(
+				createAPI([]),
+				id,
+			)
+			expect(results.sourceMeta).toBeUndefined()
+			expect(results.searchMeta?.value).toEqual({ tags: ["a"] })
+			expect(errorSpy).toHaveBeenCalledWith(
+				expect.stringContaining(`sourceMeta failed for plugin ${id}`),
+			)
+		} finally {
+			errorSpy.mockRestore()
+		}
 	})
 })
 

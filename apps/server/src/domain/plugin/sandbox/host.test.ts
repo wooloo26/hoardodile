@@ -159,6 +159,24 @@ describe("plugin sandbox", () => {
 		})
 	})
 
+	test("plugin logs reach the server console scoped by plugin id", async () => {
+		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+		sandbox = createPluginSandbox()
+		const plugin = await sandbox.loadPlugin({
+			id: "logger",
+			mainPath: fixture("logging-plugin.mjs"),
+			eager: true,
+		})
+		await expect(plugin?.detect(createStubApi())).resolves.toEqual({
+			ok: true,
+		})
+		expect(logSpy).toHaveBeenCalledWith("[plugin:logger] hello", { i: 1 })
+		expect(warnSpy).toHaveBeenCalledWith("[plugin:logger] careful")
+		expect(errorSpy).toHaveBeenCalledWith("[plugin:logger] bad news")
+	})
+
 	test("byte-range arguments cross the RPC boundary", async () => {
 		sandbox = createPluginSandbox()
 		const plugin = await sandbox.loadPlugin({

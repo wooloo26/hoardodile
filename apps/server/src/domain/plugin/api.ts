@@ -132,6 +132,8 @@ export function createPluginResourceAPI(
 	}
 
 	return {
+		// No-ops: the sandbox host is the plugin log sink — it alone knows
+		// which plugin emitted the line (see dispatchLog in sandbox/host.ts).
 		logInfo() {},
 		logWarn() {},
 		logError() {},
@@ -158,6 +160,8 @@ export function createImportResourceAPI(
 ): ResourceAPI {
 	const maxReadFileBytes = opts.maxReadFileBytes ?? PLUGIN_READ_FILE_MAX_BYTES
 	return {
+		// No-ops: the sandbox host is the plugin log sink — it alone knows
+		// which plugin emitted the line (see dispatchLog in sandbox/host.ts).
 		logInfo() {},
 		logWarn() {},
 		logError() {},
