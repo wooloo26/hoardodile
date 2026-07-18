@@ -21,6 +21,7 @@ import {
 	useNavigate,
 } from "@tanstack/react-router"
 import {
+	CornerUpLeft,
 	FilePlus,
 	FolderPlus,
 	Palette,
@@ -209,6 +210,7 @@ function DocsLayout() {
 						/>
 					)}
 				</div>
+				<SidebarHomeFooter onClose={handleCloseMobileTree} />
 			</aside>
 
 			<MobileDrawer
@@ -259,6 +261,7 @@ function DocsLayout() {
 							/>
 						)}
 					</div>
+					<SidebarHomeFooter onClose={handleCloseMobileTree} />
 				</div>
 			</MobileDrawer>
 
@@ -297,18 +300,14 @@ function SidebarHeader(props: SidebarHeaderProps) {
 	return (
 		<div className="flex flex-col border-b border-border/60">
 			<div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-2">
-				<Link
-					to="/documents"
-					className="flex min-w-0 items-center gap-2.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
-					onClick={props.onClose}
-				>
+				<div className="flex min-w-0 items-center gap-2.5">
 					<div className="flex min-w-0 flex-col gap-0.5 leading-tight">
 						<span className="truncate text-[15px] font-semibold tracking-wide">
 							{t("documents.title")}
 						</span>
 						<span className="doc-label truncate">{statusLabel}</span>
 					</div>
-				</Link>
+				</div>
 				<Button
 					variant="ghost"
 					size="icon"
@@ -358,6 +357,33 @@ function SidebarHeader(props: SidebarHeaderProps) {
 					</Button>
 				</div>
 			</div>
+		</div>
+	)
+}
+
+type SidebarHomeFooterProps = {
+	readonly onClose: () => void
+}
+
+/**
+ * Footer entry to the documents start page, rendered at the bottom of both
+ * the desktop sidebar and the mobile drawer. The header title used to carry
+ * this link, but in the drawer it sat right next to the close button and
+ * was too easy to hit by accident; a full-width labeled target at the
+ * bottom is deliberate to hit, so both layouts use it now.
+ */
+function SidebarHomeFooter(props: SidebarHomeFooterProps) {
+	const { t } = useTranslation()
+	return (
+		<div className="border-t border-border/60 p-3">
+			<Link
+				to="/documents"
+				onClick={props.onClose}
+				className="flex h-9 items-center justify-center gap-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+			>
+				<CornerUpLeft className="size-4" />
+				{t("documents.backToStart")}
+			</Link>
 		</div>
 	)
 }

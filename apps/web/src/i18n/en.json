@@ -467,6 +467,7 @@
 	},
 	"documents": {
 		"title": "Documents",
+		"backToStart": "Back to documents start page",
 		"new": "New document",
 		"newFolder": "New folder",
 		"defaultNewTitle": "Untitled document",

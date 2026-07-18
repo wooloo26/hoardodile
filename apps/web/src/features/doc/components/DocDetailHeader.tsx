@@ -121,7 +121,7 @@ export const DocDetailHeader = memo(function DocDetailHeader(
 	return (
 		<header className="doc-detail-header sticky top-12 z-22">
 			<div className="doc-toolbar flex min-w-0 items-center gap-2 px-2 py-1.5 md:px-2.5">
-				<div className="flex min-w-0 flex-1 items-center gap-1">
+				<div className="flex min-w-0 flex-1 items-center gap-2.5">
 					{props.onOpenTree !== undefined ? (
 						<Button
 							variant="ghost"
@@ -197,7 +197,7 @@ export const DocDetailHeader = memo(function DocDetailHeader(
 								</Button>
 							)}
 							{!readingMode && (
-								<>
+								<div className="flex gap-1.5">
 									<Button
 										variant="ghost"
 										size="icon"
@@ -222,12 +222,12 @@ export const DocDetailHeader = memo(function DocDetailHeader(
 									>
 										<Redo2 className="size-3.5" />
 									</Button>
-								</>
+								</div>
 							)}
 						</>
 					)}
 				</div>
-				<div className="flex min-w-0 items-center gap-1">
+				<div className="flex min-w-0 items-center gap-2.5">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button

@@ -467,6 +467,7 @@
 	},
 	"documents": {
 		"title": "文档",
+		"backToStart": "返回文档起始页",
 		"new": "新建文档",
 		"newFolder": "新建文件夹",
 		"defaultNewTitle": "未命名文档",
