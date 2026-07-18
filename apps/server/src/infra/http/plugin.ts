@@ -33,11 +33,16 @@ async function protectedHttpPluginImpl(app: FastifyInstance): Promise<void> {
 		// in the path (/files/<token>/ or /frame/<token>/). Same-origin
 		// pages use cookies and don't need a token.
 		//
-		// Token-based auth is only honoured for /files/ and /frame/
-		// routes - plugin iframes have no business hitting other
-		// endpoints.
-
-		const pathMatch = req.url.match(/\/(?:files|frame)\/([A-Za-z0-9_.-]+)\//)
+		// Token-based auth is only honoured for GET/HEAD /files/ and
+		// /frame/ routes - plugin iframes have no business hitting other
+		// endpoints. The regex must run against the path alone: req.url
+		// includes the query string, which would otherwise let a crafted
+		// query (?x=/files/<token>/) smuggle token auth into any route.
+		const pathname = req.url.split("?", 1)[0] ?? ""
+		const pathMatch =
+			req.method === "GET" || req.method === "HEAD"
+				? pathname.match(/\/(?:files|frame)\/([A-Za-z0-9_.-]+)\//)
+				: null
 		if (pathMatch !== null) {
 			const pathToken = pathMatch[1]
 			if (pathToken !== undefined && pathToken.length > 0) {

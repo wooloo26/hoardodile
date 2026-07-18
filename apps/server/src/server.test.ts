@@ -157,6 +157,43 @@ describe("server", () => {
 		expect(res.statusCode).toBe(401)
 	})
 
+	test("path token authenticates GET file routes, even with a query string", async () => {
+		const { sealed } = await built.app.sessions.createToken(86_400)
+		const res = await built.app.inject({
+			method: "GET",
+			url: `/api/resources/res-1/files/${sealed}/foo.png?download=1`,
+			remoteAddress: "127.0.0.1",
+		})
+		// The resource does not exist, but the request must pass auth
+		// (a missing token or cookie would yield 401 instead).
+		expect(res.statusCode).not.toBe(401)
+	})
+
+	test("path token in the query string is not honoured on GET routes", async () => {
+		const { sealed } = await built.app.sessions.createToken(86_400)
+		const res = await built.app.inject({
+			method: "GET",
+			url: `/api/cache/trash?x=/files/${sealed}/`,
+			remoteAddress: "127.0.0.1",
+		})
+		expect(res.statusCode).toBe(401)
+	})
+
+	test("path token in the query string is not honoured on write routes", async () => {
+		const { sealed } = await built.app.sessions.createToken(86_400)
+		for (const url of [
+			`/api/plugin-upload?x=/files/${sealed}/`,
+			`/api/resources/res-1/cover?x=/frame/${sealed}/`,
+		]) {
+			const res = await built.app.inject({
+				method: url.includes("cover") ? "PUT" : "POST",
+				url,
+				remoteAddress: "127.0.0.1",
+			})
+			expect(res.statusCode, url).toBe(401)
+		}
+	})
+
 	test("logout instructs the browser to clear the session cookie", async () => {
 		const login = await built.app.inject({
 			method: "POST",
