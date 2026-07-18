@@ -8,14 +8,30 @@ vi.mock("@tanstack/react-router", () => ({
 
 import { useBlocker } from "@tanstack/react-router"
 
+type BlockLocation = {
+	readonly pathname: string
+	readonly search: unknown
+}
+
 type BlockerOpts = {
-	shouldBlockFn: () => boolean
+	shouldBlockFn: (args: {
+		current: BlockLocation
+		next: BlockLocation
+	}) => boolean
 	enableBeforeUnload: () => boolean
 }
 
 function lastBlockerOpts(): BlockerOpts {
 	const call = vi.mocked(useBlocker).mock.calls.at(-1)?.[0]
 	return call as unknown as BlockerOpts
+}
+
+/** Locations for a real navigation away from the guarded document page. */
+function leavingArgs(): { current: BlockLocation; next: BlockLocation } {
+	return {
+		current: { pathname: "/documents/doc-1", search: {} },
+		next: { pathname: "/documents", search: {} },
+	}
 }
 
 beforeEach(() => {
@@ -31,7 +47,7 @@ describe("useDocLeaveGuard", () => {
 
 		const opts = lastBlockerOpts()
 		expect(opts.enableBeforeUnload()).toBe(true)
-		expect(opts.shouldBlockFn()).toBe(true)
+		expect(opts.shouldBlockFn(leavingArgs())).toBe(true)
 		expect(confirmSpy).toHaveBeenCalledWith("Leave anyway?")
 
 		confirmSpy.mockRestore()
@@ -44,7 +60,7 @@ describe("useDocLeaveGuard", () => {
 		)
 
 		const opts = lastBlockerOpts()
-		expect(opts.shouldBlockFn()).toBe(false)
+		expect(opts.shouldBlockFn(leavingArgs())).toBe(false)
 
 		confirmSpy.mockRestore()
 	})
@@ -57,8 +73,41 @@ describe("useDocLeaveGuard", () => {
 
 		const opts = lastBlockerOpts()
 		expect(opts.enableBeforeUnload()).toBe(false)
-		expect(opts.shouldBlockFn()).toBe(false)
+		expect(opts.shouldBlockFn(leavingArgs())).toBe(false)
 		expect(confirmSpy).not.toHaveBeenCalled()
+
+		confirmSpy.mockRestore()
+	})
+
+	it("allows same-location history pops without confirming (mobile overlay close)", () => {
+		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false)
+		renderHook(() =>
+			useDocLeaveGuard({ dirty: true, message: "Leave anyway?" }),
+		)
+
+		const opts = lastBlockerOpts()
+		const sameLocation = {
+			current: { pathname: "/documents/doc-1", search: { filter: "x" } },
+			next: { pathname: "/documents/doc-1", search: { filter: "x" } },
+		}
+		expect(opts.shouldBlockFn(sameLocation)).toBe(false)
+		expect(confirmSpy).not.toHaveBeenCalled()
+
+		confirmSpy.mockRestore()
+	})
+
+	it("still blocks when only the search params change", () => {
+		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false)
+		renderHook(() =>
+			useDocLeaveGuard({ dirty: true, message: "Leave anyway?" }),
+		)
+
+		const opts = lastBlockerOpts()
+		const searchChanged = {
+			current: { pathname: "/documents/doc-1", search: {} },
+			next: { pathname: "/documents/doc-1", search: { filter: "x" } },
+		}
+		expect(opts.shouldBlockFn(searchChanged)).toBe(true)
 
 		confirmSpy.mockRestore()
 	})
