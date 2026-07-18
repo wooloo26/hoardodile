@@ -1,0 +1,68 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { render, screen } from "@testing-library/react"
+import { describe, expect, it } from "vitest"
+import {
+	grantedPermissionKeys,
+	PluginPermissionBadges,
+} from "./PluginPermissionBadges"
+
+describe("grantedPermissionKeys", () => {
+	it("returns only granted permissions in stable order", () => {
+		expect(
+			grantedPermissionKeys({
+				sourceMeta: true,
+				searchMeta: false,
+				danmaku: true,
+				message: false,
+			}),
+		).toEqual(["sourceMeta", "danmaku"])
+	})
+
+	it("returns empty when nothing is granted", () => {
+		expect(
+			grantedPermissionKeys({
+				sourceMeta: false,
+				searchMeta: false,
+				danmaku: false,
+				message: false,
+			}),
+		).toEqual([])
+	})
+})
+
+describe("PluginPermissionBadges", () => {
+	it("renders a badge for each granted permission only", () => {
+		render(
+			<PluginPermissionBadges
+				permissions={{
+					sourceMeta: true,
+					searchMeta: false,
+					danmaku: false,
+					message: true,
+				}}
+			/>,
+		)
+
+		expect(screen.getByText("Source metadata")).toBeInTheDocument()
+		expect(screen.getByText("Messages")).toBeInTheDocument()
+		expect(screen.queryByText("Search metadata")).not.toBeInTheDocument()
+		expect(screen.queryByText("Danmaku")).not.toBeInTheDocument()
+	})
+
+	it("renders nothing when no permission is granted", () => {
+		const { container } = render(
+			<PluginPermissionBadges
+				permissions={{
+					sourceMeta: false,
+					searchMeta: false,
+					danmaku: false,
+					message: false,
+				}}
+			/>,
+		)
+
+		expect(container).toBeEmptyDOMElement()
+	})
+})

@@ -769,6 +769,10 @@ function SortablePluginItem(props: {
 					<p className="truncate text-xs text-muted-foreground">
 						{resolveDescription(plugin.manifest)}
 					</p>
+					<PluginPermissionBadges
+						className="mt-1"
+						permissions={plugin.manifest.permissions}
+					/>
 					{kinds.length > 0 ? (
 						<div className="mt-1 flex flex-wrap gap-1.5">
 							{kinds.map((kind) => {
@@ -992,6 +996,10 @@ function PluginItemCard(props: {
 					<p className="truncate text-xs text-muted-foreground">
 						{resolveDescription(plugin.manifest)}
 					</p>
+					<PluginPermissionBadges
+						className="mt-1"
+						permissions={plugin.manifest.permissions}
+					/>
 					{kinds.length > 0 ? (
 						<div className="mt-1 flex flex-wrap gap-1.5">
 							{kinds.map((kind) => {

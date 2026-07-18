@@ -25,12 +25,13 @@ export function grantedPermissionKeys(
  */
 export function PluginPermissionBadges(props: {
 	readonly permissions: PluginPermissions
+	readonly className?: string
 }) {
 	const { t } = useTranslation()
 	const granted = grantedPermissionKeys(props.permissions)
 	if (granted.length === 0) return null
 	return (
-		<div className="flex flex-wrap gap-1.5">
+		<div className={`flex flex-wrap gap-1.5 ${props.className ?? ""}`}>
 			{granted.map((key) => (
 				<span
 					key={key}
