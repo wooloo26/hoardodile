@@ -29,9 +29,13 @@ type HandlerModule = {
 	readonly createHandlers: (qc: QueryClient) => readonly HandlerEntry[]
 }
 
-const handlerModules = import.meta.glob<HandlerModule>("./handlers/*.ts", {
-	eager: true,
-})
+// Test files must never be globbed in: they import vitest, which breaks
+// the browser bundle. Tests live in ./handlers/__tests__/ and the
+// negative pattern below is the backstop for files added directly here.
+const handlerModules = import.meta.glob<HandlerModule>(
+	["./handlers/*.ts", "!./handlers/*.test.ts"],
+	{ eager: true },
+)
 
 function buildHandlers(qc: QueryClient): HandlerEntry[] {
 	const handlers: HandlerEntry[] = []

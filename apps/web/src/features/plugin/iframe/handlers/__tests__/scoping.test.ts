@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { pluginMethods } from "../methods"
-import type { HandlerContext, HandlerEntry } from "./registry"
+import { pluginMethods } from "../../methods"
+import type { HandlerContext, HandlerEntry } from "../registry"
 
 vi.mock("@/trpc/factory", () => ({
 	trpcQuery: vi.fn(async () => ({ rows: [] })),
@@ -13,9 +13,9 @@ vi.mock("@/features/plugin/iframe/iframe-pool", () => ({
 }))
 
 import { trpcMutate, trpcQuery } from "@/trpc/factory"
-import { createHandlers as createCommentHandlers } from "./comment"
-import { createHandlers as createDanmakuHandlers } from "./danmaku"
-import { createHandlers as createPreferenceHandlers } from "./preference"
+import { createHandlers as createCommentHandlers } from "../comment"
+import { createHandlers as createDanmakuHandlers } from "../danmaku"
+import { createHandlers as createPreferenceHandlers } from "../preference"
 
 const ctx = {
 	source: {} as Window,
