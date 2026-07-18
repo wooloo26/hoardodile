@@ -9,6 +9,7 @@ Prerequisites: Node.js 24, pnpm via corepack (`corepack enable`), then `pnpm ins
 - `pnpm dev` — web + server + plugin watches. `DEV_PLUGINS=gallery,manga` selects plugins (also accepts paths to external plugin dirs); `DEV_PLUGIN_PATHS` appends pre-built dists without watchers.
 - `pnpm test` / `pnpm lint` / `pnpm format` — all tests / biome check + per-package `tsc --noEmit` / biome check + format with write. Turborepo-cached; repeat runs are near-instant.
 - `pnpm build` — build all plugins, then the server (embeds web dist, plugin dists, migrations, assets).
+- `pnpm build:pkgs` — build only non-apps packages (`packages/*` + `plugins/*`), skipping the web/server/docs apps.
 - `pnpm db:generate` — regenerate Drizzle migrations from domain schemas.
 - `pnpm -F @hoardodile/server setup:dev` — one-shot setup: write admin password, optionally restore a snapshot (`RESTORE_FROM`).
 - `pnpm sdks:pack` — pack the plugin SDKs into `tmp/sdks/*.tgz` for out-of-tree plugin development.
