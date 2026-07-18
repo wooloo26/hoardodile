@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.4](https://github.com/wooloo26/hoardodile/compare/v0.1.3...v0.1.4) (2026-07-18)
+
+### Features
+
+* **server:** add CSP sandbox and frame-ancestors headers ([8f06627](https://github.com/wooloo26/hoardodile/commit/8f06627392b7ae00678d08f0a780f78b4acaee09))
+
+### Bug Fixes
+
+* **server:** scope plugin file tokens to a single resource ([edc81fb](https://github.com/wooloo26/hoardodile/commit/edc81fb83a5a6f56f98e8edeadabb5db975e7ffe))
+* **web:** keep bridge handler tests out of the import.meta.glob bundle ([3cd742d](https://github.com/wooloo26/hoardodile/commit/3cd742d295b8b382acc55982e8efd016e44f40e4))
+* **web:** scope iframe bridge methods to the iframe's own resource ([aa95bac](https://github.com/wooloo26/hoardodile/commit/aa95bac530f4bf09c4b2536ceea9b755ec13a54d))
+
 ## [0.1.3](https://github.com/wooloo26/hoardodile/compare/v0.1.2...v0.1.3) (2026-07-18)
 
 ### Features

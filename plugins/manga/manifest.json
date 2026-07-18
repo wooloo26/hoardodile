@@ -2,7 +2,7 @@
 	"id": "c9cf1c0a-2a99-44fe-ac71-4068bea2fabf",
 	"name": "Manga",
 	"description": "Manga reader with scroll / paged modes, per-page messages and position restore.",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"permissions": {
 		"sourceMeta": true,
 		"searchMeta": true,
