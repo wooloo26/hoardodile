@@ -346,6 +346,9 @@ export function createPluginSandbox(
 		worker: Worker,
 		msg: WorkerMessage,
 	): void {
+		// Stale worker from a replaced spawn: its messages must never
+		// resolve the current worker's load waiter or pending calls.
+		if (state.worker !== worker) return
 		if (msg === null || typeof msg !== "object") return
 		switch (msg.type) {
 			case "loaded": {

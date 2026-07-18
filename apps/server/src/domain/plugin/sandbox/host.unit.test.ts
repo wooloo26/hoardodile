@@ -1,3 +1,4 @@
+import type { ResourceAPI } from "@hoardodile/plugin-sdk-server"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import {
 	createPluginSandbox,
@@ -67,6 +68,30 @@ function lastWorker(): InstanceType<typeof mocks.FakeWorker> {
 	return worker
 }
 
+function createStubApi(overrides: Partial<ResourceAPI> = {}): ResourceAPI {
+	return {
+		logInfo() {},
+		logWarn() {},
+		logError() {},
+		listFiles: async () => [],
+		readFile: async () => new Uint8Array(),
+		statFile: async () => ({ sizeBytes: 0 }),
+		probeImage: async () => undefined,
+		probeVideo: async () => undefined,
+		probeAudio: async () => undefined,
+		isAnimatedImage: async () => false,
+		setCover: async () => {},
+		clearCover: async () => {},
+		setLocalCover: async () => {},
+		...overrides,
+	}
+}
+
+/** Flush microtasks and pending macrotasks. */
+function flush(): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, 0))
+}
+
 describe("plugin sandbox lifecycle (fake worker)", () => {
 	let sandbox: PluginSandbox | undefined
 
@@ -96,5 +121,62 @@ describe("plugin sandbox lifecycle (fake worker)", () => {
 		})
 		await expect(load).resolves.toBeUndefined()
 		expect(worker.terminated).toBe(true)
+	})
+
+	test("messages from a stale worker are ignored", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {})
+		sandbox = createPluginSandbox(unitConfig())
+		// Unload mid-load: the first worker's waiter rejects, load returns
+		// undefined, and the worker is terminated.
+		const first = sandbox.loadPlugin({
+			id: "p",
+			mainPath: "/p/main.js",
+			eager: true,
+		})
+		const stale = lastWorker()
+		sandbox.unloadPlugin("p")
+		await expect(first).resolves.toBeUndefined()
+		expect(stale.terminated).toBe(true)
+
+		// Respawn for the same id.
+		const second = sandbox.loadPlugin({
+			id: "p",
+			mainPath: "/p/main.js",
+			eager: true,
+		})
+		const current = lastWorker()
+		expect(current).not.toBe(stale)
+
+		// The stale worker's late "loaded" must not resolve the new spawn's
+		// load waiter — the second load stays pending until ITS worker loads.
+		let secondSettled = false
+		void second.then(() => {
+			secondSettled = true
+		})
+		stale.emit("message", { type: "loaded", ok: true, hooks: ["detect"] })
+		await flush()
+		expect(secondSettled).toBe(false)
+
+		current.emit("message", { type: "loaded", ok: true, hooks: ["detect"] })
+		const plugin = await second
+		if (plugin === undefined) throw new Error("plugin load failed")
+
+		// A stale "result" must not resolve a pending call on the new worker.
+		const detect = plugin.detect(createStubApi())
+		// Let invoke() register the pending call before delivering results.
+		await flush()
+		stale.emit("message", {
+			type: "result",
+			callId: 1,
+			ok: true,
+			value: { ok: false, reasons: ["stale"] },
+		})
+		current.emit("message", {
+			type: "result",
+			callId: 1,
+			ok: true,
+			value: { ok: true },
+		})
+		await expect(detect).resolves.toEqual({ ok: true })
 	})
 })
