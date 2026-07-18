@@ -81,6 +81,13 @@ export type ResFiles = {
 	/** Remove local cover files and the per-file display cache for a resource. */
 	clearLocalDerivatives(id: string): Promise<void>
 	/**
+	 * Remove only the rendered cover variants for a resource, keeping the
+	 * file-list cache, extracted entries and per-file previews. Used by
+	 * cover replace/clear — the archive entries the cache describes do not
+	 * change with the cover.
+	 */
+	clearCoverDerivatives(id: string): Promise<void>
+	/**
 	 * Read the sidecar `files-cache.json` for a resource. Returns
 	 * `undefined` when the file is missing, malformed, or written by a
 	 * different cache schema version — callers should fall back to
@@ -259,6 +266,13 @@ export function buildResourceFiles(
 		await unlink(paths.local.resFilesCache(id)).catch(() => {})
 	}
 
+	async function clearCoverDerivatives(id: string): Promise<void> {
+		// Only the rendered cover thumbs depend on the cover itself.
+		await clearCoverVariants(paths.local.resource(id), {
+			includeFileCaches: false,
+		})
+	}
+
 	async function readFilesCache<T>(id: string): Promise<T | undefined> {
 		try {
 			const raw = await readFile(paths.local.resFilesCache(id), "utf8")
@@ -296,6 +310,7 @@ export function buildResourceFiles(
 		writeCover,
 		deleteCover,
 		clearLocalDerivatives,
+		clearCoverDerivatives,
 		readFilesCache,
 		writeFilesCache,
 	}
@@ -304,12 +319,17 @@ export function buildResourceFiles(
 /**
  * Remove every cover derivative inside `dir` while leaving any
  * non-derived siblings (`.cover_*`, archived character variants) intact.
- * Today the derivative set is: top-level `*.webp` / `*.avif` variant
- * files plus the `file-preview/` per-file preview cache. Idempotent;
- * missing entries are silently ignored.
+ * The derivative set is: top-level `*.webp` / `*.avif` variant files,
+ * plus — unless `includeFileCaches` is false — the `file-preview/`
+ * per-file preview cache and the `extracted/` materialized-entry cache.
+ * Idempotent; missing entries are silently ignored.
  */
 // write-local-only: `dir` is always a local/ path.
-export async function clearCoverVariants(dir: string): Promise<void> {
+export async function clearCoverVariants(
+	dir: string,
+	opts: { readonly includeFileCaches?: boolean } = {},
+): Promise<void> {
+	const includeFileCaches = opts.includeFileCaches ?? true
 	const entries = await readdir(dir).catch(() => [])
 	await Promise.all(
 		// write-local-only
@@ -318,14 +338,14 @@ export async function clearCoverVariants(dir: string): Promise<void> {
 				await unlink(join(dir, entry)).catch(() => {}) // write-local-only
 				return
 			}
-			if (entry === "file-preview") {
+			if (includeFileCaches && entry === "file-preview") {
 				// write-local-only
 				await rm(join(dir, entry), {
 					recursive: true,
 					force: true,
 				}).catch(() => {})
 			}
-			if (entry === "extracted") {
+			if (includeFileCaches && entry === "extracted") {
 				// write-local-only
 				await rm(join(dir, entry), {
 					recursive: true,

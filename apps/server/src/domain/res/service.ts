@@ -765,7 +765,9 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		repo.findById(id)
 		const latestVersion = deps.paths.latestVersion
 		await files.writeCover(id, latestVersion, ext, data)
-		await files.clearLocalDerivatives(id).catch(() => {})
+		// Only cover thumbs are stale — the file-list cache describes the
+		// archive entries, which a cover change does not touch.
+		await files.clearCoverDerivatives(id).catch(() => {})
 		repo.patch(id, {
 			coverVersion: latestVersion,
 			updatedAt: now(),
@@ -778,7 +780,7 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		repo.findById(id)
 		const latestVersion = deps.paths.latestVersion
 		await files.deleteCover(id, latestVersion)
-		await files.clearLocalDerivatives(id).catch(() => {})
+		await files.clearCoverDerivatives(id).catch(() => {})
 		repo.patch(id, {
 			coverVersion: latestVersion,
 			updatedAt: now(),
