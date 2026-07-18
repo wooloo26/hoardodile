@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { docWorkspaceQueryOptions } from "@/features/doc"
 import { DocTree } from "@/features/doc/DocTree"
+import { useDocsHomeLastOpened } from "@/features/doc/hooks/useDocsHomeLastOpened"
 
 export const Route = createFileRoute("/documents/")({
 	pendingComponent: () => null,
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/documents/")({
  */
 function DocsIndex() {
 	const { t } = useTranslation()
+	useDocsHomeLastOpened()
 	const workspace = useQuery(docWorkspaceQueryOptions())
 	const nodes = workspace.data?.tree ?? []
 	const isLoading = workspace.isPending

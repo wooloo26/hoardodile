@@ -167,6 +167,11 @@ type TopBarDocLinkProps = {
 	readonly pathname: string
 }
 
+/**
+ * Documents entry points at the user's last location inside the section:
+ * the last opened document, or the documents home when that was the last
+ * place visited (recorded as the empty value — see `useDocsHomeLastOpened`).
+ */
 function TopBarDocLink(props: TopBarDocLinkProps) {
 	const { t } = useTranslation()
 	const [lastDocId] = useStringPrefSync(prefKeys.docLastOpened, "")
