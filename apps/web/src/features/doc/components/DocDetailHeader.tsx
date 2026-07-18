@@ -426,7 +426,7 @@ const VersionSelector = memo(function VersionSelector(props: {
 				<Button
 					variant="outline"
 					size="sm"
-					className="max-w-[10rem] truncate md:max-w-[14rem]"
+					className="max-w-40 truncate md:max-w-56"
 					title={t("documents.diff.compareWith")}
 					data-testid="document-diff-version-selector"
 				>

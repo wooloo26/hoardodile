@@ -208,8 +208,8 @@ export function MangaPagedView(props: {
 				centerOnInit
 			>
 				<TransformComponent
-					wrapperClass="!h-full !w-full"
-					contentClass="!flex !h-full !w-full !items-center !justify-center"
+					wrapperClass="h-full! w-full!"
+					contentClass="flex! h-full! w-full! items-center! justify-center!"
 				>
 					<div className="relative flex h-full w-full items-center justify-center">
 						<img

@@ -197,7 +197,7 @@ const TimelineBackupNode = memo(function TimelineBackupNode(
 	return (
 		<div className="relative flex items-center gap-2">
 			{/* Horizontal connector from the main spine to the backup icon */}
-			<div className="absolute -left-12 top-1/2 h-px w-[3.75rem] -translate-y-1/2 bg-border" />
+			<div className="absolute -left-12 top-1/2 h-px w-15 -translate-y-1/2 bg-border" />
 
 			<div className="relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
 				<HardDrive className="size-3" />

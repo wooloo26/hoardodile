@@ -22,7 +22,7 @@ function CharGraphCharacterNodeComponent(props: Props) {
 			<Handle
 				type="target"
 				position={Position.Top}
-				className="!size-1 !bg-muted-foreground/50"
+				className="size-1! bg-muted-foreground/50!"
 			/>
 			<CharThumb
 				charId={data.charId}
@@ -36,7 +36,7 @@ function CharGraphCharacterNodeComponent(props: Props) {
 			<Handle
 				type="source"
 				position={Position.Bottom}
-				className="!size-1 !bg-muted-foreground/50"
+				className="size-1! bg-muted-foreground/50!"
 			/>
 		</div>
 	)

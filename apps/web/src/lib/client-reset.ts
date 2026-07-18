@@ -14,7 +14,7 @@ function showReloadOverlay(message?: string): void {
 	overlay.setAttribute("role", "status")
 	overlay.setAttribute("aria-live", "polite")
 	overlay.className =
-		"fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm text-foreground"
+		"fixed inset-0 z-100 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm text-foreground"
 
 	const spinner = document.createElement("div")
 	spinner.className =

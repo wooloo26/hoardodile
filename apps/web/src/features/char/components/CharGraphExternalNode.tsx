@@ -16,7 +16,7 @@ function CharGraphExternalNodeComponent(props: Props) {
 			<Handle
 				type="target"
 				position={Position.Top}
-				className="!size-1 !bg-muted-foreground/50"
+				className="size-1! bg-muted-foreground/50!"
 			/>
 			<span className="max-w-full truncate">{data.name}</span>
 		</div>
