@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto"
 import {
 	existsSync,
 	mkdirSync,
@@ -8,6 +9,7 @@ import {
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { buffer } from "node:stream/consumers"
 import { loadEnv } from "src/config/env.ts"
 import { hashPassword } from "src/domain/auth/password.ts"
 import { readPendingRestoreMarker } from "src/domain/backup/marker.ts"
@@ -21,6 +23,7 @@ import {
 	stageViewCloneDb,
 } from "src/infra/storage/version.ts"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
+import yazl from "yazl"
 import { type BuiltServer, buildServer } from "./server.ts"
 
 async function bootstrap(): Promise<BuiltServer> {
@@ -911,5 +914,119 @@ describe("FORCE_HTTPS", () => {
 		expect(res.statusCode).toBe(200)
 		const cookieLine = firstSetCookie(res.headers["set-cookie"])
 		expect(cookieLine).toMatch(/Secure/i)
+	})
+})
+
+describe("plugin upload limits", () => {
+	let built: BuiltServer
+	let dbh: ReturnType<typeof openDb>
+	let consoleWarnSpy: ReturnType<typeof vi.spyOn> | undefined
+	let consoleInfoSpy: ReturnType<typeof vi.spyOn> | undefined
+
+	beforeEach(async () => {
+		consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+		consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {})
+		dbh = openDb(":memory:")
+		dbh.runMigrations()
+		const passwordHash = await hashPassword("hunter2")
+		dbh.db
+			.insert(schema.auth)
+			.values({ singleton: 1, passwordHash, updatedAt: Date.now() })
+			.run()
+		const env = loadEnv({
+			NODE_ENV: "test",
+			LOG_LEVEL: "silent",
+			PLUGIN_UPLOAD_MAX_BYTES: "1024",
+		} satisfies NodeJS.ProcessEnv)
+		built = await buildServer({ env, dbHandles: dbh })
+		await built.app.ready()
+	})
+
+	afterEach(async () => {
+		await built.close()
+		dbh.close()
+		consoleWarnSpy?.mockRestore()
+		consoleInfoSpy?.mockRestore()
+	})
+
+	async function loginCookie(): Promise<string> {
+		const login = await built.app.inject({
+			method: "POST",
+			url: "/auth/login",
+			remoteAddress: "127.0.0.1",
+			payload: { password: "hunter2" },
+		})
+		expect(login.statusCode).toBe(200)
+		const cookieLine = firstSetCookie(login.headers["set-cookie"])
+		const headerPart = cookieLine.split(";")[0]
+		assertString(headerPart)
+		return headerPart
+	}
+
+	async function buildZip(
+		entries: readonly (readonly [string, Buffer])[],
+	): Promise<Buffer> {
+		const zip = new yazl.ZipFile()
+		for (const [name, data] of entries) {
+			zip.addBuffer(data, name)
+		}
+		zip.end()
+		return buffer(zip.outputStream)
+	}
+
+	function multipartZip(zipBuf: Buffer): {
+		readonly payload: Buffer
+		readonly contentType: string
+	} {
+		const boundary = "----hoardodile-test-boundary"
+		return {
+			payload: Buffer.concat([
+				Buffer.from(
+					`--${boundary}\r\nContent-Disposition: form-data; name="archive"; filename="plugin.zip"\r\nContent-Type: application/zip\r\n\r\n`,
+				),
+				zipBuf,
+				Buffer.from(`\r\n--${boundary}--\r\n`),
+			]),
+			contentType: `multipart/form-data; boundary=${boundary}`,
+		}
+	}
+
+	test("rejects a plugin zip over the compressed limit with 413", async () => {
+		const cookie = await loginCookie()
+		// Random bytes are incompressible, so the zip clears 1024 bytes.
+		const zipBuf = await buildZip([
+			["manifest.json", Buffer.from("{}")],
+			["blob.bin", randomBytes(2048)],
+		])
+		const { payload, contentType } = multipartZip(zipBuf)
+		const res = await built.app.inject({
+			method: "POST",
+			url: "/api/plugin-upload",
+			remoteAddress: "127.0.0.1",
+			headers: { cookie, "content-type": contentType },
+			payload,
+		})
+		expect(res.statusCode).toBe(413)
+		expect(res.json().kind).toBe("plugin.upload_too_large")
+	})
+
+	test("rejects a plugin zip over the extracted budget with 400", async () => {
+		const cookie = await loginCookie()
+		// 2048 zero bytes deflate to almost nothing: the compressed upload
+		// passes the 1024-byte cap, but extraction exceeds the budget.
+		const zipBuf = await buildZip([
+			["manifest.json", Buffer.from("{}")],
+			["zeros.bin", Buffer.alloc(2048, 0)],
+		])
+		const { payload, contentType } = multipartZip(zipBuf)
+		const res = await built.app.inject({
+			method: "POST",
+			url: "/api/plugin-upload",
+			remoteAddress: "127.0.0.1",
+			headers: { cookie, "content-type": contentType },
+			payload,
+		})
+		expect(res.statusCode).toBe(400)
+		expect(res.json().kind).toBe("resource.archive_too_large")
 	})
 })

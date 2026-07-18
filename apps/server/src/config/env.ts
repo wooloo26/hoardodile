@@ -167,6 +167,18 @@ const envSchema = z
 			.positive()
 			.default(64 * 1024 * 1024 * 1024),
 		/**
+		 * Upper bound on a plugin upload, in bytes -- applied both to the
+		 * compressed zip payload and to the cumulative extracted size. Plugin
+		 * packages are a few source files plus assets, so anything near this
+		 * bound is almost certainly abuse (e.g. a zip bomb). Defaults to
+		 * 256 MiB.
+		 */
+		PLUGIN_UPLOAD_MAX_BYTES: z.coerce
+			.number()
+			.int()
+			.positive()
+			.default(256 * 1024 * 1024),
+		/**
 		 * Optional overrides for the `ffmpeg` / `ffprobe` binaries.
 		 * In dev `ffmpeg-static` (devDep) or PATH resolve them instead, so
 		 * neither CI nor a fresh clone needs extra setup.

@@ -20,10 +20,15 @@ export type PluginUploadsDeps = {
 		destDir: string,
 		maxExtractedBytes: number,
 	) => Promise<void>
+	/**
+	 * Cumulative uncompressed byte budget for one plugin zip. Defends
+	 * against zip bombs; sized via `PLUGIN_UPLOAD_MAX_BYTES`.
+	 */
+	readonly maxExtractedBytes: number
 }
 
 export function buildPluginUploads(deps: PluginUploadsDeps): PluginUploads {
-	const { pluginsDir, extractZip } = deps
+	const { pluginsDir, extractZip, maxExtractedBytes } = deps
 
 	async function installFromZip(
 		archive: NodeJS.ReadableStream,
@@ -34,7 +39,7 @@ export function buildPluginUploads(deps: PluginUploadsDeps): PluginUploads {
 		try {
 			await mkdir(stagingDir, { recursive: true })
 
-			await extractZip(archive, stagingDir, Number.MAX_SAFE_INTEGER)
+			await extractZip(archive, stagingDir, maxExtractedBytes)
 
 			const manifestPath = join(stagingDir, "manifest.json")
 			if (!existsSync(manifestPath)) {
