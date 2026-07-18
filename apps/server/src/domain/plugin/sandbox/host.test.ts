@@ -203,6 +203,23 @@ describe("plugin sandbox", () => {
 		})
 	})
 
+	test("watchdog tolerates a host-side API call slower than the activity window", async () => {
+		sandbox = createPluginSandbox(fastConfig({ watchdogMs: 250 }))
+		const plugin = await sandbox.loadPlugin({
+			id: "slow-api",
+			mainPath: fixture("slow-api-plugin.mjs"),
+			eager: true,
+		})
+		const api = createStubApi({
+			readFile: async () => {
+				// Host work outlasts the watchdog with zero worker-side activity.
+				await new Promise((resolve) => setTimeout(resolve, 500))
+				return new Uint8Array([1])
+			},
+		})
+		await expect(plugin?.detect(api)).resolves.toEqual({ ok: true })
+	})
+
 	test("hard timeout stops a hook that stays active but never returns", async () => {
 		sandbox = createPluginSandbox(
 			fastConfig({ watchdogMs: 250, hardTimeoutMs: 600 }),

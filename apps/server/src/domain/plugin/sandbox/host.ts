@@ -28,7 +28,8 @@ export type PluginSandboxConfig = {
 	/**
 	 * Kill the worker when an invocation neither returns nor shows API
 	 * activity for this long. Long-running hooks that keep calling the
-	 * resource API reset the watchdog continuously and never trip it.
+	 * resource API reset the watchdog continuously and never trip it;
+	 * time spent inside a host-side API call does not count as inactivity.
 	 */
 	readonly watchdogMs: number
 	/** Absolute per-invocation cap, regardless of activity. */
@@ -80,6 +81,12 @@ type PendingCall = {
 	readonly api: ResourceAPI
 	readonly resolve: (value: unknown) => void
 	readonly reject: (err: Error) => void
+	/**
+	 * Host-side API dispatches currently running for this call. While any
+	 * are in flight the watchdog is paused — the plugin is blocked on the
+	 * host, not hung.
+	 */
+	apiInFlight: number
 	watchdog?: NodeJS.Timeout
 	hardTimer?: NodeJS.Timeout
 }
@@ -288,7 +295,7 @@ export function createPluginSandbox(
 
 		const callId = nextCallId++
 		return new Promise((resolve, reject) => {
-			const call: PendingCall = { api, resolve, reject }
+			const call: PendingCall = { api, resolve, reject, apiInFlight: 0 }
 			state.pending.set(callId, call)
 			armWatchdog(state, worker, callId, call)
 			call.hardTimer = setTimeout(() => {
@@ -385,12 +392,19 @@ export function createPluginSandbox(
 			case "api": {
 				const call = state.pending.get(msg.callId)
 				if (call === undefined) return
-				armWatchdog(state, worker, msg.callId, call)
+				// Pause the watchdog while the host executes the API call —
+				// a slow readFile/probeVideo is host work, not a hung plugin.
+				call.apiInFlight += 1
+				if (call.watchdog !== undefined) {
+					clearTimeout(call.watchdog)
+					call.watchdog = undefined
+				}
 				void dispatchApi(
 					worker,
 					state,
+					msg.callId,
 					msg.apiCallId,
-					call.api,
+					call,
 					msg.method,
 					msg.args,
 				)
@@ -399,7 +413,7 @@ export function createPluginSandbox(
 			case "log": {
 				const call = state.pending.get(msg.callId)
 				if (call === undefined) return
-				armWatchdog(state, worker, msg.callId, call)
+				if (call.apiInFlight === 0) armWatchdog(state, worker, msg.callId, call)
 				dispatchLog(call.api, msg.method, msg.args)
 				return
 			}
@@ -409,8 +423,9 @@ export function createPluginSandbox(
 	async function dispatchApi(
 		worker: Worker,
 		state: PluginState,
+		callId: number,
 		apiCallId: number,
-		api: ResourceAPI,
+		call: PendingCall,
 		method: ApiMethodName,
 		args: readonly unknown[],
 	): Promise<void> {
@@ -426,20 +441,27 @@ export function createPluginSandbox(
 				ok ? transferListOf(value) : [],
 			)
 		}
-		if (!isApiMethod(method) || LOG_METHOD_NAMES.has(method)) {
-			respond(false, undefined, {
-				name: "Error",
-				message: `unknown API method: ${String(method)}`,
-			})
-			return
-		}
 		try {
+			if (!isApiMethod(method) || LOG_METHOD_NAMES.has(method)) {
+				respond(false, undefined, {
+					name: "Error",
+					message: `unknown API method: ${String(method)}`,
+				})
+				return
+			}
 			// RPC boundary: the worker-side proxy is generated from the same
 			// method list, so args always arrive in contract order.
-			const fn = api[method] as (...a: readonly unknown[]) => unknown
+			const fn = call.api[method] as (...a: readonly unknown[]) => unknown
 			respond(true, await fn(...args))
 		} catch (err) {
 			respond(false, undefined, serializeError(err))
+		} finally {
+			call.apiInFlight -= 1
+			// Resume the watchdog once the host-side work for this call
+			// has drained and the call is still alive.
+			if (call.apiInFlight === 0 && state.pending.get(callId) === call) {
+				armWatchdog(state, worker, callId, call)
+			}
 		}
 	}
 
