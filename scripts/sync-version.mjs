@@ -15,6 +15,7 @@ const manifests = [
 	"plugins/gallery/manifest.json",
 	"plugins/manga/manifest.json",
 	"plugins/novel/manifest.json",
+	"packages/plugin-file/manifest.json",
 ]
 
 const { version } = JSON.parse(readFileSync("package.json", "utf8"))
