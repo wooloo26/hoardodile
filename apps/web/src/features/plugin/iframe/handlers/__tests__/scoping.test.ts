@@ -4,7 +4,28 @@ import { pluginMethods } from "../../methods"
 import type { HandlerContext, HandlerEntry } from "../registry"
 
 vi.mock("@/trpc/factory", () => ({
-	trpcQuery: vi.fn(async () => ({ rows: [] })),
+	trpcQuery: vi.fn(async (namespace: string) => {
+		if (namespace === "danmaku") {
+			return [
+				{
+					id: "d1",
+					anchor: {
+						resId: "r-1",
+						data: { kind: "videoTime", filename: "a.mp4", timeMs: 100 },
+					},
+				},
+				{
+					id: "d2",
+					anchor: {
+						resId: "r-1",
+						data: { kind: "videoTime", filename: "b.mp4", timeMs: 50 },
+					},
+				},
+				{ id: "d3", anchor: { resId: "r-1" } },
+			]
+		}
+		return { rows: [] }
+	}),
 	trpcMutate: vi.fn(async () => ({})),
 }))
 
@@ -97,6 +118,20 @@ describe("bridge resource scoping", () => {
 		expect(trpcQuery).toHaveBeenCalledWith("danmaku", "list", {
 			anchor: { resId: "r-1" },
 		})
+	})
+
+	it("listDanmaku without a filter returns the full resource list", async () => {
+		const handler = handlerOf(danmakuHandlers, pluginMethods.listDanmaku)
+		const rows = (await handler(ctx, {})) as readonly { id: string }[]
+		expect(rows.map((d) => d.id)).toEqual(["d1", "d2", "d3"])
+	})
+
+	it("listDanmaku applies the filter against anchor data", async () => {
+		const handler = handlerOf(danmakuHandlers, pluginMethods.listDanmaku)
+		const rows = (await handler(ctx, {
+			filter: { kind: "videoTime", filename: "a.mp4" },
+		})) as readonly { id: string }[]
+		expect(rows.map((d) => d.id)).toEqual(["d1"])
 	})
 
 	it("createDanmaku overrides a foreign anchor resId", async () => {

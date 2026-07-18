@@ -113,7 +113,9 @@ export type PluginRequests = {
 		readonly output: import("@hoardodile/plugin-sdk-types").Message
 	}
 	listDanmaku: {
-		readonly input: undefined
+		readonly input: {
+			readonly filter?: import("@hoardodile/plugin-sdk-types").DanmakuListFilter
+		}
 		readonly output: readonly import("@hoardodile/plugin-sdk-types").Danmaku[]
 	}
 	createDanmaku: {

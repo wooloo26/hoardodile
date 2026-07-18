@@ -24,6 +24,7 @@ import type {
 	AnchorData,
 	Codec,
 	Danmaku,
+	DanmakuListFilter,
 	DanmakuMode,
 	Message,
 	MutationState,
@@ -252,8 +253,10 @@ export function createIframeHostAPI<
 		return host.request("createMessage", input)
 	}
 
-	function listDanmaku(): Promise<readonly Danmaku[]> {
-		return host.request("listDanmaku")
+	function listDanmaku(
+		filter?: DanmakuListFilter,
+	): Promise<readonly Danmaku[]> {
+		return host.request("listDanmaku", { filter })
 	}
 
 	function createDanmaku(input: {

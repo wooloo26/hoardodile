@@ -7,6 +7,18 @@ export type ResourceId = string & { readonly __brand: "ResourceId" }
 /** Web plugin danmaku mode. */
 export type DanmakuMode = "scroll" | "top" | "bottom"
 
+/**
+ * Client-side danmaku list filter, matched against the anchor's
+ * plugin-defined `data` fields (e.g. `{ kind: "videoTime", filename }`).
+ * Declared fields must all equal the anchor data's values.
+ */
+export type DanmakuListFilter = {
+	readonly kind?: string
+	readonly filename?: string
+	readonly page?: number
+	readonly paragraph?: number
+}
+
 /** Web plugin anchor for messages and danmaku. */
 export type ResAnchor = {
 	readonly resId: string

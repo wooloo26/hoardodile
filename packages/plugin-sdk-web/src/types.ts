@@ -1,6 +1,7 @@
 import type {
 	AnchorData,
 	Danmaku,
+	DanmakuListFilter,
 	DanmakuMode,
 	FileStats,
 	Message,
@@ -22,14 +23,6 @@ export type PluginResource<TSchema extends PluginSchema = PluginSchema> = {
 export type Codec<T> = {
 	readonly encode: (value: T) => string
 	readonly decode: (raw: string) => T | undefined
-}
-
-/** Client-side filter applied after fetching all danmaku for a resource. */
-export type DanmakuListFilter = {
-	readonly kind?: string
-	readonly filename?: string
-	readonly page?: number
-	readonly paragraph?: number
 }
 
 /** Reactive query state returned by hooks. */
@@ -94,7 +87,9 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	}) => Promise<Message>
 
 	/** Danmaku. */
-	readonly listDanmaku: () => Promise<readonly Danmaku[]>
+	readonly listDanmaku: (
+		filter?: DanmakuListFilter,
+	) => Promise<readonly Danmaku[]>
 	readonly createDanmaku: (input: {
 		readonly text: string
 		readonly anchor: AnchorData
@@ -152,6 +147,7 @@ export type PluginErrorInfo = {
 export type {
 	AnchorData,
 	Danmaku,
+	DanmakuListFilter,
 	DanmakuMode,
 	Message,
 	ResAnchor,

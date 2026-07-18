@@ -1,6 +1,7 @@
 import type {
 	AnchorData,
 	Danmaku,
+	DanmakuListFilter,
 	DanmakuMode,
 	Message,
 	PluginSchema,
@@ -114,11 +115,17 @@ function useMessageList(host: Host) {
 
 // ── Danmaku queries ───────────────────────────────────────────────────────
 
-function useDanmakuList(host: Host, _filter?: unknown) {
+function useDanmakuList(host: Host, filter?: DanmakuListFilter) {
 	return useHostQuery<"listDanmaku", readonly Danmaku[]>(host, {
 		method: "listDanmaku",
-		params: undefined,
+		params: { filter },
 		invalidateKey: "danmaku:invalidate",
+		extraDeps: [
+			filter?.kind,
+			filter?.filename,
+			filter?.page,
+			filter?.paragraph,
+		],
 	})
 }
 
@@ -295,7 +302,8 @@ export function createPluginQueryAPI<
 			useFileList(host) as QueryState<readonly TSchema["file"][]>,
 		useMessageList: () => useMessageList(host),
 		useCreateMessage: () => useCreateMessage(host),
-		useDanmakuList: (filter?: unknown) => useDanmakuList(host, filter),
+		useDanmakuList: (filter?: DanmakuListFilter) =>
+			useDanmakuList(host, filter),
 		useCreateDanmaku: () => useCreateDanmaku(host),
 		usePref: <T>(key: string, defaultValue: T, codec?: Codec<T>) =>
 			usePref(host, key, defaultValue, codec),
