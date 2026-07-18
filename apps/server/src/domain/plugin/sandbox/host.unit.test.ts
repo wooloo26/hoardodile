@@ -179,4 +179,47 @@ describe("plugin sandbox lifecycle (fake worker)", () => {
 		})
 		await expect(detect).resolves.toEqual({ ok: true })
 	})
+
+	test("concurrent loadPlugin calls for the same id keep the newer state alive", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {})
+		sandbox = createPluginSandbox(unitConfig())
+		const first = sandbox.loadPlugin({
+			id: "p",
+			mainPath: "/p/old.js",
+			eager: true,
+		})
+		const w1 = lastWorker()
+
+		// Second load for the same id while the first is still in flight:
+		// the old worker is torn down, which rejects the first load.
+		const second = sandbox.loadPlugin({
+			id: "p",
+			mainPath: "/p/new.js",
+			eager: true,
+		})
+		expect(w1.terminated).toBe(true)
+		await flush()
+		const w2 = lastWorker()
+		expect(w2).not.toBe(w1)
+		await expect(first).resolves.toBeUndefined()
+
+		// The first call's failure path must not evict the newer state.
+		w2.emit("message", { type: "loaded", ok: true, hooks: ["detect"] })
+		const plugin = await second
+		if (plugin === undefined) throw new Error("plugin load failed")
+
+		const detect = plugin.detect(createStubApi())
+		await flush()
+		w2.emit("message", {
+			type: "result",
+			callId: 1,
+			ok: true,
+			value: { ok: true },
+		})
+		await expect(detect).resolves.toEqual({ ok: true })
+
+		// The newer state is still tracked — dispose terminates its worker.
+		await sandbox.disposeAll()
+		expect(w2.terminated).toBe(true)
+	})
 })

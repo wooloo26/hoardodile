@@ -142,11 +142,14 @@ export function createPluginSandbox(
 			await ensureLoaded(state)
 		} catch (err) {
 			console.error(`[plugin-sandbox] ${opts.id}: failed to load main.js`, err)
-			states.delete(opts.id)
+			// A concurrent loadPlugin for the same id may have replaced this
+			// state — only remove the map entry when it is still ours.
+			state.disposed = true
+			if (states.get(opts.id) === state) states.delete(opts.id)
 			return undefined
 		}
 		if (!opts.eager) {
-			teardownWorker(state)
+			void teardownWorker(state)
 		}
 		return createSandboxedPlugin(state.hooks ?? ["detect"], (hook, api) =>
 			invoke(state, hook, api),
