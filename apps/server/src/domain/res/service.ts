@@ -230,12 +230,11 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 		return buildSourceArtifactView(viewDeps, resId, fileVersion, spec)
 	}
 
-	async function buildResourceAPI(
+	function wrapViewInApi(
+		view: SourceArtifactView,
 		resId: string,
 		fileVersion: number,
-		stats: FileStats | undefined,
-	): Promise<ResourceAPI> {
-		const view = await buildResourceView(resId, fileVersion, stats)
+	): ResourceAPI {
 		return createPluginResourceAPI({
 			view,
 			probeImage,
@@ -244,6 +243,15 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 			probeCache,
 			cacheScope: `${resId}:${fileVersion}`,
 		})
+	}
+
+	async function buildResourceAPI(
+		resId: string,
+		fileVersion: number,
+		stats: FileStats | undefined,
+	): Promise<ResourceAPI> {
+		const view = await buildResourceView(resId, fileVersion, stats)
+		return wrapViewInApi(view, resId, fileVersion)
 	}
 
 	const cover = buildResourceCoverOps({
@@ -571,13 +579,14 @@ export function createResourceService(deps: ResServiceDeps): ResService {
 	async function computeAndCacheFiles(id: string): Promise<SerializedFileList> {
 		const row = repo.findById(id)
 		const stats = parseFileStats(row.fileStats)
+		let api: ResourceAPI
 		try {
-			await buildResourceView(id, row.fileVersion, stats)
+			// Build the view once — validation and the API share it.
+			const view = await buildResourceView(id, row.fileVersion, stats)
+			api = wrapViewInApi(view, id, row.fileVersion)
 		} catch {
 			return []
 		}
-
-		const api = await buildResourceAPI(id, row.fileVersion, stats)
 
 		// If the owning plugin provides buildFileList, delegate to it.
 		if (row.contentPluginId !== null) {

@@ -1,5 +1,5 @@
 import { createWriteStream, mkdtempSync, rmSync } from "node:fs"
-import { mkdir, readFile, stat } from "node:fs/promises"
+import { mkdir, readFile, rm, stat } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { buffer } from "node:stream/consumers"
@@ -179,6 +179,41 @@ describe("withMaterializedEntry concurrent extraction", () => {
 			expect(cached.equals(PAYLOAD)).toBe(true)
 			const info = await stat(pathA)
 			expect(info.size).toBe(PAYLOAD.length)
+		} finally {
+			rmSync(root, { recursive: true, force: true })
+		}
+	})
+})
+
+describe("resolveByteRange archive stat", () => {
+	test("stats the archive once per view, not per entry", async () => {
+		const root = mkdtempSync(join(tmpdir(), "src-view-stat-"))
+		try {
+			const paths = createStoragePaths({ root, latestVersion: 1 })
+			const resId = "res-stat"
+			const archivePath = paths.latest.resSourceArchive(resId)
+			await mkdir(join(root, "versions", "1", "resources", resId), {
+				recursive: true,
+			})
+			await writeStoredZip(archivePath, [["a.jpg", Buffer.from("x")]])
+			const deps = { paths, zipCdCache: createZipCdCache() }
+
+			const view = buildSourceArtifactView(deps, resId, 1, {
+				kind: "zip",
+				archivePath,
+			})
+			await expect(view.resolveByteRange("a.jpg")).resolves.toBeDefined()
+			await expect(view.resolveByteRange("a.jpg")).resolves.toBeDefined()
+
+			// Within one view's lifetime the memoized stat survives the
+			// archive's disappearance; a fresh view stats again and misses.
+			await rm(archivePath)
+			await expect(view.resolveByteRange("a.jpg")).resolves.toBeDefined()
+			const fresh = buildSourceArtifactView(deps, resId, 1, {
+				kind: "zip",
+				archivePath,
+			})
+			await expect(fresh.resolveByteRange("a.jpg")).resolves.toBeUndefined()
 		} finally {
 			rmSync(root, { recursive: true, force: true })
 		}

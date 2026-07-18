@@ -1,4 +1,4 @@
-import { createWriteStream } from "node:fs"
+import { createWriteStream, type Stats } from "node:fs"
 import { mkdir, rename, rm, stat } from "node:fs/promises"
 import { dirname } from "node:path"
 import type { Readable } from "node:stream"
@@ -203,6 +203,15 @@ function buildZipView(
 	fileVersion: number,
 	archivePath: string,
 ): SourceArtifactView {
+	// Archive bytes are immutable for a given fileVersion, and the view
+	// itself is rebuilt per operation — one memoized stat per view keeps
+	// every resolveByteRange off the syscall path without staleness risk.
+	let archiveInfo: Promise<Stats | undefined> | undefined
+	function statArchive(): Promise<Stats | undefined> {
+		archiveInfo ??= stat(archivePath).catch(() => undefined)
+		return archiveInfo
+	}
+
 	async function listEntries(): Promise<readonly string[]> {
 		const records = await deps.zipCdCache.list(resId, fileVersion, archivePath)
 		return records.map((r) => r.name)
@@ -346,7 +355,7 @@ function buildZipView(
 				`${SOURCE_ARCHIVE_NAME} for ${resId} contains non-STORED entry ${relPath} (method ${entry.compressionMethod}). Re-upload to rewrite.`,
 			)
 		}
-		const info = await stat(archivePath).catch(() => undefined)
+		const info = await statArchive()
 		if (info === undefined) return undefined
 		const size = entry.uncompressedSize
 		const end = size === 0 ? entry.dataOffset : entry.dataOffset + size - 1
