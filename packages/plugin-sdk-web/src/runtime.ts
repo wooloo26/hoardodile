@@ -63,6 +63,10 @@ export function ensureHostBridge(): Host {
 	window.addEventListener(
 		"message",
 		function handleMessage(event: MessageEvent) {
+			// Only the host (parent window) may drive this bridge; any
+			// other window that obtains a reference to this frame must
+			// not be able to inject fake responses or pushes.
+			if (event.source !== window.parent) return
 			const msg = event.data
 			if (!isValidHostMessage(msg)) return
 
@@ -436,6 +440,8 @@ export function mountPlugin(mount: (ctx: PluginIframeContext) => void): void {
 	}
 
 	window.addEventListener("message", (event: MessageEvent) => {
+		// Only trust context/visibility pushes from the host parent window.
+		if (event.source !== window.parent) return
 		const msg = event.data
 		if (!isRecord(msg) || msg.type !== "push") return
 		if (msg.key === "context") {

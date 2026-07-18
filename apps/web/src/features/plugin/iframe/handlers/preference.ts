@@ -4,7 +4,7 @@ import { broadcastToAll } from "@/features/plugin/iframe/iframe-pool"
 import { hostPushKeys } from "@/lib/keys"
 import { trpcMutate } from "@/trpc/factory"
 import { pluginMethods } from "../methods"
-import { defineHandler, type HandlerEntry } from "./registry"
+import { assertOwnResource, defineHandler, type HandlerEntry } from "./registry"
 
 export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 	return [
@@ -33,9 +33,10 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 				value: z.string(),
 			}),
 			async (ctx, params) => {
+				assertOwnResource(ctx, params.resId)
 				await trpcMutate("pluginPreference", "cacheSet", {
 					pluginId: ctx.pluginId,
-					resId: params.resId,
+					resId: ctx.resId,
 					key: params.key,
 					value: params.value,
 				})
@@ -43,7 +44,7 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 					type: "push",
 					key: hostPushKeys.cacheChanged,
 					data: {
-						resId: params.resId,
+						resId: ctx.resId,
 						key: params.key,
 						value: params.value,
 					},

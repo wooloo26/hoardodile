@@ -120,7 +120,7 @@ function wrapHtml(body: string): string {
 		'<style type="text/css">html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style>',
 		"</head>",
 		"<body>",
-		`<script>(function(){window.__pluginContext=undefined;window.__pluginVisibility=undefined;window.addEventListener("message",function(e){if(e.data?.type==="push"){if(e.data?.key==="context"){window.__pluginContext=e.data.data;window.dispatchEvent(new CustomEvent("context-ready",{detail:e.data.data}))}else if(e.data?.key==="visibility"){window.__pluginVisibility=e.data.data;window.dispatchEvent(new CustomEvent("visibility-changed",{detail:e.data.data}))}}})})();</script>`,
+		`<script>(function(){window.__pluginContext=undefined;window.__pluginVisibility=undefined;window.addEventListener("message",function(e){if(e.source!==window.parent)return;if(e.data?.type==="push"){if(e.data?.key==="context"){window.__pluginContext=e.data.data;window.dispatchEvent(new CustomEvent("context-ready",{detail:e.data.data}))}else if(e.data?.key==="visibility"){window.__pluginVisibility=e.data.data;window.dispatchEvent(new CustomEvent("visibility-changed",{detail:e.data.data}))}}})})();</script>`,
 		body,
 		"</body>",
 		"</html>",
