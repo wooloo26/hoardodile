@@ -42,12 +42,21 @@ export type PluginLoaderDeps = {
 
 export function createPluginLoader(deps: PluginLoaderDeps): PluginLoader {
 	let registry: PluginRegistry | undefined
+	// Serializes loadAll/rescan: an overlapping run would dispose workers
+	// out from under the previous run's in-flight plugin loads.
+	let chain: Promise<unknown> = Promise.resolve()
 
 	const discovery = createPluginDiscovery(deps)
 	const sandbox = deps.sandbox ?? createPluginSandbox()
 	const activation = createPluginActivation({ sandbox })
 
-	async function loadAll(): Promise<PluginRegistry> {
+	function loadAll(): Promise<PluginRegistry> {
+		const run = chain.then(doLoadAll)
+		chain = run.catch(() => {})
+		return run
+	}
+
+	async function doLoadAll(): Promise<PluginRegistry> {
 		const disposeStart = performance.now()
 		// Terminate workers from the previous registry. This also makes
 		// rescan pick up changed plugin code — worker respawn re-imports

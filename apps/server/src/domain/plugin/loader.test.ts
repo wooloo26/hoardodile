@@ -5,6 +5,7 @@ import type { PluginManifest } from "@hoardodile/schemas"
 import { type DbHandles, openDb } from "src/infra/db/connection.ts"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { createPluginLoader } from "./loader.ts"
+import type { PluginSandbox } from "./sandbox/host.ts"
 
 const SHARED_ID = "11111111-1111-4111-8111-111111111111"
 
@@ -189,5 +190,58 @@ describe("plugin loader: dev plugin overrides same-id disk plugin", () => {
 			// @ts-expect-error — accessing a stripped key
 			entry?.manifest.ui?.card?.invalidKind,
 		).toBeUndefined()
+	})
+})
+
+describe("plugin loader: loadAll serialization", () => {
+	let root: string
+	let dbh: DbHandles
+	let consoleLogSpy: ReturnType<typeof vi.spyOn> | undefined
+
+	beforeEach(() => {
+		root = mkdtempSync(join(tmpdir(), "app-plugin-loader-"))
+		dbh = openDb(":memory:")
+		dbh.runMigrations()
+		consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+	})
+
+	afterEach(() => {
+		consoleLogSpy?.mockRestore()
+		dbh.close()
+		rmSync(root, { recursive: true, force: true })
+	})
+
+	test("concurrent loadAll calls never interleave sandbox teardown", async () => {
+		const log: string[] = []
+		const sandbox: PluginSandbox = {
+			loadPlugin: async () => undefined,
+			unloadPlugin: () => {},
+			disposeAll: async () => {
+				log.push("dispose:start")
+				await new Promise((resolve) => setTimeout(resolve, 10))
+				log.push("dispose:end")
+			},
+		}
+		const loader = createPluginLoader({
+			pluginsDir: join(root, "plugins"),
+			db: dbh.db,
+			sandbox,
+		})
+
+		const [first, second] = await Promise.all([
+			loader.loadAll(),
+			loader.loadAll(),
+		])
+		expect(first).toBeDefined()
+		expect(loader.getRegistry()).toBe(second)
+
+		// Every teardown must complete before the next run starts one.
+		const starts = log.flatMap((event, i) =>
+			event === "dispose:start" ? [i] : [],
+		)
+		expect(starts).toHaveLength(2)
+		for (const i of starts) {
+			expect(log[i + 1]).toBe("dispose:end")
+		}
 	})
 })
