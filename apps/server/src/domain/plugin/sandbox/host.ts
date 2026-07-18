@@ -219,6 +219,12 @@ export function createPluginSandbox(
 		worker.postMessage({ type: "load", mainPath: state.mainPath })
 		try {
 			await loaded
+		} catch (err) {
+			// A plugin whose main.js throws at import reports `loaded: ok:false`
+			// and keeps idling — terminate the worker so it never outlives
+			// its owning state (failWorker already covered error/exit).
+			await teardownWorker(state)
+			throw err
 		} finally {
 			state.loadWaiter = undefined
 		}
