@@ -198,7 +198,13 @@ export function createPluginSandbox(
 		}
 		state.respawnTimes.push(now)
 
-		const worker = new Worker(new URL("./worker-entry.mjs", import.meta.url), {
+		// Keep the path out of the URL literal so Vite does not detect a browser
+		// worker here: it would bundle worker-entry.mjs with node: builtins
+		// shimmed out and rewrite the URL to an unusable /assets/ path. The file
+		// is copied verbatim next to the bundle (copyWorkerEntryPlugin) and must
+		// run untransformed inside a Node worker thread.
+		const workerEntryPath = "./worker-entry.mjs"
+		const worker = new Worker(new URL(workerEntryPath, import.meta.url), {
 			resourceLimits: { maxOldGenerationSizeMb: config.maxOldSpaceMb },
 		})
 		// The sandbox must never hold the process open on its own.
