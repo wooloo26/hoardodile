@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.3](https://github.com/wooloo26/hoardodile/compare/v0.1.2...v0.1.3) (2026-07-18)
+
+### Features
+
+* **build:** add build:pkgs script for non-apps packages ([758f785](https://github.com/wooloo26/hoardodile/commit/758f7856fc7aefd6b09f5554c1469ffc1059df75))
+* **web:** confirm dialog with risk warning before plugin install ([4aeb758](https://github.com/wooloo26/hoardodile/commit/4aeb75835f885050934704ac4713f3344acdfa90))
+* **web:** show declared permissions in plugin list ([7313a55](https://github.com/wooloo26/hoardodile/commit/7313a5597fd0706ca7f9b31ed6c805858b59c078))
+
+### Bug Fixes
+
+* **server:** cap plugin upload compressed and extracted size ([8ab2c9e](https://github.com/wooloo26/hoardodile/commit/8ab2c9eeb9596220fd01d13220ef88fa43f82f4f))
+* **server:** cap probe buffering at 32MB per entry ([c699f9b](https://github.com/wooloo26/hoardodile/commit/c699f9b5358ada972b486bd904984f33274290d0))
+* **server:** restrict path-token auth to GET file/frame route paths ([8b04680](https://github.com/wooloo26/hoardodile/commit/8b04680a209838a455401d690d0b53fc6f2fb16d))
+* **server:** stop vite from bundling the sandbox worker as a browser worker ([0c04d65](https://github.com/wooloo26/hoardodile/commit/0c04d653f069243759c785fa743178c6e22e96b1))
+
+### Performance Improvements
+
+* **plugins:** parallelize per-file probe loops with bounded concurrency ([b4f4124](https://github.com/wooloo26/hoardodile/commit/b4f4124f601aa4f7688244ed10be752d043a74c0))
+* **server:** aggregate file stats from the zip CD instead of per-file RPCs ([c03f93e](https://github.com/wooloo26/hoardodile/commit/c03f93ef728040dd4ba389f164f2485c7351dc15))
+* **server:** cache host-side probes per resource entry ([7c264a6](https://github.com/wooloo26/hoardodile/commit/7c264a6fe9ee448f52ecf5864ffaa0df4d4c8545))
+* **server:** cap concurrent meta rebuilds across resources ([27a36c2](https://github.com/wooloo26/hoardodile/commit/27a36c243af87c369776e5599dac15311281f3c0))
+* **server:** keep the file-list cache across cover changes ([409d84f](https://github.com/wooloo26/hoardodile/commit/409d84ff012e526c3be1374fd7bff3d02b50419f))
+* **server:** memoize archive stat per source view ([7764c5e](https://github.com/wooloo26/hoardodile/commit/7764c5e7409f5e21c259a7fc9eaa43fbb22b41d7))
+
 ## [0.1.2](https://github.com/wooloo26/hoardodile/compare/v0.1.1...v0.1.2) (2026-07-18)
 
 ### Features
