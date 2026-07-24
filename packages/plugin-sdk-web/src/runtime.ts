@@ -97,6 +97,7 @@ export function ensureHostBridge(): Host {
 	)
 
 	function request<K extends keyof PluginRequests>(
+		resId: string | undefined,
 		method: K,
 		...args: RequestInput<K> extends void ? [] : [RequestInput<K>]
 	): Promise<RequestOutput<K>> {
@@ -117,6 +118,7 @@ export function ensureHostBridge(): Host {
 				id,
 				method: method as string,
 				params,
+				resId,
 			}
 			window.parent.postMessage(message, "*")
 		})
@@ -144,7 +146,17 @@ export function ensureHostBridge(): Host {
 		}
 	}
 
-	hostBridge = { request, subscribe } as Host
+	function makeHost(resId: string | undefined): Host {
+		return {
+			request(method, ...args) {
+				return request(resId, method, ...args)
+			},
+			subscribe,
+			withScope: makeHost,
+		}
+	}
+
+	hostBridge = makeHost(undefined)
 	return hostBridge
 }
 
@@ -210,7 +222,7 @@ function buildFrameUrl(
 export function createIframeHostAPI<
 	TSchema extends PluginSchema = PluginSchema,
 >(ctx: PluginIframeContext): WebPluginAPI<TSchema> {
-	const host = ensureHostBridge()
+	const host = ensureHostBridge().withScope(ctx.resId)
 	seedPluginStores(ctx)
 
 	function logInfo(message: string, data?: Record<string, unknown>): void {

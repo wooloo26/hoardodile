@@ -4,6 +4,12 @@ import { z } from "zod"
 
 export type HandlerContext = {
 	readonly source: Window
+	/**
+	 * The resource this request is scoped to: the SDK's stamp when it
+	 * names the iframe's current or previous binding, otherwise the
+	 * iframe's current registration ("" when released). Resolved once in
+	 * the host message handler — handlers just use it.
+	 */
 	readonly resId: string
 	readonly pluginId: string
 }

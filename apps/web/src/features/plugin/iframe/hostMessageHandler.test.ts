@@ -228,6 +228,75 @@ describe("createHostMessageHandler", () => {
 		})
 	})
 
+	describe("request scope resolution", () => {
+		async function readFileScopeByteLength(
+			source: FakeWindow,
+			request: PluginRequest,
+		): Promise<number> {
+			const handler = createHostMessageHandler(buildHandlers())
+			handler(fakeMessageEvent(request, source))
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
+			})
+			// The fake readFile handler encodes the scoped resId's length.
+			const msg = vi.mocked(source.postMessage).mock
+				.calls[0]?.[0] as unknown as { data: ArrayBuffer }
+			return msg.data.byteLength
+		}
+
+		it("scopes unstamped requests to the current registration", async () => {
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			const size = await readFileScopeByteLength(source, {
+				type: "request",
+				id: 1,
+				method: pluginMethods.readFile,
+				params: { path: "a.png" },
+			})
+			expect(size).toBe(4 + "r-1".length)
+		})
+
+		it("adopts a stamp naming the current binding", async () => {
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			const size = await readFileScopeByteLength(source, {
+				type: "request",
+				id: 2,
+				method: pluginMethods.readFile,
+				params: { path: "a.png" },
+				resId: "r-1",
+			})
+			expect(size).toBe(4 + "r-1".length)
+		})
+
+		it("adopts a stamp naming the previous binding (late write)", async () => {
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-old" })
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			const size = await readFileScopeByteLength(source, {
+				type: "request",
+				id: 3,
+				method: pluginMethods.readFile,
+				params: { path: "a.png" },
+				resId: "r-old",
+			})
+			expect(size).toBe(4 + "r-old".length)
+		})
+
+		it("falls back to the registration for a foreign stamp", async () => {
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			const size = await readFileScopeByteLength(source, {
+				type: "request",
+				id: 4,
+				method: pluginMethods.readFile,
+				params: { path: "a.png" },
+				resId: "r-foreign",
+			})
+			expect(size).toBe(4 + "r-1".length)
+		})
+	})
+
 	describe("dialog routing", () => {
 		it("routes dialog.confirm", async () => {
 			const handler = createHostMessageHandler(buildHandlers())

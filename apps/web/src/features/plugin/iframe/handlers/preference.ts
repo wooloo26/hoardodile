@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { broadcastToAll } from "@/features/plugin/iframe/iframe-pool"
+import { upsertResCacheEntry } from "@/features/plugin/iframe/plugin-cache-preload"
 import { hostPushKeys } from "@/lib/keys"
 import { trpcMutate } from "@/trpc/factory"
 import { pluginMethods } from "../methods"
@@ -32,12 +33,17 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 				value: z.string(),
 			}),
 			async (ctx, params) => {
+				// A late write from an already-released iframe (older plugin
+				// builds without a scope stamp) has nowhere to land — drop it
+				// silently instead of failing the mutation.
+				if (ctx.resId === "") return
 				await trpcMutate("pluginPreference", "cacheSet", {
 					pluginId: ctx.pluginId,
 					resId: ctx.resId,
 					key: params.key,
 					value: params.value,
 				})
+				upsertResCacheEntry(ctx.resId, ctx.pluginId, params.key, params.value)
 				broadcastToAll({
 					type: "push",
 					key: hostPushKeys.cacheChanged,

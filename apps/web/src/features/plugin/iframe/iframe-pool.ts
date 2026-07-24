@@ -46,6 +46,12 @@ export function createTransport(
 export type IframeRecord = {
 	pluginId: string
 	resId: string
+	/**
+	 * The binding this iframe held immediately before the current one.
+	 * Lets the host honor late requests stamped with the previous resource
+	 * (e.g. an unmount flush racing a rebind or release).
+	 */
+	prevResId?: string
 }
 
 const iframeBySource = new Map<Window, IframeRecord>()
@@ -63,7 +69,13 @@ export function registerIframe(source: Window, record: IframeRecord): void {
 			}
 		}
 	}
-	iframeBySource.set(source, record)
+	const prevResId =
+		prev !== undefined
+			? prev.resId !== record.resId
+				? prev.resId
+				: prev.prevResId
+			: undefined
+	iframeBySource.set(source, { ...record, prevResId })
 	let sources = sourcesByResId.get(record.resId)
 	if (sources === undefined) {
 		sources = new Set()
@@ -323,7 +335,8 @@ export function claim(opts: { pluginId: string }): PoolClaimedEntry {
 			entry!.iframe.style.display = "none"
 			const win = entry!.iframe.contentWindow
 			if (win !== null) {
-				unregisterIframe(win)
+				// Rebind (not unregister+register) so the previous resource
+				// stays on record for late requests stamped with it.
 				registerIframe(win, { pluginId: entry!.pluginId, resId: "" })
 			}
 		},

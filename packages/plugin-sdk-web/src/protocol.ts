@@ -40,6 +40,15 @@ export type PluginRequest = {
 	readonly id: number
 	readonly method: string
 	readonly params?: unknown
+	/**
+	 * SDK-internal scope stamp: the resource the request was issued for,
+	 * captured by the runtime when the plugin called the API. The host
+	 * adopts it only when it names the iframe's current or immediately
+	 * previous binding, so late requests (e.g. an unmount flush after the
+	 * iframe was rebound or released) still reach the right resource.
+	 * Plugin code never sets this.
+	 */
+	readonly resId?: string
 }
 
 /** Wire response from host to plugin for a prior request. */
@@ -186,4 +195,10 @@ export type Host = {
 		key: K,
 		handler: (data: HostPushes[K]) => void,
 	): () => void
+	/**
+	 * Internal — returns a Host whose requests are stamped with the given
+	 * resource scope (see {@link PluginRequest.resId}). Used by the runtime
+	 * to bind one API instance to the resource it was created for.
+	 */
+	withScope: (resId: string) => Host
 }

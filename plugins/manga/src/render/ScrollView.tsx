@@ -68,6 +68,9 @@ export function MangaScrollView(props: {
 		if (root === null) return
 		function update() {
 			if (root === null) return
+			// The iframe may have been hidden on mount; a pending restore
+			// jump becomes possible as soon as real dimensions arrive.
+			attemptPendingScroll()
 			if (
 				containerWidthRef.current > 0 &&
 				root.clientWidth !== containerWidthRef.current
@@ -128,6 +131,28 @@ export function MangaScrollView(props: {
 	})
 	const virtualizerRef = useRef(virtualizer)
 	virtualizerRef.current = virtualizer
+	const onScrollHandledRef = useRef(onScrollHandled)
+	onScrollHandledRef.current = onScrollHandled
+	/**
+	 * Restore target awaiting a layoutable container. `scrollToIndex` on a
+	 * zero-size container (the host keeps the iframe `display:none` until
+	 * it finishes positioning it) is a silent no-op, so the jump is
+	 * retried once the ResizeObserver reports real dimensions instead of
+	 * being dropped — and page-visible reports stay suppressed meanwhile,
+	 * so a pending restore is never overwritten with page 1.
+	 */
+	const pendingScrollRef = useRef<number | undefined>(undefined)
+
+	function attemptPendingScroll() {
+		const target = pendingScrollRef.current
+		if (target === undefined) return
+		const root = containerRef.current
+		if (root === null || root.clientHeight === 0) return
+		virtualizerRef.current.scrollToIndex(target, { align: "start" })
+		pendingScrollRef.current = undefined
+		onScrollHandledRef.current()
+	}
+
 	const virtualItems = virtualizer.getVirtualItems()
 	const activePageIndex = useMemo(() => {
 		if (virtualItems.length === 0) return 0
@@ -146,6 +171,7 @@ export function MangaScrollView(props: {
 	useEffect(
 		function reportActive() {
 			if (isResizingRef.current) return
+			if (pendingScrollRef.current !== undefined) return
 			onPageVisible(activePageIndex)
 		},
 		[activePageIndex, onPageVisible],
@@ -153,10 +179,10 @@ export function MangaScrollView(props: {
 	useEffect(
 		function jumpToTarget() {
 			if (scrollToPage === undefined) return
-			virtualizer.scrollToIndex(scrollToPage, { align: "start" })
-			onScrollHandled()
+			pendingScrollRef.current = scrollToPage
+			attemptPendingScroll()
 		},
-		[scrollToPage, onScrollHandled, virtualizer],
+		[scrollToPage],
 	)
 	useEffect(function bindCtrlWheelZoom() {
 		const root = containerRef.current

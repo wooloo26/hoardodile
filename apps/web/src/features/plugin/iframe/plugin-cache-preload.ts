@@ -52,6 +52,33 @@ export function getCachedForPlugin(
 	return map.get(pluginId)
 }
 
+/**
+ * Keep a preloaded snapshot in sync after a successful `cacheSet`, so a
+ * later preview of the same resource does not read a stale value. Only
+ * touches resources that were actually preloaded; an empty value deletes
+ * the key, mirroring the server-side read semantics.
+ */
+export function upsertResCacheEntry(
+	resId: string,
+	pluginId: string,
+	key: string,
+	value: string,
+): void {
+	const map = store.get(resId)
+	if (map === undefined) return
+	let record = map.get(pluginId)
+	if (record === undefined) {
+		if (value === "") return
+		record = {}
+		map.set(pluginId, record)
+	}
+	if (value === "") {
+		delete record[key]
+	} else {
+		record[key] = value
+	}
+}
+
 export function invalidateResCache(resId: string): void {
 	store.delete(resId)
 }

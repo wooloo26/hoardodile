@@ -54,6 +54,29 @@ describe("pluginIframeState", () => {
 			expect(getIframeBySource(a)).toBeUndefined()
 			expect(getIframeBySource(b)).toBeDefined()
 		})
+
+		it("remembers the previous binding on re-register", () => {
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			registerIframe(source, { pluginId: "p-1", resId: "r-2" })
+			expect(getIframeBySource(source)).toEqual({
+				pluginId: "p-1",
+				resId: "r-2",
+				prevResId: "r-1",
+			})
+		})
+
+		it("keeps the previous binding across same-resource re-registration", () => {
+			const source = fakeWindow()
+			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
+			registerIframe(source, { pluginId: "p-1", resId: "r-2" })
+			registerIframe(source, { pluginId: "p-1", resId: "r-2" })
+			expect(getIframeBySource(source)).toEqual({
+				pluginId: "p-1",
+				resId: "r-2",
+				prevResId: "r-1",
+			})
+		})
 	})
 
 	describe("broadcastToResource", () => {
