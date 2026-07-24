@@ -1,11 +1,6 @@
 export { claim, setPoolContainer } from "./iframe/iframe-pool"
 export { PluginIframePoolHost } from "./iframe/PluginIframePoolHost"
 export {
-	clearAllResCache,
-	invalidateResCache,
-	preloadCacheByResId,
-} from "./iframe/plugin-cache-preload"
-export {
 	type UsePluginIframeSlotOptions,
 	type UsePluginIframeSlotResult,
 	usePluginIframeSlot,

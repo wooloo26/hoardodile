@@ -33,11 +33,6 @@ vi.mock("@/features/plugin/iframe/iframe-pool", () => ({
 	broadcastToAll: vi.fn(),
 }))
 
-vi.mock("@/features/plugin/iframe/plugin-cache-preload", () => ({
-	upsertResCacheEntry: vi.fn(),
-}))
-
-import { upsertResCacheEntry } from "@/features/plugin/iframe/plugin-cache-preload"
 import { trpcMutate, trpcQuery } from "@/trpc/factory"
 import { createHandlers as createCommentHandlers } from "../comment"
 import { createHandlers as createDanmakuHandlers } from "../danmaku"
@@ -152,7 +147,7 @@ describe("bridge resource scoping", () => {
 		})
 	})
 
-	it("setCache scopes to the iframe's resource and syncs the preload store", async () => {
+	it("setCache scopes to the iframe's resource", async () => {
 		const handler = handlerOf(preferenceHandlers, pluginMethods.setCache)
 		await handler(ctx, { key: "position", value: "12" })
 		expect(trpcMutate).toHaveBeenCalledWith("pluginPreference", "cacheSet", {
@@ -161,12 +156,6 @@ describe("bridge resource scoping", () => {
 			key: "position",
 			value: "12",
 		})
-		expect(upsertResCacheEntry).toHaveBeenCalledWith(
-			"r-1",
-			"p-1",
-			"position",
-			"12",
-		)
 	})
 
 	it("setCache from a released iframe is dropped silently", async () => {
@@ -174,6 +163,5 @@ describe("bridge resource scoping", () => {
 		const unbound = { ...ctx, resId: "" } satisfies HandlerContext
 		await handler(unbound, { key: "position", value: "12" })
 		expect(trpcMutate).not.toHaveBeenCalled()
-		expect(upsertResCacheEntry).not.toHaveBeenCalled()
 	})
 })

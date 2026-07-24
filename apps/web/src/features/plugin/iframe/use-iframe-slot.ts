@@ -12,7 +12,7 @@ import i18n from "@/i18n"
 import { trpcQuery } from "@/trpc/factory"
 import { fetchPluginSessionToken } from "../pluginSessionToken"
 import { claim, type PoolClaimedEntry } from "./iframe-pool"
-import { getCachedForPlugin, preloadCacheByResId } from "./plugin-cache-preload"
+import { fetchPluginCache } from "./plugin-cache-fetch"
 
 // ── usePluginIframePool ──────────────────────────────────────────────────────
 
@@ -191,8 +191,6 @@ export function usePluginContext(opts: {
 	useEffect(() => {
 		if (slot === null) return
 
-		preloadCacheByResId(resId)
-
 		const ctx: PluginIframeContext = {
 			pluginId,
 			resId,
@@ -223,9 +221,9 @@ export function usePluginContext(opts: {
 			if (!mounted) return
 
 			try {
-				const preloadedCache = getCachedForPlugin(resId, pluginId)
-				const [prefEntries, sessionToken] = await Promise.all([
+				const [prefEntries, cacheRecord, sessionToken] = await Promise.all([
 					trpcQuery("pluginPreference", "listByPlugin", { pluginId }),
+					fetchPluginCache(resId, pluginId),
 					fetchPluginSessionToken(resId),
 				])
 				if (!mounted) return
@@ -234,25 +232,8 @@ export function usePluginContext(opts: {
 						ctx.initialPrefs[entry.key] = entry.value
 					}
 				}
-				if (preloadedCache !== undefined) {
-					for (const [key, value] of Object.entries(preloadedCache)) {
-						ctx.initialCache[key] = value
-					}
-				} else {
-					const cacheEntries = await trpcQuery(
-						"pluginPreference",
-						"cacheList",
-						{
-							pluginId,
-							resId,
-						},
-					)
-					if (!mounted) return
-					for (const entry of cacheEntries) {
-						if (entry.value !== undefined && entry.value !== "") {
-							ctx.initialCache[entry.key] = entry.value
-						}
-					}
+				for (const [key, value] of Object.entries(cacheRecord)) {
+					ctx.initialCache[key] = value
 				}
 				// @ts-expect-error
 				ctx.fileToken = sessionToken

@@ -1,7 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { broadcastToAll } from "@/features/plugin/iframe/iframe-pool"
-import { upsertResCacheEntry } from "@/features/plugin/iframe/plugin-cache-preload"
 import { hostPushKeys } from "@/lib/keys"
 import { trpcMutate } from "@/trpc/factory"
 import { pluginMethods } from "../methods"
@@ -42,7 +41,6 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 					key: params.key,
 					value: params.value,
 				})
-				upsertResCacheEntry(ctx.resId, ctx.pluginId, params.key, params.value)
 				broadcastToAll({
 					type: "push",
 					key: hostPushKeys.cacheChanged,
