@@ -145,6 +145,10 @@ export function MangaReader() {
 				mode={mode}
 				showComments={settings.showComments}
 				useOriginal={useOriginal}
+				// The toggle is a no-op for pages without a preview variant
+				// (small or already-efficient files always serve the original)
+				// — hide it there instead of offering a dead button.
+				showOriginalToggle={currentFile?.preview === true}
 				onToggleMode={toggleMode}
 				onToggleComments={toggleComments}
 				onToggleOriginal={toggleUseOriginal}
@@ -197,6 +201,7 @@ function MangaTopBar(props: {
 	readonly mode: MangaReadingMode
 	readonly showComments: boolean
 	readonly useOriginal: boolean
+	readonly showOriginalToggle: boolean
 	readonly onToggleMode: () => void
 	readonly onToggleComments: () => void
 	readonly onToggleOriginal: () => void
@@ -208,6 +213,7 @@ function MangaTopBar(props: {
 		mode,
 		showComments,
 		useOriginal,
+		showOriginalToggle,
 		onToggleMode,
 		onToggleComments,
 		onToggleOriginal,
@@ -222,16 +228,18 @@ function MangaTopBar(props: {
 				onJump={onJump}
 			/>
 			<div className="flex items-center gap-1">
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					onClick={onToggleOriginal}
-					className="h-7 gap-1 px-2 text-xs text-white hover:bg-white/10"
-					data-testid="manga-original-toggle"
-				>
-					{useOriginal ? t("showPreview") : t("showOriginal")}
-				</Button>
+				{showOriginalToggle ? (
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={onToggleOriginal}
+						className="h-7 gap-1 px-2 text-xs text-white hover:bg-white/10"
+						data-testid="manga-original-toggle"
+					>
+						{useOriginal ? t("showPreview") : t("showOriginal")}
+					</Button>
+				) : null}
 				<Button
 					type="button"
 					variant="ghost"
