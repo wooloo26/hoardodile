@@ -8,7 +8,7 @@ Refactor only the module or feature the user named.
 Apply these principles, in whatever order the code demands:
 
 - Deduplicate code. Collapse functions with more than 4 parameters into a single params/options object, unless the parameter list is clearly justified.
-- Break down oversized files, long functions, and deep call chains.
+- Break down long functions and deep call chains. Extract a file only for a distinct, standalone responsibility — keep file-level cohesion high, do not split just to reduce line count.
 - Enforce SOLID principles — but avoid over-engineering: no speculative abstractions, no generality the current code does not need.
 - Favor composition over inheritance. Keep cohesion high and coupling low. Depend on abstractions, not concrete implementations (DIP).
 - Sharpen naming so every name says exactly what the thing is and does. Extract pure functions where logic mixes computation with side effects.
