@@ -8,10 +8,12 @@ import {
 } from "@hoardodile/ui/components/dialog"
 import { isBelowMd } from "@hoardodile/ui/hooks/use-mobile"
 import { cn } from "@hoardodile/ui/lib/utils"
+import { useQuery } from "@tanstack/react-query"
 import { Maximize, Minimize, X } from "lucide-react"
 import type { RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { pluginListAllQueryOptions } from "@/features/plugin"
 import { usePluginIframeSlot } from "@/features/plugin/iframe/use-iframe-slot"
 import { useUsageTracker } from "@/features/usage/useUsageTracker"
 
@@ -241,6 +243,13 @@ export function ResPreviewDialog(props: ResPreviewDialogProps) {
 		enabled: open,
 		active: open && contentVisible,
 	})
+	// The plugin manifest may declare its preferred preview height
+	// (`ui.height`, e.g. the manga reader's "85vh"); the dialog honors it
+	// the same way the resource detail page does.
+	const pluginListQuery = useQuery(pluginListAllQueryOptions())
+	const manifestHeight = pluginListQuery.data?.find(
+		(p) => p.id === contentPluginId,
+	)?.manifest.ui?.height
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -264,8 +273,16 @@ export function ResPreviewDialog(props: ResPreviewDialogProps) {
 					"data-open:animate-none data-closed:animate-none sm:data-open:animate-none sm:data-closed:animate-none",
 					fullscreenAPI.isFullscreen
 						? "inset-0 h-svh w-screen sm:inset-0 sm:max-w-none sm:max-h-none"
-						: "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[85vh] max-h-[85vh] w-screen sm:w-[90vw] sm:max-w-none sm:max-h-none",
+						: cn(
+								"left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-screen sm:w-[90vw] sm:max-w-none sm:max-h-none",
+								manifestHeight === undefined && "h-[85vh] max-h-[85vh]",
+							),
 				)}
+				style={
+					!fullscreenAPI.isFullscreen && manifestHeight !== undefined
+						? { height: manifestHeight, maxHeight: manifestHeight }
+						: undefined
+				}
 			>
 				<DialogBody className="flex flex-col overflow-hidden p-0">
 					<DialogTitle className="sr-only">
