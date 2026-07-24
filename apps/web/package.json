@@ -17,7 +17,7 @@
 		"@hoardodile/server": "workspace:*",
 		"@playwright/test": "^1.61.1",
 		"@tanstack/router-devtools": "^1.167.0",
-		"@tanstack/router-plugin": "^1.168.20",
+		"@tanstack/router-plugin": "^1.168.23",
 		"@testing-library/jest-dom": "catalog:",
 		"@testing-library/react": "catalog:",
 		"@testing-library/user-event": "^14.6.1",
