@@ -1,5 +1,6 @@
 import type { PluginIframeContext } from "@hoardodile/plugin-sdk-web"
 import type { Resource } from "@hoardodile/schemas"
+import { useQueryClient } from "@tanstack/react-query"
 import type { RefObject } from "react"
 import {
 	useCallback,
@@ -10,6 +11,7 @@ import {
 } from "react"
 import i18n from "@/i18n"
 import { trpcQuery } from "@/trpc/factory"
+import { pluginListAllQueryOptions } from "../pluginApi"
 import { fetchPluginSessionToken } from "../pluginSessionToken"
 import { claim, type PoolClaimedEntry } from "./iframe-pool"
 import { fetchPluginCache } from "./plugin-cache-fetch"
@@ -22,9 +24,16 @@ export function usePluginIframePool(opts: {
 }): { readonly slot: PoolClaimedEntry | null } {
 	const { pluginId, iframeRef } = opts
 	const [slot, setSlot] = useState<PoolClaimedEntry | null>(null)
+	const qc = useQueryClient()
 
 	useEffect(() => {
-		const newSlot = claim({ pluginId })
+		// Read the fingerprint imperatively: the plugin list resolves
+		// asynchronously, and re-claiming when it lands would reload the
+		// iframe a second time.
+		const assetVersion = qc
+			.getQueryData(pluginListAllQueryOptions().queryKey)
+			?.find((p) => p.id === pluginId)?.assetVersion
+		const newSlot = claim({ pluginId, assetVersion })
 		setSlot(newSlot)
 		if (iframeRef !== undefined) iframeRef.current = newSlot.iframe
 
@@ -33,7 +42,7 @@ export function usePluginIframePool(opts: {
 			setSlot(null)
 			if (iframeRef !== undefined) iframeRef.current = null
 		}
-	}, [pluginId, iframeRef])
+	}, [pluginId, iframeRef, qc])
 
 	return { slot }
 }

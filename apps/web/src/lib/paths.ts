@@ -54,8 +54,8 @@ export const apiPaths = {
 	},
 
 	plugins: {
-		indexHtml: (id: string) =>
-			`/api/plugins/${encodeURIComponent(id)}/index.html`,
+		indexHtml: (id: string, assetVersion?: string) =>
+			`/api/plugins/${encodeURIComponent(id)}/index.html${assetVersion !== undefined ? `?v=${encodeURIComponent(assetVersion)}` : ""}`,
 		asset: (id: string, rel: string) => `/api/plugins/${id}/${rel}`,
 	},
 

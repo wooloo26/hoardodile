@@ -1,3 +1,5 @@
+import { statSync } from "node:fs"
+import { join } from "node:path"
 import type { PluginManifest, PluginManifestId } from "@hoardodile/schemas"
 import { eq } from "drizzle-orm"
 import type { SqliteDb } from "src/infra/db/connection.ts"
@@ -15,6 +17,12 @@ export type PluginSettingsRow = {
 	readonly missing: boolean
 	readonly builtin: boolean
 	readonly dev: boolean
+	/**
+	 * Fingerprint of the plugin's client assets (its index.html mtime).
+	 * Changes on every rebuild/reinstall, so the web client can hard-cache
+	 * plugin assets under a `?v=` URL and only fetch anew when this moves.
+	 */
+	readonly assetVersion?: string
 }
 
 export type PluginServiceDeps = {
@@ -53,7 +61,16 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
 			missing: entry.missing,
 			builtin: entry.builtin,
 			dev: entry.dev,
+			assetVersion: assetVersionOf(entry.diskPath),
 		}))
+	}
+
+	function assetVersionOf(diskPath: string | undefined): string | undefined {
+		if (diskPath === undefined) return undefined
+		const st = statSync(join(diskPath, "index.html"), {
+			throwIfNoEntry: false,
+		})
+		return st !== undefined ? String(st.mtimeMs) : undefined
 	}
 
 	function update(

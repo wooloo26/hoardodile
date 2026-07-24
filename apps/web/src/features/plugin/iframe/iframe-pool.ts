@@ -151,6 +151,8 @@ type PoolEntry = {
 	claimId: number | undefined
 	lastReleased: number
 	loaded: boolean
+	/** Fingerprint the iframe's versioned URL was built with. */
+	assetVersion?: string
 }
 
 const entries = new Map<number, PoolEntry>()
@@ -169,7 +171,11 @@ function getPluginList(pluginId: string): PoolEntry[] {
 	return list
 }
 
-function createIframeEntry(pluginId: string, isPrimary: boolean): PoolEntry {
+function createIframeEntry(
+	pluginId: string,
+	isPrimary: boolean,
+	assetVersion?: string,
+): PoolEntry {
 	if (container === undefined) {
 		throw new Error("PluginIframePool container not mounted")
 	}
@@ -178,7 +184,7 @@ function createIframeEntry(pluginId: string, isPrimary: boolean): PoolEntry {
 	iframe.sandbox.add("allow-scripts", "allow-forms", "allow-downloads")
 	iframe.referrerPolicy = "no-referrer"
 	iframe.allowFullscreen = true
-	iframe.src = apiPaths.plugins.indexHtml(pluginId)
+	iframe.src = apiPaths.plugins.indexHtml(pluginId, assetVersion)
 	iframe.title = `plugin:${pluginId}`
 	iframe.style.position = "fixed"
 	iframe.style.border = "0"
@@ -212,6 +218,7 @@ function createIframeEntry(pluginId: string, isPrimary: boolean): PoolEntry {
 		claimId: undefined,
 		lastReleased: 0,
 		loaded: false,
+		assetVersion,
 	}
 
 	entries.set(id, entry)
@@ -291,8 +298,11 @@ export function setPoolContainer(el: HTMLElement | undefined): void {
 	}
 }
 
-export function claim(opts: { pluginId: string }): PoolClaimedEntry {
-	const { pluginId } = opts
+export function claim(opts: {
+	pluginId: string
+	assetVersion?: string
+}): PoolClaimedEntry {
+	const { pluginId, assetVersion } = opts
 
 	let entry = findFreeEntry(pluginId)
 	if (entry === undefined) {
@@ -305,14 +315,22 @@ export function claim(opts: { pluginId: string }): PoolClaimedEntry {
 				evictLruIdleEphemeral(pluginId)
 			}
 		}
-		entry = createIframeEntry(pluginId, isPrimary)
+		entry = createIframeEntry(pluginId, isPrimary, assetVersion)
 	} else {
 		entry.loaded = false
-		const cw = entry.iframe.contentWindow
-		if (cw !== null) {
-			cw.location.replace(entry.iframe.src)
+		if (entry.assetVersion !== assetVersion) {
+			// The plugin's assets changed since this entry was built —
+			// reload from the re-versioned URL so the year-long cache is
+			// bypassed only when the fingerprint actually moved.
+			entry.assetVersion = assetVersion
+			entry.iframe.src = apiPaths.plugins.indexHtml(pluginId, assetVersion)
 		} else {
-			entry.iframe.src = entry.iframe.src
+			const cw = entry.iframe.contentWindow
+			if (cw !== null) {
+				cw.location.replace(entry.iframe.src)
+			} else {
+				entry.iframe.src = entry.iframe.src
+			}
 		}
 	}
 
