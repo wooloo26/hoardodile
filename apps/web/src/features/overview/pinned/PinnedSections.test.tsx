@@ -583,4 +583,28 @@ describe("pinned refresh", () => {
 			screen.getByTestId("overview-pinned-refresh-interval"),
 		).toHaveTextContent("Off")
 	})
+
+	it("shows the random session hint only when a random section is pinned", async () => {
+		const hint =
+			"Pinned content stays fixed for this session only; reloading the page draws a new set."
+
+		setPinnedResources([{ id: "res-pin-random", random: true }])
+		const first = await renderSection(<OverviewPinnedRow />)
+		await waitFor(() => {
+			expect(screen.getByTestId("overview-pinned-row")).toBeInTheDocument()
+		})
+		expect(screen.getByText(hint)).toBeInTheDocument()
+		first.unmount()
+		currentQueryClient = undefined
+
+		prefSync.set(
+			prefKeys.overviewPinnedResources,
+			pinnedSectionListCodec.encode([{ id: "res-pin-plain" }]),
+		)
+		await renderSection(<OverviewPinnedRow />)
+		await waitFor(() => {
+			expect(screen.getByTestId("overview-pinned-row")).toBeInTheDocument()
+		})
+		expect(screen.queryByText(hint)).not.toBeInTheDocument()
+	})
 })

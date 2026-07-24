@@ -20,6 +20,10 @@ export function OverviewPinnedRow() {
 	const showCharacters = !charData.isPending && charData.visibleItems.length > 0
 	const showResources = !resData.isPending && resData.visibleItems.length > 0
 	const visibleCount = Number(showCharacters) + Number(showResources)
+	const hasRandomSection = [
+		...charData.visibleItems,
+		...resData.visibleItems,
+	].some(({ item }) => item.random === true)
 
 	if (visibleCount === 0) return null
 
@@ -29,6 +33,11 @@ export function OverviewPinnedRow() {
 			data-testid="overview-pinned-row"
 		>
 			<div className="flex items-center justify-end gap-2">
+				{hasRandomSection ? (
+					<p className="mr-auto text-xs text-muted-foreground">
+						{t("overview.pinned.refresh.randomSessionHint")}
+					</p>
+				) : null}
 				<DropdownSelect
 					size="sm"
 					value={String(intervalSec)}

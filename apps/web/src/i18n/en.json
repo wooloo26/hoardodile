@@ -361,7 +361,8 @@
 				"off": "Off",
 				"every30s": "Every 30 seconds",
 				"every60s": "Every minute",
-				"every300s": "Every 5 minutes"
+				"every300s": "Every 5 minutes",
+				"randomSessionHint": "Pinned content stays fixed for this session only; reloading the page draws a new set."
 			}
 		},
 		"sort": {
