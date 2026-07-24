@@ -18,10 +18,11 @@ The server has no CLI flags; all runtime configuration comes from environment va
 
 ## Coding guidelines
 
-1. Follow the [Microsoft/TypeScript](https://github.com/microsoft/TypeScript) conventions.
-2. Prefer type inference; do not annotate types that can be inferred.
-3. Use type guards (`instanceof`, `typeof`), assertion functions (`asserts`), or `satisfies` instead of `as`.
-4. Avoid arrow functions assigned to `let` or `const`.
+1. **Always keep the code elegant.** Elegance beats brevity: choose the conceptually cleanest design — code volume is secondary.
+2. Follow the [Microsoft/TypeScript](https://github.com/microsoft/TypeScript) conventions.
+3. Prefer type inference; do not annotate types that can be inferred.
+4. Use type guards (`instanceof`, `typeof`), assertion functions (`asserts`), or `satisfies` instead of `as`.
+5. Avoid arrow functions assigned to `let` or `const`.
 
 ## Dependencies
 
