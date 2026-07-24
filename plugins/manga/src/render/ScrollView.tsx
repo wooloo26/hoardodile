@@ -26,6 +26,12 @@ const ZOOM_STEP = 0.1
 const MAX_RENDER_WIDTH = 900
 /** Number of off-screen pages to keep mounted at each end of the window. */
 const OVERSCAN = 3
+/**
+ * Upper bound for re-asserting a scroll target against measurement
+ * corrections; generous enough for a full page-load cascade, small
+ * enough to never spin forever.
+ */
+const MAX_SCROLL_ASSERTS = 60
 
 export function MangaScrollView(props: {
 	readonly pages: readonly MangaPage[]
@@ -68,9 +74,9 @@ export function MangaScrollView(props: {
 		if (root === null) return
 		function update() {
 			if (root === null) return
-			// The iframe may have been hidden on mount; a pending restore
-			// jump becomes possible as soon as real dimensions arrive.
-			attemptPendingScroll()
+			// The iframe may have been hidden on mount; a pending scroll
+			// target becomes reachable as soon as real dimensions arrive.
+			assertScrollTarget()
 			if (
 				containerWidthRef.current > 0 &&
 				root.clientWidth !== containerWidthRef.current
@@ -134,23 +140,36 @@ export function MangaScrollView(props: {
 	const onScrollHandledRef = useRef(onScrollHandled)
 	onScrollHandledRef.current = onScrollHandled
 	/**
-	 * Restore target awaiting a layoutable container. `scrollToIndex` on a
-	 * zero-size container (the host keeps the iframe `display:none` until
-	 * it finishes positioning it) is a silent no-op, so the jump is
-	 * retried once the ResizeObserver reports real dimensions instead of
-	 * being dropped — and page-visible reports stay suppressed meanwhile,
-	 * so a pending restore is never overwritten with page 1.
+	 * Scroll target (restore or manual jump) being converged on. Two
+	 * hazards make a single `scrollToIndex` insufficient:
+	 *  - the host keeps the iframe `display:none` until it finishes
+	 *    positioning it, where any scroll is a silent no-op;
+	 *  - images above the target load *after* the jump, and the
+	 *    virtualizer applies the size corrections via `transform` — which
+	 *    the browser's scroll anchoring does not compensate — so the
+	 *    content drifts under a static scrollTop.
+	 * The target is therefore re-asserted on every measurement pass
+	 * until the visible page matches it, and page-visible reports stay
+	 * suppressed meanwhile so a pending jump is never overwritten with
+	 * whatever page the drift happens to show.
 	 */
 	const pendingScrollRef = useRef<number | undefined>(undefined)
+	const scrollAssertsRef = useRef(0)
 
-	function attemptPendingScroll() {
+	function assertScrollTarget() {
 		const target = pendingScrollRef.current
 		if (target === undefined) return
 		const root = containerRef.current
 		if (root === null || root.clientHeight === 0) return
+		// Bound the convergence loop; giving up is safe because reporting
+		// resumes from the actually-visible page.
+		if (scrollAssertsRef.current >= MAX_SCROLL_ASSERTS) {
+			pendingScrollRef.current = undefined
+			onScrollHandledRef.current()
+			return
+		}
+		scrollAssertsRef.current += 1
 		virtualizerRef.current.scrollToIndex(target, { align: "start" })
-		pendingScrollRef.current = undefined
-		onScrollHandledRef.current()
 	}
 
 	const virtualItems = virtualizer.getVirtualItems()
@@ -169,6 +188,19 @@ export function MangaScrollView(props: {
 		activePageRef.current = activePageIndex
 	}, [activePageIndex])
 	useEffect(
+		function settleScrollTarget() {
+			const target = pendingScrollRef.current
+			if (target === undefined) return
+			if (activePageIndex === target) {
+				pendingScrollRef.current = undefined
+				onScrollHandledRef.current()
+				return
+			}
+			assertScrollTarget()
+		},
+		[activePageIndex, virtualItems],
+	)
+	useEffect(
 		function reportActive() {
 			if (isResizingRef.current) return
 			if (pendingScrollRef.current !== undefined) return
@@ -180,7 +212,8 @@ export function MangaScrollView(props: {
 		function jumpToTarget() {
 			if (scrollToPage === undefined) return
 			pendingScrollRef.current = scrollToPage
-			attemptPendingScroll()
+			scrollAssertsRef.current = 0
+			assertScrollTarget()
 		},
 		[scrollToPage],
 	)
@@ -197,6 +230,11 @@ export function MangaScrollView(props: {
 		return () => root.removeEventListener("wheel", onWheel)
 	}, [])
 	const totalSize = virtualizer.getTotalSize()
+	// Width starts at 0 before the first layout (and while the host keeps
+	// the iframe hidden); rendering items then would size every estimate
+	// from a bogus width and guarantee a correction wave once the real
+	// width arrives.
+	const showItems = renderWidth > 0
 	return (
 		<div
 			ref={containerRef}
@@ -211,37 +249,38 @@ export function MangaScrollView(props: {
 					width: renderWidth > 0 ? `${renderWidth}px` : "100%",
 				}}
 			>
-				{virtualItems.map((vi) => {
-					const page = pages[vi.index]
-					if (page === undefined) return null
-					const isActive = vi.index === activePageIndex
-					return (
-						<div
-							key={vi.key}
-							data-index={vi.index}
-							data-page-index={vi.index}
-							ref={virtualizer.measureElement}
-							className="absolute left-0 w-full"
-							style={{
-								transform: `translateY(${vi.start}px)`,
-								lineHeight: 0,
-							}}
-						>
-							<MangaPageImage
-								page={page}
-								useOriginal={useOriginal}
-								renderWidth={renderWidth}
-								loading={
-									Math.abs(vi.index - activePageIndex) <= 3 ? "eager" : "lazy"
-								}
-							/>
-							<MangaPageCommentOverlay
-								comments={perPageComments.get(page.filename) ?? []}
-								enabled={showComments && isActive}
-							/>
-						</div>
-					)
-				})}
+				{showItems &&
+					virtualItems.map((vi) => {
+						const page = pages[vi.index]
+						if (page === undefined) return null
+						const isActive = vi.index === activePageIndex
+						return (
+							<div
+								key={vi.key}
+								data-index={vi.index}
+								data-page-index={vi.index}
+								ref={virtualizer.measureElement}
+								className="absolute left-0 w-full"
+								style={{
+									transform: `translateY(${vi.start}px)`,
+									lineHeight: 0,
+								}}
+							>
+								<MangaPageImage
+									page={page}
+									useOriginal={useOriginal}
+									renderWidth={renderWidth}
+									loading={
+										Math.abs(vi.index - activePageIndex) <= 3 ? "eager" : "lazy"
+									}
+								/>
+								<MangaPageCommentOverlay
+									comments={perPageComments.get(page.filename) ?? []}
+									enabled={showComments && isActive}
+								/>
+							</div>
+						)
+					})}
 			</div>
 		</div>
 	)
