@@ -1,5 +1,6 @@
 import type { Message } from "@hoardodile/plugin-sdk-web"
 import { useVirtualizer } from "@tanstack/react-virtual"
+import { Loader2 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { MangaPage } from "../shared"
 import { estimatePageHeight, FALLBACK_PAGE_ASPECT } from "./helpers"
@@ -306,9 +307,14 @@ function MangaPageImage(props: {
 		>
 			{!loaded && (
 				<div
-					className="absolute inset-0 animate-pulse bg-neutral-800"
+					className="absolute inset-0 bg-neutral-800"
 					data-testid="manga-page-skeleton"
-				/>
+				>
+					{/* A full-page opacity pulse repaints the whole viewport every
+					    frame and saturates the renderer while pages stream in;
+					    the loading cue stays, shrunk to a tiny composited icon. */}
+					<Loader2 className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 animate-spin text-neutral-600" />
+				</div>
 			)}
 			<img
 				src={api.resolveFileUrl(
