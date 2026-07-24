@@ -269,31 +269,56 @@ describe("createHostMessageHandler", () => {
 			expect(size).toBe(4 + "r-1".length)
 		})
 
-		it("adopts a stamp naming the previous binding (late write)", async () => {
+		it("drops a stale stamp after a rebind without invoking the handler", async () => {
 			const source = fakeWindow()
 			registerIframe(source, { pluginId: "p-1", resId: "r-old" })
 			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
-			const size = await readFileScopeByteLength(source, {
-				type: "request",
-				id: 3,
-				method: pluginMethods.readFile,
-				params: { path: "a.png" },
-				resId: "r-old",
+			const handler = createHostMessageHandler(buildHandlers())
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 3,
+						method: pluginMethods.readFile,
+						params: { path: "a.png" },
+						resId: "r-old",
+					},
+					source,
+				),
+			)
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
 			})
-			expect(size).toBe(4 + "r-old".length)
+			// Acknowledged without data: the readFile handler never ran.
+			expect(source.postMessage).toHaveBeenCalledWith(
+				{ type: "response", id: 3, ok: true },
+				"*",
+			)
 		})
 
-		it("falls back to the registration for a foreign stamp", async () => {
+		it("drops a stamp for a resource the iframe never held", async () => {
 			const source = fakeWindow()
 			registerIframe(source, { pluginId: "p-1", resId: "r-1" })
-			const size = await readFileScopeByteLength(source, {
-				type: "request",
-				id: 4,
-				method: pluginMethods.readFile,
-				params: { path: "a.png" },
-				resId: "r-foreign",
+			const handler = createHostMessageHandler(buildHandlers())
+			handler(
+				fakeMessageEvent(
+					{
+						type: "request",
+						id: 4,
+						method: pluginMethods.readFile,
+						params: { path: "a.png" },
+						resId: "r-foreign",
+					},
+					source,
+				),
+			)
+			await vi.waitFor(() => {
+				expect(source.postMessage).toHaveBeenCalled()
 			})
-			expect(size).toBe(4 + "r-1".length)
+			expect(source.postMessage).toHaveBeenCalledWith(
+				{ type: "response", id: 4, ok: true },
+				"*",
+			)
 		})
 	})
 

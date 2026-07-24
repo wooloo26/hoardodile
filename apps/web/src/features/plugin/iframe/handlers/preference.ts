@@ -33,9 +33,8 @@ export function createHandlers(_qc: QueryClient): HandlerEntry[] {
 				value: z.string(),
 			}),
 			async (ctx, params) => {
-				// A late write from an already-released iframe (older plugin
-				// builds without a scope stamp) has nowhere to land — drop it
-				// silently instead of failing the mutation.
+				// A write from a never-bound iframe has nowhere to land —
+				// drop it silently instead of failing the mutation.
 				if (ctx.resId === "") return
 				await trpcMutate("pluginPreference", "cacheSet", {
 					pluginId: ctx.pluginId,

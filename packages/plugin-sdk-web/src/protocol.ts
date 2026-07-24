@@ -43,10 +43,10 @@ export type PluginRequest = {
 	/**
 	 * SDK-internal scope stamp: the resource the request was issued for,
 	 * captured by the runtime when the plugin called the API. The host
-	 * adopts it only when it names the iframe's current or immediately
-	 * previous binding, so late requests (e.g. an unmount flush after the
-	 * iframe was rebound or released) still reach the right resource.
-	 * Plugin code never sets this.
+	 * drops the request as stale when the stamp no longer matches the
+	 * iframe's binding (e.g. an unmount flush racing a rebind), so late
+	 * requests never leak into the wrong resource. Plugin code never
+	 * sets this.
 	 */
 	readonly resId?: string
 }

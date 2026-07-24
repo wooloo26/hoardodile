@@ -46,23 +46,25 @@ export function createHostMessageHandler(
 		if (msg.type !== "request") return
 
 		// The SDK stamps each request with the resource it was issued for
-		// (PluginRequest.resId). Adopt the stamp only when it names the
-		// iframe's current or immediately previous binding — that covers
-		// late requests racing a rebind/release without letting a plugin
-		// scope itself into resources it was never bound to. Anything else
-		// (including older, unstamped plugin builds) falls back to the
-		// current registration.
-		const stamped =
-			typeof msg.resId === "string" && msg.resId !== "" ? msg.resId : undefined
-		const resId =
-			stamped !== undefined &&
-			(stamped === iframeRecord.resId || stamped === iframeRecord.prevResId)
-				? stamped
-				: iframeRecord.resId
+		// (PluginRequest.resId). A stamp that no longer matches the iframe's
+		// binding marks the request as stale — the tree that issued it is
+		// gone (e.g. an unmount flush racing a rebind) — so it is dropped
+		// silently instead of leaking into the wrong resource. Unstamped
+		// requests (older plugin builds) use the current binding, which
+		// outlives release, so late flushes after a close still land.
+		if (
+			typeof msg.resId === "string" &&
+			msg.resId !== "" &&
+			msg.resId !== iframeRecord.resId
+		) {
+			const response: HostResponse = { type: "response", id: msg.id, ok: true }
+			source.postMessage(response, "*")
+			return
+		}
 
 		const ctx: HandlerContext = {
 			source,
-			resId,
+			resId: iframeRecord.resId,
 			pluginId: iframeRecord.pluginId,
 		}
 
