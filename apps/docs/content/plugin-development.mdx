@@ -6,7 +6,7 @@ hoardodile content plugins can live **outside the main repository** — in a sep
 
 A content plugin is a directory with:
 
-- **`manifest.json`** — UUID `id`, `name`, `description`, `version`, `permissions` (`sourceMeta`, `searchMeta`, `danmaku`, `message`), optional `i18n` strings and `ui` templates
+- **`manifest.json`** — UUID `id`, `name`, `description`, `version`, `permissions` (`sourceMeta`, `searchMeta`, `danmaku`, `message`), optional `i18n` strings and `ui` templates. `ui.height` / `ui.aspect` declare the plugin's preferred preview surface size and are honored by both the resource detail page and the preview dialog
 - **`src/main.ts`** (optional) — server side, built to `dist/main.js` and loaded by the server via dynamic import
 - **`index.html` + `src/render.tsx`** (optional) — client side, built to `dist/` and rendered inside a sandboxed iframe
 

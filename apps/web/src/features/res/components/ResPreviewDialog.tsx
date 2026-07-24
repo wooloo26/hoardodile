@@ -243,13 +243,14 @@ export function ResPreviewDialog(props: ResPreviewDialogProps) {
 		enabled: open,
 		active: open && contentVisible,
 	})
-	// The plugin manifest may declare its preferred preview height
-	// (`ui.height`, e.g. the manga reader's "85vh"); the dialog honors it
-	// the same way the resource detail page does.
+	// The plugin manifest may declare its preferred preview sizing
+	// (`ui.aspect` capped by the viewport, or `ui.height`); the dialog
+	// honors it the same way the resource detail page does.
 	const pluginListQuery = useQuery(pluginListAllQueryOptions())
-	const manifestHeight = pluginListQuery.data?.find(
-		(p) => p.id === contentPluginId,
-	)?.manifest.ui?.height
+	const manifestUi = pluginListQuery.data?.find((p) => p.id === contentPluginId)
+		?.manifest.ui
+	const manifestAspect = manifestUi?.aspect
+	const manifestHeight = manifestUi?.height
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -274,14 +275,22 @@ export function ResPreviewDialog(props: ResPreviewDialogProps) {
 					fullscreenAPI.isFullscreen
 						? "inset-0 h-svh w-screen sm:inset-0 sm:max-w-none sm:max-h-none"
 						: cn(
-								"left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-screen sm:w-[90vw] sm:max-w-none sm:max-h-none",
-								manifestHeight === undefined && "h-[85vh] max-h-[85vh]",
+								// Same width ceiling as the resource detail page's
+								// max-w-480 content column.
+								"left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-screen sm:w-[90vw] sm:max-w-480 sm:max-h-none",
+								manifestAspect === undefined &&
+									manifestHeight === undefined &&
+									"h-[85vh] max-h-[85vh]",
 							),
 				)}
 				style={
-					!fullscreenAPI.isFullscreen && manifestHeight !== undefined
-						? { height: manifestHeight, maxHeight: manifestHeight }
-						: undefined
+					fullscreenAPI.isFullscreen
+						? undefined
+						: manifestAspect !== undefined
+							? { aspectRatio: manifestAspect, maxHeight: "85vh" }
+							: manifestHeight !== undefined
+								? { height: manifestHeight, maxHeight: manifestHeight }
+								: undefined
 				}
 			>
 				<DialogBody className="flex flex-col overflow-hidden p-0">

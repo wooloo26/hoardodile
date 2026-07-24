@@ -1,6 +1,5 @@
 import type { AnchorData, HostPush } from "@hoardodile/plugin-sdk-web"
 import type { ResAnchor } from "@hoardodile/schemas"
-import { pickCoverKind } from "@hoardodile/schemas"
 import { Separator } from "@hoardodile/ui/components/separator"
 import { cn } from "@hoardodile/ui/lib/utils"
 import { useQueries, useQuery } from "@tanstack/react-query"
@@ -138,6 +137,10 @@ function ResDetailRoute() {
 			? pluginListQuery.data?.find((p) => p.id === resource.contentPluginId)
 					?.manifest
 			: undefined
+	// Preview surface sizing is the plugin's call: a declared aspect ratio
+	// wins (capped at 70vh), then a declared fixed height, then the 60vh
+	// default.
+	const manifestAspect = pluginManifest?.ui?.aspect
 	const manifestHeight = pluginManifest?.ui?.height
 
 	const header = (
@@ -174,15 +177,21 @@ function ResDetailRoute() {
 		</header>
 	)
 
-	const isVideo = pickCoverKind(resource.coverMeta) === "video"
-	const useFixedHeight = !isVideo && manifestHeight !== undefined
 	const previewSurface = (
 		<div
 			className={cn(
 				"relative flex w-full items-center justify-center overflow-hidden",
-				isVideo ? "aspect-video max-h-[70vh]" : !useFixedHeight && "h-[60vh]",
+				manifestAspect !== undefined
+					? "max-h-[70vh]"
+					: manifestHeight === undefined && "h-[60vh]",
 			)}
-			style={useFixedHeight ? { height: manifestHeight } : undefined}
+			style={
+				manifestAspect !== undefined
+					? { aspectRatio: manifestAspect, maxHeight: "70vh" }
+					: manifestHeight !== undefined
+						? { height: manifestHeight }
+						: undefined
+			}
 			data-testid="resource-detail-preview"
 		>
 			<PreviewContent

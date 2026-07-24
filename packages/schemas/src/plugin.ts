@@ -53,7 +53,17 @@ const messageUi = z.object({
 })
 
 export const pluginManifestUi = z.object({
+	/**
+	 * Preferred preview surface height (any CSS length, e.g. "85vh").
+	 * Applied by both the resource detail page and the preview dialog.
+	 */
 	height: z.string().min(1).optional(),
+	/**
+	 * Preferred preview surface aspect ratio (e.g. "16/9"), capped by the
+	 * host at 70vh. Intended for video-centric plugins; takes precedence
+	 * over `height`. When neither is set the host falls back to 60vh.
+	 */
+	aspect: z.string().min(1).optional(),
 	card: coverKindUiMap.optional(),
 	search: searchUi.optional(),
 	message: messageUi.optional(),
