@@ -83,7 +83,7 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	readonly listMessages: () => Promise<readonly Message[]>
 	readonly createMessage: (input: {
 		readonly body: string
-		readonly anchor?: AnchorData
+		readonly anchor?: AnchorData<TSchema["anchor"]>
 	}) => Promise<Message>
 
 	/** Danmaku. */
@@ -92,7 +92,7 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	) => Promise<readonly Danmaku[]>
 	readonly createDanmaku: (input: {
 		readonly text: string
-		readonly anchor: AnchorData
+		readonly anchor: AnchorData<TSchema["anchor"]>
 		readonly mode?: DanmakuMode
 	}) => Promise<Danmaku>
 
@@ -123,7 +123,10 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	readonly useFileList: () => QueryState<readonly TSchema["file"][]>
 	readonly useMessageList: () => QueryState<readonly Message[]>
 	readonly useCreateMessage: () => MutationState<
-		{ readonly body: string; readonly anchor?: AnchorData },
+		{
+			readonly body: string
+			readonly anchor?: AnchorData<TSchema["anchor"]>
+		},
 		Message
 	>
 	readonly useDanmakuList: (
@@ -132,7 +135,7 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	readonly useCreateDanmaku: () => MutationState<
 		{
 			readonly text: string
-			readonly anchor: AnchorData
+			readonly anchor: AnchorData<TSchema["anchor"]>
 			readonly mode?: DanmakuMode
 		},
 		Danmaku

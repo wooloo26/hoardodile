@@ -51,7 +51,7 @@ The iframe is sandboxed (opaque origin, no cookies) and talks to the host over `
 
 Two SDK helpers cover the common reader-style needs:
 
-- **Anchor jumps** — when the user clicks a comment/danmaku anchor in the host UI, the host pushes the plugin-defined anchor data to the iframe. React plugins subscribe with `useAnchorJump(cb)` (`@hoardodile/plugin-sdk-react`); framework-agnostic ones use `api.onAnchorJump(cb)`, which returns an unsubscribe function. Never listen for raw `message` events yourself.
+- **Anchor jumps** — when the user clicks a comment/danmaku anchor in the host UI, the host pushes the plugin-defined anchor data to the iframe. Declare your anchor shape once on the plugin schema (`anchor` slot) with a matching `decodeAnchor` validator, pass it to `definePluginAPI({ decodeAnchor })`, and subscribe with the returned typed `useAnchorJump(cb)` — the callback receives validated, fully typed anchor data (invalid anchors are dropped at the SDK boundary). Use the same decoder when reading anchors back from message/danmaku lists. Framework-agnostic plugins can use the raw `api.onAnchorJump(cb)`, which returns an unsubscribe function. Never listen for raw `message` events yourself.
 - **Position persistence** — reader positions, resume timestamps, and similar continuously-changing state belong in the per-resource cache (not plugin-wide prefs). `useCacheWriter({ key, value, encode, disabled? })` (`@hoardodile/plugin-sdk-react`) writes `api.setCache` with a debounce and flushes on `pagehide`/unmount; read the initial value synchronously via `api.getCache(key)`.
 
 ## Build tooling

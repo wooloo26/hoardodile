@@ -1,4 +1,4 @@
-import { useAnchorJump, useCacheWriter } from "@hoardodile/plugin-sdk-react"
+import { useCacheWriter } from "@hoardodile/plugin-sdk-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "../i18n"
 import {
@@ -13,7 +13,7 @@ import {
 } from "../prefs"
 import { NovelChapterSheet } from "./ChapterSheet"
 import { buildCommentsByParagraph } from "./commentsByParagraph"
-import { usePluginAPI } from "./hooks"
+import { useAnchorJump, usePluginAPI } from "./hooks"
 import { NovelBody } from "./NovelBody"
 import { NovelParagraphCommentDialog } from "./NovelParagraphCommentDialog"
 import { NovelTopBar } from "./NovelTopBar"
@@ -162,16 +162,8 @@ export function NovelReader(props: { readonly open: boolean }) {
 	}, [])
 
 	useAnchorJump(function onJump(anchor) {
-		const data = anchor.data
-		if (typeof data !== "object" || data === null) return
-		if (
-			!("paragraphIndex" in data) ||
-			typeof data.paragraphIndex !== "number"
-		) {
-			return
-		}
-		if (!("filename" in data) || data.filename !== filename) return
-		handleJump(data.paragraphIndex)
+		if (anchor.data.filename !== filename) return
+		handleJump(anchor.data.paragraphIndex)
 	})
 
 	function handleSettingsChange(next: NovelSettings) {

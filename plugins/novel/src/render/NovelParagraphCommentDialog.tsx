@@ -21,6 +21,7 @@ export function NovelParagraphCommentDialog(props: {
 	}
 
 	async function handleSubmit(body: string) {
+		if (paragraphIndex === undefined) return
 		await createMessage.mutate({
 			body,
 			anchor: {

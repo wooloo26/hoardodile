@@ -1,7 +1,6 @@
 import type { Danmaku as DanmakuRecord } from "@hoardodile/plugin-sdk-web"
-import { usePluginAPI } from "../hooks"
+import { useAnchorJump, usePluginAPI } from "../hooks"
 import "@videojs/react/video/skin.css"
-import { useAnchorJump } from "@hoardodile/plugin-sdk-react"
 import { useBelowMd } from "@hoardodile/ui/hooks/use-mobile"
 import { cn } from "@hoardodile/ui/lib/utils"
 import { createPlayer } from "@videojs/react"
@@ -306,21 +305,12 @@ function EnhancedPlayerInner(
 	})
 
 	useAnchorJump(function handleAnchorJump(anchor) {
-		const data = anchor.data
-		if (typeof data !== "object" || data === null) return
-		if (!("timeMs" in data) || typeof data.timeMs !== "number") return
-		if (
-			"filename" in data &&
-			typeof data.filename === "string" &&
-			data.filename !== filename
-		) {
-			return
-		}
+		if (anchor.data.filename !== filename) return
 		const v = videoRef.current
 		if (v === null) return
 		// Preserve play/pause state when jumping from a danmaku anchor.
 		const wasPlaying = !v.paused
-		v.currentTime = Math.max(0, data.timeMs) / 1000
+		v.currentTime = Math.max(0, anchor.data.timeMs) / 1000
 		if (wasPlaying) v.play().catch(noopReject)
 	})
 

@@ -28,8 +28,11 @@ export type ResAnchor = {
  * Anchor as supplied by plugin code: only the plugin-defined location
  * data. The SDK injects the iframe's own resource id before the anchor
  * reaches the host — plugins never pass a resId.
+ *
+ * The generic defaults to `unknown`; plugins that declare an `anchor`
+ * slot on their {@link PluginSchema} get it narrowed automatically.
  */
-export type AnchorData = Omit<ResAnchor, "resId">
+export type AnchorData<T = unknown> = { readonly data?: T }
 
 /** Web plugin message shape. */
 export type Message = {
@@ -78,4 +81,11 @@ export interface PluginSchema {
 	readonly file?: unknown
 	readonly sourceMeta?: unknown
 	readonly searchMeta?: unknown
+	/**
+	 * Plugin-defined anchor data shape (the `data` payload of message and
+	 * danmaku anchors). Outgoing anchors are typed by this slot; incoming
+	 * anchor data is validated by the plugin's `decodeAnchor` (see
+	 * `definePluginAPI` in `@hoardodile/plugin-sdk-react`).
+	 */
+	readonly anchor?: unknown
 }

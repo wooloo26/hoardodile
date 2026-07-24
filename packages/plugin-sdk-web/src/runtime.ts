@@ -40,7 +40,11 @@ const REQUEST_TIMEOUT_MS = 10_000
 let nextId = 1
 let hostBridge: Host | undefined
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+/**
+ * Narrow an unknown value to a plain record. Handy for decoding
+ * plugin-defined payloads (e.g. anchor data) without assertion casts.
+ */
+export function isRecord(value: unknown): value is Record<string, unknown> {
 	return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 

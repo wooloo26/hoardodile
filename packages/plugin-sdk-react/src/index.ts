@@ -1,5 +1,9 @@
 export { PluginAPIProvider, usePluginAPI } from "./context.tsx"
-export { definePluginAPI } from "./define-api.ts"
+export {
+	type DefinePluginAPIOptions,
+	definePluginAPI,
+	type PluginAnchor,
+} from "./define-api.ts"
 export {
 	createWebPluginAPI,
 	StubPluginAPIProvider,

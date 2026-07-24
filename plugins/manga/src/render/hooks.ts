@@ -1,5 +1,5 @@
 import { definePluginAPI } from "@hoardodile/plugin-sdk-react"
-import type { MangaSchema } from "../shared"
+import { decodeMangaPageAnchor, type MangaSchema } from "../shared"
 
-export const { PluginAPIProvider, usePluginAPI } =
-	definePluginAPI<MangaSchema>()
+export const { PluginAPIProvider, usePluginAPI, useAnchorJump } =
+	definePluginAPI<MangaSchema>({ decodeAnchor: decodeMangaPageAnchor })

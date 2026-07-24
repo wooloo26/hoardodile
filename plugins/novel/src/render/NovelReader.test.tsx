@@ -50,7 +50,7 @@ function message(id: string, paragraphIndex: number): Message {
 		likeCount: 0,
 		dislikeCount: 0,
 		replyCount: 0,
-		anchor: { resId: "r-test", data: { paragraphIndex } },
+		anchor: { resId: "r-test", data: { paragraphIndex, filename: FILENAME } },
 	}
 }
 

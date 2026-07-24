@@ -32,6 +32,7 @@ export {
 	extractThemePayload,
 	getPluginContext,
 	getVisibilitySnapshot,
+	isRecord,
 	mountPlugin,
 	subscribeToVisibility,
 } from "./runtime.ts"

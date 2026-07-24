@@ -1,5 +1,5 @@
-import { useAnchorJump, useCacheWriter } from "@hoardodile/plugin-sdk-react"
-import type { AnchorData, Message } from "@hoardodile/plugin-sdk-web"
+import { useCacheWriter } from "@hoardodile/plugin-sdk-react"
+import type { Message } from "@hoardodile/plugin-sdk-web"
 import { booleanCodec } from "@hoardodile/plugin-sdk-web"
 import { Button } from "@hoardodile/ui/components/button"
 import { MessageSquare, MessageSquareOff, Rows3, Square } from "lucide-react"
@@ -16,9 +16,10 @@ import {
 	type MangaReadingMode,
 	type MangaSettings,
 } from "../prefs"
+import { decodeMangaPageAnchor } from "../shared"
 import { MangaCommentSendBar } from "./CommentSendBar"
 import { readMangaPreviews, selectMangaPages } from "./helpers"
-import { usePluginAPI } from "./hooks"
+import { useAnchorJump, usePluginAPI } from "./hooks"
 import { MangaPagedView } from "./PagedView"
 import { MangaScrollView } from "./ScrollView"
 
@@ -129,24 +130,10 @@ export function MangaReader() {
 		[pages.length, mode],
 	)
 
-	useAnchorJump(
-		useCallback(
-			function handleAnchorJump(anchor: AnchorData) {
-				const data = anchor.data
-				if (typeof data !== "object" || data === null) return
-				if (!("page" in data) || typeof data.page !== "number") return
-				if ("filename" in data && typeof data.filename === "string") {
-					const idx = pages.findIndex((p) => p.filename === data.filename)
-					if (idx !== -1) {
-						handleManualJump(idx)
-						return
-					}
-				}
-				handleManualJump(data.page)
-			},
-			[pages, handleManualJump],
-		),
-	)
+	useAnchorJump(function handleAnchorJump(anchor) {
+		const idx = pages.findIndex((p) => p.filename === anchor.data.filename)
+		handleManualJump(idx !== -1 ? idx : anchor.data.page)
+	})
 
 	const currentFile = pages[currentPageIndex]
 
@@ -286,11 +273,11 @@ function buildPerPageComments(
 	for (const c of all) {
 		const a = c.anchor
 		if (a === undefined) continue
-		const data = a.data as { readonly filename?: string } | undefined
-		if (data?.filename === undefined) continue
-		const arr = map.get(data.filename) ?? []
+		const anchor = decodeMangaPageAnchor(a.data)
+		if (anchor === undefined) continue
+		const arr = map.get(anchor.filename) ?? []
 		arr.push(c)
-		map.set(data.filename, arr)
+		map.set(anchor.filename, arr)
 	}
 	return map
 }

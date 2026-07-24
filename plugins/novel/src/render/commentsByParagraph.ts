@@ -1,4 +1,5 @@
 import type { Message } from "@hoardodile/plugin-sdk-web"
+import { decodeNovelParagraphAnchor } from "../shared"
 
 export function buildCommentsByParagraph(
 	rows: readonly Message[],
@@ -7,11 +8,11 @@ export function buildCommentsByParagraph(
 	for (const c of rows) {
 		const a = c.anchor
 		if (a === undefined) continue
-		const data = a.data as { readonly paragraphIndex?: number } | undefined
-		if (data?.paragraphIndex === undefined) continue
-		const arr = map.get(data.paragraphIndex) ?? []
+		const anchor = decodeNovelParagraphAnchor(a.data)
+		if (anchor === undefined) continue
+		const arr = map.get(anchor.paragraphIndex) ?? []
 		arr.push(c)
-		map.set(data.paragraphIndex, arr)
+		map.set(anchor.paragraphIndex, arr)
 	}
 	return map
 }

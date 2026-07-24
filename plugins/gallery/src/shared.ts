@@ -1,4 +1,5 @@
 import type { PluginSchema } from "@hoardodile/plugin-sdk-types"
+import { isRecord } from "@hoardodile/plugin-sdk-web"
 
 export type GalleryFile = {
 	readonly filename: string
@@ -30,4 +31,28 @@ export interface GallerySchema extends PluginSchema {
 	readonly file: GalleryFile
 	readonly sourceMeta: GallerySourceMeta
 	readonly searchMeta: GallerySearchMeta
+	readonly anchor: VideoTimeAnchor
+}
+
+/** Danmaku anchor pinning a comment to a playback position of one file. */
+export type VideoTimeAnchor = {
+	readonly kind: "videoTime"
+	readonly filename: string
+	readonly timeMs: number
+}
+
+/** Validate incoming anchor data against {@link VideoTimeAnchor}. */
+export function decodeVideoTimeAnchor(
+	data: unknown,
+): VideoTimeAnchor | undefined {
+	if (!isRecord(data)) return undefined
+	const { kind, filename, timeMs } = data
+	if (
+		kind !== "videoTime" ||
+		typeof filename !== "string" ||
+		typeof timeMs !== "number"
+	) {
+		return undefined
+	}
+	return { kind, filename, timeMs }
 }

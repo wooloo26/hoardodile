@@ -1,4 +1,5 @@
 import type { Danmaku as DanmakuRecord } from "@hoardodile/plugin-sdk-web"
+import { decodeVideoTimeAnchor } from "../shared"
 import {
 	DANMAKU_AREA_PRESETS,
 	type DanmakuArea,
@@ -44,8 +45,8 @@ export function writeResume(
 
 export function toEngineComment(d: DanmakuRecord, fontSizePx: number) {
 	const mode = d.mode === "scroll" ? "rtl" : d.mode
-	const data = d.anchor.data as { kind?: string; timeMs?: number } | undefined
-	const timeMs = data?.kind === "videoTime" ? (data.timeMs ?? 0) : 0
+	const anchor = decodeVideoTimeAnchor(d.anchor.data)
+	const timeMs = anchor?.timeMs ?? 0
 	return {
 		text: d.text,
 		mode,

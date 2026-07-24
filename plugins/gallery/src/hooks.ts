@@ -1,5 +1,5 @@
 import { definePluginAPI } from "@hoardodile/plugin-sdk-react"
-import type { GallerySchema } from "./shared"
+import { decodeVideoTimeAnchor, type GallerySchema } from "./shared"
 
-export const { PluginAPIProvider, usePluginAPI } =
-	definePluginAPI<GallerySchema>()
+export const { PluginAPIProvider, usePluginAPI, useAnchorJump } =
+	definePluginAPI<GallerySchema>({ decodeAnchor: decodeVideoTimeAnchor })
