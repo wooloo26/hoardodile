@@ -506,7 +506,7 @@ function EnhancedPlayerInner(
 		// paints a stray outline ring across the video. Suppress it —
 		// keyboard focus on the controls inside still gets their own
 		// rings.
-		"focus-visible:outline-none",
+		"focus-visible:outline-hidden",
 	)
 	// `natural` caps the video at its source resolution so low-res
 	// clips are not scaled up; `contain` letterboxes to fill.

@@ -37,7 +37,7 @@ export function DanmakuSendBar(props: SendBarProps) {
 	const canSubmit = text.trim().length > 0 && !isPending
 	return (
 		<form
-			className="flex items-center gap-2 bg-black px-4 py-2 text-white outline-none focus:outline-none focus-visible:outline-none"
+			className="flex items-center gap-2 bg-black px-4 py-2 text-white outline-hidden focus:outline-hidden focus-visible:outline-hidden"
 			tabIndex={-1}
 			onSubmit={handleSubmit}
 		>

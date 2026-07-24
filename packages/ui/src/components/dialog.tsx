@@ -110,7 +110,7 @@ function DialogContent({
 					// Mobile: bottom sheet occupying most of the viewport so edit
 					// forms have room to breathe. The component never scrolls
 					// itself; only the inner DialogBody does.
-					"fixed z-50 flex flex-col bg-popover text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none",
+					"fixed z-50 flex flex-col bg-popover text-sm text-popover-foreground ring-1 ring-foreground/10 outline-hidden",
 					"inset-x-0 bottom-0 max-h-[85svh] overflow-hidden rounded-t-xl rounded-b-none",
 					motionClasses,
 					// ≥ sm: centred modal, allow up to 90vh.

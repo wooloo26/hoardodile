@@ -360,7 +360,7 @@ function MangaPageJumpInput(props: {
 						;(e.target as HTMLInputElement).blur()
 					}
 				}}
-				className="w-12 rounded border border-white/20 bg-transparent px-1 py-0.5 text-center tabular-nums text-white outline-none focus:border-white/60"
+				className="w-12 rounded border border-white/20 bg-transparent px-1 py-0.5 text-center tabular-nums text-white outline-hidden focus:border-white/60"
 				aria-label={t("page")}
 				data-testid="manga-page-jump-input"
 			/>

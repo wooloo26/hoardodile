@@ -101,7 +101,7 @@ function NovelPageJumpInput(props: {
 						;(e.target as HTMLInputElement).blur()
 					}
 				}}
-				className="w-12 rounded border border-current/20 bg-transparent px-1 py-0.5 text-center text-xs outline-none focus:border-current/60"
+				className="w-12 rounded border border-current/20 bg-transparent px-1 py-0.5 text-center text-xs outline-hidden focus:border-current/60"
 				aria-label={t("page")}
 				data-testid="novel-page-jump-input"
 			/>
