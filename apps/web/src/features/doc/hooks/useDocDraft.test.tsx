@@ -448,4 +448,48 @@ describe("useDocDraft", () => {
 		// The local edit must survive the snapshot reconciliation.
 		await waitFor(() => expect(result.current.titleInput).toBe("EDITED"))
 	})
+
+	it("awaits a slow offline snapshot write before clearing the offline draft", async () => {
+		const { result } = setup({ id: "docA", draft: draftA })
+		await waitFor(() => expect(result.current.isCacheLoading).toBe(false))
+
+		let resolveSnapshotWrite: (() => void) | undefined
+		const setSpy = vi.spyOn(draftStore, "setCurrent").mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					resolveSnapshotWrite = resolve
+				}),
+		)
+		const clearSpy = vi.spyOn(draftStore, "clearCurrent")
+
+		try {
+			act(() => result.current.onContentChange(modifiedContent))
+
+			const savePromise = act(async () => {
+				await result.current.manualSaveAsync()
+			})
+
+			// The manual save flushes the pending snapshot; while that write is
+			// still in flight the clear must not run, otherwise the late write
+			// would resurrect an offline entry over the just-saved server draft.
+			await waitFor(() => expect(setSpy).toHaveBeenCalled())
+			await new Promise((r) => setTimeout(r, 50))
+			expect(clearSpy).not.toHaveBeenCalled()
+
+			resolveSnapshotWrite?.()
+			await savePromise
+
+			expect(clearSpy).toHaveBeenCalled()
+			const setOrder = setSpy.mock.invocationCallOrder[0]
+			const clearOrder = clearSpy.mock.invocationCallOrder[0]
+			expect(setOrder).toBeDefined()
+			expect(clearOrder).toBeDefined()
+			if (setOrder !== undefined && clearOrder !== undefined) {
+				expect(setOrder).toBeLessThan(clearOrder)
+			}
+		} finally {
+			setSpy.mockRestore()
+			clearSpy.mockRestore()
+		}
+	})
 })

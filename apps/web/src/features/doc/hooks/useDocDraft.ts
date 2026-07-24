@@ -139,18 +139,20 @@ export function useDocDraft(args: DocDraftInput): DocDraft {
 		await draftStore.setCurrent(docId, { title, content, savedAt: Date.now() })
 	}
 
-	const flushOfflineSnapshot = useCallback(() => {
+	const flushOfflineSnapshot = useCallback((): Promise<void> | undefined => {
 		if (offlineSnapshotTimerRef.current !== undefined) {
 			clearTimeout(offlineSnapshotTimerRef.current)
 			offlineSnapshotTimerRef.current = undefined
 		}
 		const snapshot = pendingOfflineSnapshotRef.current
-		if (snapshot === undefined) return
+		if (snapshot === undefined) return undefined
 		pendingOfflineSnapshotRef.current = undefined
 		const targetId = currentDocIdRef.current
-		saveOfflineSnapshot(targetId, snapshot.title, snapshot.content).catch(
-			() => {},
-		)
+		return saveOfflineSnapshot(
+			targetId,
+			snapshot.title,
+			snapshot.content,
+		).catch(() => {})
 	}, [])
 
 	const scheduleOfflineSnapshot = useCallback(
@@ -213,7 +215,9 @@ export function useDocDraft(args: DocDraftInput): DocDraft {
 		if (titleInputRef.current === titleAtSaveStart && titleChanged) {
 			setTitleInputRaw(trimmedTitle)
 		}
-		flushOfflineSnapshot()
+		// Await the snapshot write before clearing so a late-resolving write
+		// cannot resurrect an offline entry that clearOfflineDraft just removed.
+		await flushOfflineSnapshot()
 		await clearOfflineDraft()
 	}, [draft, charCount, flushOfflineSnapshot, patchMut, qc, t])
 

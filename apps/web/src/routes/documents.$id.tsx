@@ -261,22 +261,27 @@ function DocDetailRoute() {
 	])
 
 	const handleEnterDiff = useCallback(
-		function handleEnterDiff() {
+		async function handleEnterDiff() {
 			if (versions.length === 0) return
 			const editor = editorHandleRef.current?.editor
 			if (editor === undefined) return
 			setEnteringDiff(true)
 			try {
-				// Flush any buffered edits so the diff matches what the user sees.
-				draftState.manualSave()
-				setDiffCurrentBlocks(editor.document as DiffableBlock[])
-				setDiffVersionId(versions[0]?.id)
-				setDiffMode(true)
+				// Flush any buffered edits and wait for the save to settle so the
+				// diff matches what the user sees, and so the main editor remounts
+				// with fresh content when the diff is closed.
+				await draftState.manualSaveAsync()
+			} catch {
+				// The mutation layer already toasts the failure; stay out of diff.
+				return
 			} finally {
 				setEnteringDiff(false)
 			}
+			setDiffCurrentBlocks(editor.document as DiffableBlock[])
+			setDiffVersionId(versions[0]?.id)
+			setDiffMode(true)
 		},
-		[draftState.manualSave, versions],
+		[draftState.manualSaveAsync, versions],
 	)
 
 	const handleExitDiff = useCallback(function handleExitDiff() {
