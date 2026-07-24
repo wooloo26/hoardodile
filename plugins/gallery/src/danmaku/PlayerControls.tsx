@@ -27,9 +27,8 @@ type ControlsProps = {
 	/**
 	 * `full`      — the standard control bar (default).
 	 * `seek-only` — just a thin progress slider pinned to the bottom
-	 *               edge so the user can scrub the active feed video
-	 *               without the rest of the chrome competing for the
-	 *               viewport.
+	 *               edge so the user can scrub without the rest of the
+	 *               chrome competing for the viewport.
 	 */
 	readonly mode?: "full" | "seek-only"
 	readonly paused: boolean

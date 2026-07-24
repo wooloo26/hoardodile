@@ -5,10 +5,8 @@
 	"license": "GPL-3.0",
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts",
 		"./main": "./src/main.ts",
-		"./locales/*": "./src/locales/*.ts",
-		"./danmaku/*": "./src/danmaku/*.ts"
+		"./locales/*": "./src/locales/*.ts"
 	},
 	"scripts": {
 		"build": "hoardodile-plugin-build",

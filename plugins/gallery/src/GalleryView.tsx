@@ -17,8 +17,6 @@ import type { GalleryFile } from "./shared"
 /**
  * Player customisation hook. Forwarded straight through to the
  * underlying {@link DanmakuPlayer} when the active file is a video.
- * Used by the feed to enable autoplay+loop and to lift danmaku display
- * settings out of the player so a single popover can cover all slides.
  */
 export type GalleryPlayerOptions = {
 	readonly autoplay?: boolean
@@ -28,16 +26,11 @@ export type GalleryPlayerOptions = {
 	readonly disableResume?: boolean
 	readonly settings?: DanmakuSettings
 	readonly onSettingsChange?: (next: DanmakuSettings) => void
-	/**
-	 * Forwarded to the underlying `<DanmakuPlayer preload>`. Lets the
-	 * resource feed bump active neighbours up to `"auto"` so the next
-	 * swipe starts buffering before the slide is shown.
-	 */
+	/** Forwarded to the underlying `<DanmakuPlayer preload>`. */
 	readonly preload?: "none" | "metadata" | "auto"
 }
 
 export type GalleryViewProps = {
-	readonly resId: string
 	readonly mediaFiles: readonly GalleryFile[]
 	readonly onCurrentFileChange: (file: GalleryFile | undefined) => void
 	readonly hideSendBar: boolean
@@ -60,7 +53,6 @@ export type GalleryViewProps = {
 export function GalleryView(props: GalleryViewProps) {
 	const api = usePluginAPI()
 	const {
-		resId,
 		mediaFiles,
 		onCurrentFileChange,
 		hideSendBar,
@@ -89,10 +81,6 @@ export function GalleryView(props: GalleryViewProps) {
 		if (controlled) onFileIndexChange(clamped)
 		else setInternalIndex(clamped)
 	}
-
-	useEffect(() => {
-		if (!controlled) setInternalIndex(0)
-	}, [resId, controlled])
 
 	useEffect(() => {
 		function handleKey(e: KeyboardEvent) {
@@ -138,7 +126,6 @@ export function GalleryView(props: GalleryViewProps) {
 			<GalleryFileMedia
 				file={file}
 				src={src}
-				resId={resId}
 				hideSendBar={hideSendBar}
 				playerOptions={playerOptions}
 				naturalSize={sourceMetaSize}
@@ -329,7 +316,6 @@ function GalleryClickZones(props: GalleryClickZonesProps) {
 type GalleryFileMediaProps = {
 	readonly file: GalleryFile
 	readonly src: string
-	readonly resId: string
 	readonly hideSendBar: boolean
 	readonly playerOptions?: GalleryPlayerOptions
 	readonly naturalSize?: { readonly w: number; readonly h: number }
@@ -342,7 +328,6 @@ function GalleryFileMedia(props: GalleryFileMediaProps) {
 	const {
 		file,
 		src,
-		resId,
 		hideSendBar,
 		playerOptions,
 		naturalSize,
@@ -354,7 +339,6 @@ function GalleryFileMedia(props: GalleryFileMediaProps) {
 		return (
 			<DanmakuPlayer
 				key={src}
-				resId={resId}
 				filename={file.filename}
 				src={src}
 				autoplay={playerOptions?.autoplay}

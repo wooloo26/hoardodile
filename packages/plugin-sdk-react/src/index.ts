@@ -10,3 +10,5 @@ export {
 	type PluginRootConfig,
 	useVisibility,
 } from "./root.tsx"
+export { useAnchorJump } from "./use-anchor-jump.ts"
+export { useCacheWriter } from "./use-cache-writer.ts"

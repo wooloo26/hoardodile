@@ -27,8 +27,8 @@ export function DanmakuSettingsPopover(props: {
 	readonly onChange: (next: DanmakuSettings) => void
 	/**
 	 * Optional custom trigger element (e.g. an icon-and-label button
-	 * for the feed header). When omitted falls back to the default
-	 * icon-only trigger shared with the inline send bar.
+	 * in a host surface's header). When omitted falls back to the
+	 * default icon-only trigger shared with the inline send bar.
 	 */
 	readonly trigger?: ReactNode
 	readonly contentSide?: "top" | "bottom" | "left" | "right"

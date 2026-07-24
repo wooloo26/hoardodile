@@ -111,6 +111,14 @@ export type WebPluginAPI<TSchema extends PluginSchema = PluginSchema> = {
 	/** Invalidation. */
 	readonly invalidate: (target: InvalidateTarget) => Promise<void>
 
+	/**
+	 * Subscribe to host-initiated anchor jumps (e.g. the user clicked a
+	 * comment anchor in the host UI). The anchor carries plugin-defined data
+	 * only and always targets the iframe's own resource. Returns an
+	 * unsubscribe function.
+	 */
+	readonly onAnchorJump: (cb: (anchor: AnchorData) => void) => () => void
+
 	/** Reactive hooks. */
 	readonly useFileList: () => QueryState<readonly TSchema["file"][]>
 	readonly useMessageList: () => QueryState<readonly Message[]>

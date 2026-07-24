@@ -21,10 +21,6 @@ export const MANGA_SETTINGS_DEFAULT: MangaSettings = {
 	pageDirection: "ltr",
 }
 
-export function mangaPositionKey(resId: string): string {
-	return `position.${resId}`
-}
-
 export function encodeMangaSettings(value: MangaSettings): string {
 	return JSON.stringify(value)
 }

@@ -7,8 +7,9 @@ import { usePluginAPI } from "../hooks"
 import {
 	areaToHeight,
 	noopReject,
-	serverResumeKey,
+	resumeCacheKey,
 	toEngineComment,
+	writeResume,
 } from "./helpers"
 import {
 	AUTOPLAY_PREF_KEY,
@@ -80,7 +81,6 @@ export function useDanmakuEngine(deps: EngineDeps) {
 
 type ResumePlaybackDeps = {
 	readonly videoRef: React.RefObject<HTMLVideoElement | null>
-	readonly resId: string
 	readonly filename: string
 	readonly currentMs: number
 	readonly durationMs: number
@@ -89,19 +89,12 @@ type ResumePlaybackDeps = {
 
 export function useResumePlayback(deps: ResumePlaybackDeps) {
 	const api = usePluginAPI()
-	const {
-		videoRef,
-		resId,
-		filename,
-		currentMs,
-		durationMs,
-		disabled = false,
-	} = deps
+	const { videoRef, filename, currentMs, durationMs, disabled = false } = deps
 	const lastWriteRef = useRef(0)
 	const apiRef = useRef(api)
 	apiRef.current = api
-	const latestRef = useRef({ resId, filename, currentMs, durationMs })
-	latestRef.current = { resId, filename, currentMs, durationMs }
+	const latestRef = useRef({ filename, currentMs, durationMs })
+	latestRef.current = { filename, currentMs, durationMs }
 	useEffect(() => {
 		if (disabled) return
 		const v = videoRef.current
@@ -111,17 +104,13 @@ export function useResumePlayback(deps: ResumePlaybackDeps) {
 		const durMs = durationMs > 0 ? durationMs : durationFromElement(v)
 		if (durMs === 0) return
 		const curMs = currentMs > 0 ? currentMs : Math.round(v.currentTime * 1000)
-		writeResume({
-			resId,
+		writeResume(apiRef.current, {
 			filename,
 			currentMs: curMs,
 			durationMs: durMs,
-			setPrefSync: (key, value) => {
-				apiRef.current.setPref(key, value)
-			},
 		})
 		lastWriteRef.current = now
-	}, [videoRef, resId, filename, currentMs, durationMs, disabled])
+	}, [videoRef, filename, currentMs, durationMs, disabled])
 	useEffect(function flushOnUnmountAndPagehide() {
 		if (disabled) return
 		function flush() {
@@ -140,14 +129,10 @@ export function useResumePlayback(deps: ResumePlaybackDeps) {
 					: v !== null
 						? Math.round(v.currentTime * 1000)
 						: 0
-			writeResume({
-				resId: snap.resId,
+			writeResume(apiRef.current, {
 				filename: snap.filename,
 				currentMs: curMs,
 				durationMs: durMs,
-				setPrefSync: (key, value) => {
-					apiRef.current.setPref(key, value)
-				},
 			})
 		}
 		window.addEventListener("pagehide", flush)
@@ -163,26 +148,8 @@ function durationFromElement(v: HTMLVideoElement): number {
 	return Number.isFinite(d) && d > 0 ? Math.round(d * 1000) : 0
 }
 
-function writeResume(args: {
-	readonly resId: string
-	readonly filename: string
-	readonly currentMs: number
-	readonly durationMs: number
-	readonly setPrefSync: (key: string, value: string) => void
-}): void {
-	const { currentMs, durationMs, setPrefSync } = args
-	const remaining = durationMs - currentMs
-	const prefKey = serverResumeKey(args.resId, args.filename)
-	if (remaining <= RESUME_MIN_REMAINING_MS) {
-		setPrefSync(prefKey, "")
-	} else if (currentMs > 1000) {
-		setPrefSync(prefKey, String(currentMs))
-	}
-}
-
 type ResumeApplyDeps = {
 	readonly videoRef: React.RefObject<HTMLVideoElement | null>
-	readonly resId: string
 	readonly filename: string
 	readonly disabled?: boolean
 }
@@ -191,9 +158,16 @@ export function useResumeApply(deps: ResumeApplyDeps): {
 	readonly lastResumedAt: number | undefined
 } {
 	const api = usePluginAPI()
-	const { videoRef, resId, filename, disabled = false } = deps
-	const prefKey = serverResumeKey(resId, filename)
-	const [prefValue] = api.usePref<number>(prefKey, 0, numberCodec())
+	const { videoRef, filename, disabled = false } = deps
+	// One-shot read: the per-resource cache is seeded into the iframe
+	// context before mount, so the saved offset is available
+	// synchronously. The player remounts per file (`key={src}`), so a
+	// mount-time read always matches the current file.
+	const [resumeMs] = useState(function readInitial() {
+		const raw = api.getCache(resumeCacheKey(filename))
+		const parsed = raw !== undefined ? Number(raw) : 0
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+	})
 	const appliedRef = useRef(false)
 	const [lastResumedAt, setLastResumedAt] = useState<number | undefined>(
 		undefined,
@@ -202,7 +176,7 @@ export function useResumeApply(deps: ResumeApplyDeps): {
 		function applyResume() {
 			if (disabled) return
 			if (appliedRef.current) return
-			const winningMs = prefValue > 0 ? prefValue : 0
+			const winningMs = resumeMs
 			if (winningMs <= 0) {
 				appliedRef.current = true
 				return
@@ -238,7 +212,7 @@ export function useResumeApply(deps: ResumeApplyDeps): {
 				v.removeEventListener("canplay", handler)
 			}
 		},
-		[prefValue, videoRef, resId, filename, disabled],
+		[resumeMs, videoRef, filename, disabled],
 	)
 	return { lastResumedAt }
 }

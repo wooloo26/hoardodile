@@ -1,4 +1,5 @@
-import type { Message } from "@hoardodile/plugin-sdk-web"
+import { useAnchorJump, useCacheWriter } from "@hoardodile/plugin-sdk-react"
+import type { AnchorData, Message } from "@hoardodile/plugin-sdk-web"
 import { booleanCodec } from "@hoardodile/plugin-sdk-web"
 import { Button } from "@hoardodile/ui/components/button"
 import { MessageSquare, MessageSquareOff, Rows3, Square } from "lucide-react"
@@ -7,6 +8,7 @@ import { useTranslation } from "../i18n"
 import {
 	decodeMangaPosition,
 	decodeMangaSettings,
+	encodeMangaPosition,
 	encodeMangaSettings,
 	MANGA_SETTINGS_DEFAULT,
 	MANGA_SETTINGS_KEY,
@@ -14,13 +16,11 @@ import {
 	type MangaReadingMode,
 	type MangaSettings,
 } from "../prefs"
-import { useMangaReaderJumpBus } from "./bus"
 import { MangaCommentSendBar } from "./CommentSendBar"
 import { readMangaPreviews, selectMangaPages } from "./helpers"
 import { usePluginAPI } from "./hooks"
 import { MangaPagedView } from "./PagedView"
 import { MangaScrollView } from "./ScrollView"
-import { useReaderPositionWriter } from "./useReaderPositionWriter"
 
 /**
  * Manga reader. Routes between scroll and paged view, persists the
@@ -37,7 +37,6 @@ export function MangaReader() {
 	const toggleUseOriginal = useCallback(() => {
 		setUseOriginal(!useOriginal)
 	}, [setUseOriginal, useOriginal])
-	const resId = api.resource.id
 
 	const filesQuery = api.useFileList()
 	const pages = useMemo(() => {
@@ -86,24 +85,18 @@ export function MangaReader() {
 	}, [position, pages.length])
 
 	// persist position with debounce + flush
-	useReaderPositionWriter({
-		pageIndex: currentPageIndex,
+	useCacheWriter({
+		key: "position",
+		value: currentPageIndex,
+		encode: encodePageIndex,
 		disabled: !hasHydratedRef.current,
 	})
 
-	// comments: manual fetch so we can refresh after posting
-	const [commentsData, setCommentsData] = useState<
-		readonly Message[] | undefined
-	>(undefined)
-	useEffect(() => {
-		api.listMessages().then(setCommentsData)
-	}, [api])
-	const refreshComments = useCallback(() => {
-		api.listMessages().then(setCommentsData)
-	}, [api])
+	// comments: reactive list, refreshed via api.invalidate("messages")
+	const commentsQuery = api.useMessageList()
 	const perPageComments = useMemo(
-		() => buildPerPageComments(commentsData ?? []),
-		[commentsData],
+		() => buildPerPageComments(commentsQuery.data ?? []),
+		[commentsQuery.data],
 	)
 
 	const toggleMode = useCallback(() => {
@@ -123,17 +116,6 @@ export function MangaReader() {
 		)
 	}, [settings, setSettingsRaw])
 
-	const handleJumpByFilename = useCallback(
-		(filename: string) => {
-			const idx = pages.findIndex((p) => p.filename === filename)
-			if (idx === -1) return
-			setCurrentPageIndex(idx)
-			if (mode === "scroll") setScrollToPage(idx)
-		},
-		[pages, mode],
-	)
-	useMangaReaderJumpBus({ resId, onJump: handleJumpByFilename })
-
 	const handleScrollHandled = useCallback(() => {
 		setScrollToPage(undefined)
 	}, [])
@@ -147,15 +129,13 @@ export function MangaReader() {
 		[pages.length, mode],
 	)
 
-	useEffect(
-		function listenForAnchorJump() {
-			function handler(event: MessageEvent) {
-				if (event.data?.type !== "anchor-jump") return
-				const data = event.data.data as
-					| { readonly page?: number; readonly filename?: string }
-					| undefined
-				if (typeof data?.page !== "number") return
-				if (data.filename !== undefined) {
+	useAnchorJump(
+		useCallback(
+			function handleAnchorJump(anchor: AnchorData) {
+				const data = anchor.data
+				if (typeof data !== "object" || data === null) return
+				if (!("page" in data) || typeof data.page !== "number") return
+				if ("filename" in data && typeof data.filename === "string") {
 					const idx = pages.findIndex((p) => p.filename === data.filename)
 					if (idx !== -1) {
 						handleManualJump(idx)
@@ -163,11 +143,9 @@ export function MangaReader() {
 					}
 				}
 				handleManualJump(data.page)
-			}
-			window.addEventListener("message", handler)
-			return () => window.removeEventListener("message", handler)
-		},
-		[pages, handleManualJump],
+			},
+			[pages, handleManualJump],
+		),
 	)
 
 	const currentFile = pages[currentPageIndex]
@@ -215,12 +193,15 @@ export function MangaReader() {
 					<MangaCommentSendBar
 						filename={currentFile.filename}
 						page={currentPageIndex}
-						onSuccess={refreshComments}
 					/>
 				</div>
 			) : null}
 		</div>
 	)
+}
+
+function encodePageIndex(pageIndex: number): string {
+	return encodeMangaPosition({ v: 1, pageIndex })
 }
 
 function MangaTopBar(props: {

@@ -1,5 +1,4 @@
 import { MAX_COMMENT_BODY_LENGTH } from "@hoardodile/consts/text-limits"
-import type { ResAnchor } from "@hoardodile/plugin-sdk-web"
 import { Button } from "@hoardodile/ui/components/button"
 import { Textarea } from "@hoardodile/ui/components/textarea"
 import { Send } from "lucide-react"
@@ -17,8 +16,6 @@ export type CommentComposerProps = {
 	readonly placeholder?: string
 	readonly submitLabel?: string
 	readonly pendingLabel?: string
-	/** Pre-seeded anchor attached to the comment without exposing UI for it. */
-	readonly initialAnchor?: ResAnchor
 	/** Initial body text. */
 	readonly initialBody?: string
 	/** Optional slot for character/resource pickers (web-specific). */

@@ -22,7 +22,6 @@ function GalleryPreview() {
 	if (!visible) return undefined
 	return (
 		<GalleryView
-			resId={api.resource.id}
 			mediaFiles={mediaFiles}
 			onCurrentFileChange={() => {}}
 			hideSendBar={false}

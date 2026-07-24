@@ -72,10 +72,6 @@ export const NOVEL_BG_COLOR_PRESETS: readonly {
 	},
 ] as const
 
-export function novelPositionKey(resId: string): string {
-	return `position.${resId}`
-}
-
 export function encodeNovelSettings(value: NovelSettings): string {
 	return JSON.stringify(value)
 }
@@ -136,11 +132,6 @@ export function novelTextColorFor(bgColor: string): string {
 export const novelSettingsCodec: Codec<NovelSettings> = {
 	encode: encodeNovelSettings,
 	decode: decodeNovelSettings,
-}
-
-export const novelPositionCodec: Codec<NovelPosition> = {
-	encode: encodeNovelPosition,
-	decode: decodeNovelPosition,
 }
 
 export const novelPositionMaybeCodec: Codec<NovelPosition | undefined> = {

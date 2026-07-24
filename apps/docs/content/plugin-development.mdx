@@ -49,6 +49,11 @@ createPluginRoot({ provider: PluginAPIProvider, render: MyView })
 
 The iframe is sandboxed (opaque origin, no cookies) and talks to the host over `postMessage`. `usePluginAPI()` exposes the resource context (`api.resource.sourceMeta`, …), file URLs (`resolveFileUrl`), preferences/cache, messages/danmaku (with the matching permissions), and reactive hooks. The SDK injects resource scoping, tokens, and URL details automatically — plugin code never handles a resId or builds host URLs by hand. `useVisibility()` reports whether the iframe is on screen.
 
+Two SDK helpers cover the common reader-style needs:
+
+- **Anchor jumps** — when the user clicks a comment/danmaku anchor in the host UI, the host pushes the plugin-defined anchor data to the iframe. React plugins subscribe with `useAnchorJump(cb)` (`@hoardodile/plugin-sdk-react`); framework-agnostic ones use `api.onAnchorJump(cb)`, which returns an unsubscribe function. Never listen for raw `message` events yourself.
+- **Position persistence** — reader positions, resume timestamps, and similar continuously-changing state belong in the per-resource cache (not plugin-wide prefs). `useCacheWriter({ key, value, encode, disabled? })` (`@hoardodile/plugin-sdk-react`) writes `api.setCache` with a debounce and flushes on `pagehide`/unmount; read the initial value synchronously via `api.getCache(key)`.
+
 ## Build tooling
 
 The `hoardodile-plugin-build` CLI ships with `@hoardodile/plugin-sdk-server`:

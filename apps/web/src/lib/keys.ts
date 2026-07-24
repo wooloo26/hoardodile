@@ -56,6 +56,7 @@ export const hostPushKeys = {
 	visibility: "visibility",
 	prefsChanged: "prefsChanged",
 	cacheChanged: "cacheChanged",
+	anchorJump: "anchorJump",
 } as const
 
 // ── ServiceWorker message types ────────────────────────────────────────────

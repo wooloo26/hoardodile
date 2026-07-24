@@ -1,7 +1,7 @@
 import type { Danmaku as DanmakuRecord } from "@hoardodile/plugin-sdk-web"
-import type { VideoPlayerStore } from "@videojs/react"
 import { usePluginAPI } from "../hooks"
 import "@videojs/react/video/skin.css"
+import { useAnchorJump } from "@hoardodile/plugin-sdk-react"
 import { useBelowMd } from "@hoardodile/ui/hooks/use-mobile"
 import { cn } from "@hoardodile/ui/lib/utils"
 import { createPlayer } from "@videojs/react"
@@ -9,13 +9,6 @@ import { Video, VideoSkin, videoFeatures } from "@videojs/react/video"
 import type Danmaku from "danmaku"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "../i18n"
-import {
-	clearPlayerTime,
-	dispatchDanmakuPlayerSeek,
-	publishPlayerTime,
-	useEmitDanmakuRequestBus,
-	useSeekBus,
-} from "./bus"
 import { DanmakuSendBar } from "./DanmakuSendBar"
 import { noopReject, toEngineComment } from "./helpers"
 import {
@@ -37,18 +30,17 @@ import {
 	type PlayerEngine,
 	VOLUME_PREF_KEY,
 } from "./types"
-import { useDanmakuSubmitter } from "./useDanmakuSubmitter"
 
 /**
  * Bullet-comment ("danmaku") video player. Wraps a native `<video>`
  * with a Danmaku.js overlay and a shadcn control bar; persists the
- * playback offset per `(resId, filename)` so reopening resumes
- * from the last known position.
+ * playback offset per file (in the resource-scoped plugin cache) so
+ * reopening resumes from the last known position.
  *
  * The persisted engine preference selects between two independent
  * surfaces (mounting one swaps out the other):
  *  - `enhanced` — custom danmaku stack with shadcn UI.
- *  - `native`   — plain `@videojs/react` skin, no danmaku/bus/resume.
+ *  - `native`   — plain `@videojs/react` skin, no danmaku/resume.
  *                 Reference fallback when the custom UI misbehaves.
  */
 export function DanmakuPlayer(props: DanmakuPlayerProps) {
@@ -172,7 +164,6 @@ function EnhancedPlayerInner(
 	},
 ) {
 	const {
-		resId,
 		filename = "",
 		src,
 		autoplay,
@@ -205,7 +196,7 @@ function EnhancedPlayerInner(
 	// Full store for action methods (`play`, `pause`, `seek`, ...);
 	// selectors below subscribe each reactive field individually so we
 	// re-render only on the slice that actually changed.
-	const store = EnhancedVideoPlayer.usePlayer() as VideoPlayerStore
+	const store = EnhancedVideoPlayer.usePlayer()
 	const paused = EnhancedVideoPlayer.usePlayer((s) => Boolean(s.paused))
 	const currentTime = EnhancedVideoPlayer.usePlayer(
 		(s) => Number(s.currentTime) || 0,
@@ -229,9 +220,9 @@ function EnhancedPlayerInner(
 	const [internalSettings, setInternalSettings] = useState<DanmakuSettings>(
 		DEFAULT_DANMAKU_SETTINGS,
 	)
-	// `settings` may be controlled by the caller (the feed lifts this so
-	// it can render the popover in its own header). When uncontrolled we
-	// fall back to the internal copy.
+	// `settings` may be controlled by the caller (so the popover can
+	// live outside the player subtree). When uncontrolled we fall back
+	// to the internal copy.
 	const settings = settingsProp ?? internalSettings
 	function setSettings(next: DanmakuSettings) {
 		if (onSettingsChange !== undefined) onSettingsChange(next)
@@ -283,7 +274,7 @@ function EnhancedPlayerInner(
 		return () => {
 			clearHideControls()
 		}
-	}, [resId, filename])
+	}, [filename])
 
 	const danmakuListQ = api.useDanmakuList({
 		kind: "videoTime",
@@ -303,7 +294,6 @@ function EnhancedPlayerInner(
 
 	useResumePlayback({
 		videoRef,
-		resId,
 		filename,
 		currentMs,
 		durationMs,
@@ -311,32 +301,28 @@ function EnhancedPlayerInner(
 	})
 	const { lastResumedAt } = useResumeApply({
 		videoRef,
-		resId,
 		filename,
 		disabled: disableResume,
 	})
-	useSeekBus({ videoRef, resId, filename })
 
-	useEffect(
-		function listenForAnchorJump() {
-			function handler(event: MessageEvent) {
-				if (event.data?.type !== "anchor-jump") return
-				const data = event.data.data as
-					| { readonly timeMs?: number; readonly filename?: string }
-					| undefined
-				if (typeof data?.timeMs !== "number") return
-				if (data.filename !== undefined && data.filename !== filename) return
-				dispatchDanmakuPlayerSeek({
-					resId,
-					filename,
-					timeMs: data.timeMs,
-				})
-			}
-			window.addEventListener("message", handler)
-			return () => window.removeEventListener("message", handler)
-		},
-		[resId, filename],
-	)
+	useAnchorJump(function handleAnchorJump(anchor) {
+		const data = anchor.data
+		if (typeof data !== "object" || data === null) return
+		if (!("timeMs" in data) || typeof data.timeMs !== "number") return
+		if (
+			"filename" in data &&
+			typeof data.filename === "string" &&
+			data.filename !== filename
+		) {
+			return
+		}
+		const v = videoRef.current
+		if (v === null) return
+		// Preserve play/pause state when jumping from a danmaku anchor.
+		const wasPlaying = !v.paused
+		v.currentTime = Math.max(0, data.timeMs) / 1000
+		if (wasPlaying) v.play().catch(noopReject)
+	})
 
 	const { autoplay: autoplayPrefValue, setAutoplay: handleAutoplayChange } =
 		useAutoplayPref()
@@ -423,7 +409,7 @@ function EnhancedPlayerInner(
 			const url = URL.createObjectURL(blob)
 			const a = document.createElement("a")
 			a.href = url
-			a.download = `${resId}-${Math.round(v.currentTime * 1000)}.png`
+			a.download = `${api.resource.name}-${Math.round(v.currentTime * 1000)}.png`
 			document.body.appendChild(a)
 			a.click()
 			a.remove()
@@ -447,28 +433,8 @@ function EnhancedPlayerInner(
 		danmakuRef.current?.emit(toEngineComment(d, settings.fontSizePx))
 	}
 
-	const externalSubmitter = useDanmakuSubmitter({
-		filename,
-		getCurrentMs: () => currentMs,
-		onEmit: handleEmitDanmaku,
-	})
-	useEmitDanmakuRequestBus({
-		resId,
-		filename,
-		onRequest: externalSubmitter.submit,
-	})
-
-	useEffect(() => {
-		publishPlayerTime(resId, filename, currentMs)
-	}, [resId, filename, currentMs])
-	useEffect(() => {
-		return () => {
-			clearPlayerTime(resId, filename)
-		}
-	}, [resId, filename])
-
-	// Controlled playback: the feed flips this on when the slide
-	// becomes active and off when it leaves so neighbours preload
+	// Controlled playback: the caller flips this on when the surface
+	// becomes active and off when it leaves so hidden copies preload
 	// silently. `autoPlay` only fires on initial mount so we drive
 	// transitions imperatively.
 	useEffect(() => {

@@ -2,24 +2,44 @@ import type { Danmaku as DanmakuRecord } from "@hoardodile/plugin-sdk-web"
 import {
 	DANMAKU_AREA_PRESETS,
 	type DanmakuArea,
-	RESUME_STORAGE_PREFIX,
+	RESUME_MIN_REMAINING_MS,
 } from "./types"
 
-export function resumeKey(resId: string, filename: string): string {
-	return filename === ""
-		? RESUME_STORAGE_PREFIX + resId
-		: `${RESUME_STORAGE_PREFIX}${resId}:${filename}`
+/**
+ * Per-resource cache key for a file's resume offset (milliseconds as a
+ * decimal string). The cache is already scoped to the current resource
+ * by the host, so the key only needs to distinguish files within it.
+ */
+export function resumeCacheKey(filename: string): string {
+	return filename === "" ? "resume" : `resume:${filename}`
+}
+
+/** Minimal cache-writer surface needed by {@link writeResume}. */
+export type ResumeWriter = {
+	readonly setCache: (key: string, value: string) => void
 }
 
 /**
- * Server-side preference key for the per-(resource, file) resume
- * offset. Mirrors {@link resumeKey} but uses the dotted namespace
- * convention used elsewhere in the preferences store.
+ * Persist the resume offset for a file. Near the end of the media the
+ * offset is cleared instead, and positions under one second are not
+ * worth resuming from.
  */
-export function serverResumeKey(resId: string, filename: string): string {
-	return filename === ""
-		? `player.resume:${resId}`
-		: `player.resume:${resId}:${filename}`
+export function writeResume(
+	api: ResumeWriter,
+	args: {
+		readonly filename: string
+		readonly currentMs: number
+		readonly durationMs: number
+	},
+): void {
+	const { currentMs, durationMs } = args
+	const remaining = durationMs - currentMs
+	const key = resumeCacheKey(args.filename)
+	if (remaining <= RESUME_MIN_REMAINING_MS) {
+		api.setCache(key, "")
+	} else if (currentMs > 1000) {
+		api.setCache(key, String(currentMs))
+	}
 }
 
 export function toEngineComment(d: DanmakuRecord, fontSizePx: number) {

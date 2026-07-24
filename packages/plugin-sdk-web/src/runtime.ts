@@ -297,6 +297,10 @@ export function createIframeHostAPI<
 		return host.request("invalidate", { target })
 	}
 
+	function onAnchorJump(cb: (anchor: AnchorData) => void): () => void {
+		return host.subscribe("anchorJump", cb)
+	}
+
 	function useFileList(): QueryState<readonly TSchema["file"][]> {
 		throw new Error("useFileList must be provided by a framework adapter")
 	}
@@ -366,6 +370,7 @@ export function createIframeHostAPI<
 		setCache,
 		listCache,
 		invalidate,
+		onAnchorJump,
 		useFileList,
 		useMessageList,
 		useCreateMessage,

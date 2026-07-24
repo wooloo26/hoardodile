@@ -15,10 +15,9 @@ const MAX_MANGA_COMMENT_LENGTH = 500
 export function MangaCommentSendBar(props: {
 	readonly filename: string
 	readonly page: number
-	readonly onSuccess?: () => void
 	readonly disabled?: boolean
 }) {
-	const { filename, page, onSuccess, disabled = false } = props
+	const { filename, page, disabled = false } = props
 	const api = usePluginAPI()
 	const { t } = useTranslation()
 	const [text, setText] = useState("")
@@ -39,7 +38,6 @@ export function MangaCommentSendBar(props: {
 				() => {
 					setText("")
 					void api.invalidate("messages")
-					onSuccess?.()
 				},
 				() => {
 					/* error handled by host */

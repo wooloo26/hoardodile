@@ -7,7 +7,6 @@
  */
 
 export type DanmakuPlayerProps = {
-	readonly resId: string
 	/**
 	 * Stable per-resource sub-anchor (typically the gallery file's
 	 * filename). Defaults to "" for resources that expose only one
@@ -16,17 +15,12 @@ export type DanmakuPlayerProps = {
 	readonly filename?: string
 	readonly src: string
 	readonly autoplay?: boolean
-	/**
-	 * Loop playback. Caller-driven (e.g. the feed always loops). When
-	 * omitted the player does not loop.
-	 */
+	/** Loop playback. When omitted the player does not loop. */
 	readonly loop?: boolean
 	/**
 	 * Optional controlled playback state. When provided, the player
-	 * imperatively plays or pauses to match every change of this flag
-	 * — useful for the feed where the *active* card plays and
-	 * neighbours stay paused after preloading. Leave undefined to keep
-	 * the user-driven play/pause behaviour.
+	 * imperatively plays or pauses to match every change of this flag.
+	 * Leave undefined to keep the user-driven play/pause behaviour.
 	 */
 	readonly playing?: boolean
 	/**
@@ -34,41 +28,38 @@ export type DanmakuPlayerProps = {
 	 *  - `full`      — the standard control bar with seek, volume,
 	 *                  play/pause, fullscreen, etc. Default.
 	 *  - `seek-only` — only a thin progress slider so the user can
-	 *                  scrub the active feed video without pinning
-	 *                  the rest of the chrome over it.
+	 *                  scrub without pinning the rest of the chrome
+	 *                  over the video.
 	 *  - `none`      — no controls at all (tap-to-toggle external).
 	 */
 	readonly controls?: "full" | "seek-only" | "none"
 	/**
-	 * Skip the per-`(resId, filename)` resume hooks (read on
-	 * mount, throttled write while playing). The feed always plays
-	 * from the start so the cross-device resume seek does not pause
-	 * the active video half a second after autoplay starts.
+	 * Skip the per-file resume hooks (read on mount, throttled write
+	 * while playing). Useful for surfaces that always play from the
+	 * start, where a resume seek would pause the video half a second
+	 * after autoplay starts.
 	 */
 	readonly disableResume?: boolean
 	readonly className?: string
 	/**
 	 * Hide the inline danmaku send bar. The full control bar (seek,
-	 * volume, play/pause, fullscreen, etc.) is still rendered. Used by
-	 * the TikTok-style feed where danmaku is composed in an external
-	 * popup but users still need to scrub the timeline.
+	 * volume, play/pause, fullscreen, etc.) is still rendered. Used
+	 * when danmaku is composed in an external surface but users still
+	 * need to scrub the timeline.
 	 */
 	readonly hideSendBar?: boolean
 	/**
 	 * Optional controlled danmaku display settings. When provided the
 	 * player treats them as the source of truth (and stops keeping its
-	 * own internal copy). The feed lifts this state so the same
-	 * settings persist across slides and so the danmaku popover can
-	 * live outside the player subtree (e.g. in the feed header).
+	 * own internal copy), so the settings popover can live outside the
+	 * player subtree.
 	 */
 	readonly settings?: DanmakuSettings
 	readonly onSettingsChange?: (next: DanmakuSettings) => void
 	/**
 	 * Forwarded to the underlying `<video preload>` attribute. The
 	 * default is `"metadata"` — enough to expose duration/dimensions
-	 * without prefetching the bytes. The resource feed bumps active
-	 * neighbours up to `"auto"` so the next swipe starts buffering
-	 * before the slide is shown.
+	 * without prefetching the bytes.
 	 */
 	readonly preload?: "none" | "metadata" | "auto"
 	/**
@@ -82,7 +73,6 @@ export type DanmakuPlayerProps = {
 
 export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2] as const
 
-export const RESUME_STORAGE_PREFIX = "app:player:resume:"
 export const RESUME_THROTTLE_MS = 2000
 export const RESUME_MIN_REMAINING_MS = 5
 export const VOLUME_PREF_KEY = "player.volume"

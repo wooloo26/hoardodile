@@ -1,3 +1,4 @@
+import type { AnchorData, HostPush } from "@hoardodile/plugin-sdk-web"
 import type { ResAnchor } from "@hoardodile/schemas"
 import { pickCoverKind } from "@hoardodile/schemas"
 import { Separator } from "@hoardodile/ui/components/separator"
@@ -34,6 +35,7 @@ import { EntityUsageStats } from "@/features/usage/components/EntityUsageStats"
 import { useUsageTracker } from "@/features/usage/useUsageTracker"
 import { requireAuth } from "@/lib/auth-guard"
 import { formatBytes } from "@/lib/formatBytes"
+import { hostPushKeys } from "@/lib/keys"
 
 const resDetailSearchSchema = z
 	.object({
@@ -105,7 +107,12 @@ function ResDetailRoute() {
 		}
 		const win = previewIframeRef.current?.contentWindow
 		if (win !== null && win !== undefined) {
-			win.postMessage({ type: "anchor-jump", data: anchor.data }, "*")
+			const push: HostPush = {
+				type: "push",
+				key: hostPushKeys.anchorJump,
+				data: { data: anchor.data } satisfies AnchorData,
+			}
+			win.postMessage(push, "*")
 		}
 	}
 

@@ -5,8 +5,7 @@
 	"license": "GPL-3.0",
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts",
-		"./test-utils": "./src/test-utils.ts"
+		".": "./src/index.ts"
 	},
 	"scripts": {
 		"build": "tsc --noEmit",

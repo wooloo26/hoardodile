@@ -1,7 +1,8 @@
-import type { Message } from "@hoardodile/plugin-sdk-web"
+import { useAnchorJump, useCacheWriter } from "@hoardodile/plugin-sdk-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "../i18n"
 import {
+	encodeNovelPosition,
 	NOVEL_SETTINGS_DEFAULT,
 	NOVEL_SETTINGS_KEY,
 	type NovelPosition,
@@ -18,7 +19,6 @@ import { NovelParagraphCommentDialog } from "./NovelParagraphCommentDialog"
 import { NovelTopBar } from "./NovelTopBar"
 import { NovelSettingsSheet } from "./SettingsSheet"
 import { useDeferredNovelDocument } from "./useDeferredNovelDocument"
-import { useReaderPositionWriter } from "./useReaderPositionWriter"
 
 /**
  * TXT novel reader with paragraph-level comments. Picks the first
@@ -81,24 +81,10 @@ export function NovelReader(props: { readonly open: boolean }) {
 		chapterRegexSource: settings.chapterRegex,
 	})
 
-	// Comments are fetched imperatively; the SDK only exposes a create hook.
-	const [comments, setComments] = useState<readonly Message[]>([])
-	useEffect(() => {
-		let cancelled = false
-		api
-			.listMessages()
-			.then(function got(rows) {
-				if (cancelled) return
-				setComments(rows)
-			})
-			.catch(function err(e: unknown) {
-				if (cancelled) return
-				api.logError("failed to load comments", { error: String(e) })
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [api])
+	// Reactive message list from the SDK; refetches when the host
+	// invalidates after a create/delete.
+	const messagesQuery = api.useMessageList()
+	const comments = useMemo(() => messagesQuery.data ?? [], [messagesQuery.data])
 	const commentsByParagraph = useMemo(
 		() => buildCommentsByParagraph(comments),
 		[comments],
@@ -159,8 +145,10 @@ export function NovelReader(props: { readonly open: boolean }) {
 		[filename, scrollAnchor.paragraphIndex, scrollAnchor.fraction],
 	)
 
-	useReaderPositionWriter({
-		position: positionPayload,
+	useCacheWriter({
+		key: "position",
+		value: positionPayload,
+		encode: encodeNovelPosition,
 		disabled: !open || !hasHydratedRef.current,
 	})
 
@@ -173,22 +161,18 @@ export function NovelReader(props: { readonly open: boolean }) {
 		setScrollToPage(page)
 	}, [])
 
-	useEffect(
-		function listenForAnchorJump() {
-			function handler(event: MessageEvent) {
-				if (event.data?.type !== "anchor-jump") return
-				const data = event.data.data as
-					| { readonly paragraphIndex?: number; readonly filename?: string }
-					| undefined
-				if (typeof data?.paragraphIndex !== "number") return
-				if (data.filename !== filename) return
-				handleJump(data.paragraphIndex)
-			}
-			window.addEventListener("message", handler)
-			return () => window.removeEventListener("message", handler)
-		},
-		[filename, handleJump],
-	)
+	useAnchorJump(function onJump(anchor) {
+		const data = anchor.data
+		if (typeof data !== "object" || data === null) return
+		if (
+			!("paragraphIndex" in data) ||
+			typeof data.paragraphIndex !== "number"
+		) {
+			return
+		}
+		if (!("filename" in data) || data.filename !== filename) return
+		handleJump(data.paragraphIndex)
+	})
 
 	function handleSettingsChange(next: NovelSettings) {
 		setSettings(next)

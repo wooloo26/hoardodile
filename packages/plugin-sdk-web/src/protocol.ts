@@ -150,6 +150,12 @@ export type HostPushes = {
 	themeChanged: { readonly resolvedTheme: string; readonly palette: string }
 	languageChanged: { readonly language: string }
 	prefsChanged: { readonly key: string; readonly value?: string }
+	/**
+	 * Host-initiated request to jump to an anchor (e.g. the user clicked a
+	 * comment anchor in the host UI). Carries the plugin-defined anchor data
+	 * only — the resource is always the iframe's own.
+	 */
+	anchorJump: import("@hoardodile/plugin-sdk-types").AnchorData
 	"res:invalidate": undefined
 	"resources:invalidate": undefined
 	"messages:invalidate": undefined
