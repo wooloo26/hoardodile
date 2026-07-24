@@ -61,7 +61,7 @@
 		"@trpc/client": "^11.18.0",
 		"@trpc/server": "^11.18.0",
 		"@types/yazl": "^3.3.1",
-		"better-sqlite3": "^12.11.1",
+		"better-sqlite3": "^13.0.1",
 		"drizzle-orm": "^0.45.2",
 		"es-toolkit": "catalog:",
 		"eventemitter3": "^5.0.4",

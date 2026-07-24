@@ -21,7 +21,7 @@
 		"@hoardodile/plugin-sdk-types": "workspace:*",
 		"@hoardodile/plugin-sdk-web": "workspace:*",
 		"@hoardodile/ui": "workspace:*",
-		"@tanstack/react-virtual": "^3.14.6",
+		"@tanstack/react-virtual": "^3.14.7",
 		"lucide-react": "catalog:",
 		"react": "catalog:",
 		"react-zoom-pan-pinch": "^4.0.3",
