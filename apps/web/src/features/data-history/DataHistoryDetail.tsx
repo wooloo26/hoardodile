@@ -1,11 +1,12 @@
 import { Badge } from "@hoardodile/ui/components/badge"
 import { Button } from "@hoardodile/ui/components/button"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { HardDrive, History, RotateCcw, Trash2 } from "lucide-react"
+import { Download, HardDrive, History, RotateCcw, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { useDateFormatter } from "@/features/settings/datePrefs"
 import { formatBytes } from "@/lib/formatBytes"
+import { apiPaths } from "@/lib/paths"
 import type { BackupEvent, DataHistoryList } from "./api"
 import {
 	dataHistoryKeys,
@@ -226,6 +227,20 @@ function ArchiveDetail(props: ArchiveDetailProps) {
 					{t("dataHistory.archive.activeHint")}
 				</p>
 			)}
+
+			<div className="flex flex-col gap-2 pt-2">
+				<Button
+					size="sm"
+					variant="outline"
+					asChild
+					data-testid={`download-version-${archive.version}`}
+				>
+					<a href={apiPaths.versions.dbDownload(archive.version)}>
+						<Download className="mr-1 size-4" />
+						{t("dataHistory.action.download")}
+					</a>
+				</Button>
+			</div>
 		</div>
 	)
 }
@@ -338,6 +353,20 @@ function BackupDetail(props: BackupDetailProps) {
 					)}
 				</div>
 			) : null}
+
+			<div className="flex flex-col gap-2 pt-2">
+				<Button
+					size="sm"
+					variant="outline"
+					asChild
+					data-testid={`download-${backup.fileName}`}
+				>
+					<a href={apiPaths.backups.download(backup.fileName)}>
+						<Download className="mr-1 size-4" />
+						{t("dataHistory.action.download")}
+					</a>
+				</Button>
+			</div>
 
 			{isArchived ? (
 				<p className="text-sm text-muted-foreground">

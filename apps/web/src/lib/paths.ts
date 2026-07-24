@@ -59,6 +59,15 @@ export const apiPaths = {
 		asset: (id: string, rel: string) => `/api/plugins/${id}/${rel}`,
 	},
 
+	backups: {
+		download: (fileName: string) =>
+			`/api/backups/${encodeURIComponent(fileName)}/download`,
+	},
+
+	versions: {
+		dbDownload: (version: number) => `/api/versions/${version}/db.sqlite`,
+	},
+
 	pluginUpload: () => "/api/plugin-upload",
 
 	events: () => "/api/events",

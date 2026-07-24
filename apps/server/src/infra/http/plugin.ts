@@ -2,6 +2,7 @@ import multipart from "@fastify/multipart"
 import fastifySSE from "@fastify/sse"
 import type { FastifyInstance, FastifyPluginAsync } from "fastify"
 import { cookieOptions } from "src/domain/auth/cookie.ts"
+import { backupFilesPlugin } from "./backup-files.ts"
 import { cacheAdminPlugin } from "./cache-admin.ts"
 import { charFilesPlugin } from "./char-files.ts"
 import { charThumbsPlugin } from "./char-thumbs.ts"
@@ -141,6 +142,7 @@ async function protectedHttpPluginImpl(app: FastifyInstance): Promise<void> {
 	await app.register(fastifySSE, { heartbeatInterval: 15_000 })
 
 	await app.register(resFilesPlugin)
+	await app.register(backupFilesPlugin)
 	await app.register(resUploadOrderedPlugin)
 	await app.register(resUploadArchivePlugin)
 	await app.register(resUploadPreviewPlugin)

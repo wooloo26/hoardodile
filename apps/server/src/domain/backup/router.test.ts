@@ -15,6 +15,8 @@ describe("backup router", () => {
 			delete: vi.fn(async () => undefined),
 			prepareRestore: vi.fn(async () => undefined),
 			updateMeta: vi.fn(async () => undefined),
+			resolveFilePath: vi.fn(async () => "/tmp/app-1.sqlite"),
+			snapshotRuntimeDb: vi.fn(async () => undefined),
 		}
 		const signals = {
 			emit: vi.fn(),

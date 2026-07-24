@@ -100,6 +100,22 @@ export type BackupService = {
 	 * @throws {DomainError} `backup.not_found` when `fileName` does not exist.
 	 */
 	updateMeta(fileName: string, input: BackupUpdateMetaInput): Promise<void>
+	/**
+	 * Resolve the on-disk path of a snapshot for read-only streaming
+	 * (download). Like restore, snapshots left behind in archived versions
+	 * are located too, but never mutated.
+	 *
+	 * @throws {DomainError} `backup.not_found` when `fileName` does not exist.
+	 */
+	resolveFilePath(fileName: string): Promise<string>
+	/**
+	 * Snapshot the live runtime DB to an arbitrary `destination` path
+	 * (`VACUUM INTO` + integrity check), e.g. a temp file for download.
+	 *
+	 * @throws {DomainError} `backup.integrity_failed` when the freshly
+	 *   written snapshot does not pass `PRAGMA integrity_check`.
+	 */
+	snapshotRuntimeDb(destination: string): Promise<void>
 }
 
 /**
@@ -231,6 +247,30 @@ export function createBackupService(deps: BackupServiceDeps): BackupService {
 		delete: async (fileName) => deleteBackup(fileName),
 		prepareRestore: async (fileName) => prepareRestore(fileName),
 		updateMeta: async (fileName, input) => updateMeta(fileName, input),
+		resolveFilePath: async (fileName) => resolveFilePath(fileName),
+		snapshotRuntimeDb: async (destination) => snapshotRuntimeDb(destination),
+	}
+
+	function resolveFilePath(fileName: string): string {
+		const path = resolveBackupPath(fileName)
+		if (!pathExists(path)) {
+			throw notFound("backup.not_found", `backup ${fileName} does not exist`, {
+				fileName,
+			})
+		}
+		return path
+	}
+
+	function snapshotRuntimeDb(destination: string): void {
+		db.vacuumInto(destination)
+		if (!verifySnapshotIntegrity(destination)) {
+			rmSync(destination, { force: true })
+			throw invalid(
+				"backup.integrity_failed",
+				"snapshot failed integrity check",
+				{ destination },
+			)
+		}
 	}
 
 	function resolveBackupPath(

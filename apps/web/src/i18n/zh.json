@@ -440,7 +440,8 @@
 			"delete": "删除备份",
 			"deleting": "删除中…",
 			"switchToVersion": "切换查看此版本",
-			"switching": "切换中…"
+			"switching": "切换中…",
+			"download": "下载 .sqlite"
 		},
 		"reloading": "重新加载中…",
 		"detail": {

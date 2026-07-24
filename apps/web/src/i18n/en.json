@@ -440,7 +440,8 @@
 			"delete": "Delete backup",
 			"deleting": "Deleting…",
 			"switchToVersion": "Switch to this version",
-			"switching": "Switching…"
+			"switching": "Switching…",
+			"download": "Download .sqlite"
 		},
 		"reloading": "Reloading…",
 		"detail": {
