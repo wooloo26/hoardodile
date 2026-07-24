@@ -95,27 +95,33 @@ function useHostQuery<K extends PluginRequestKey, T>(
 
 // ── File queries ─────────────────────────────────────────────────────────
 
-function useFileList(host: Host) {
+function useFileList(host: Host, contextDeps: readonly unknown[]) {
 	return useHostQuery<"listFiles", readonly string[]>(host, {
 		method: "listFiles",
 		params: undefined,
 		invalidateKey: "res:invalidate",
+		extraDeps: contextDeps,
 	})
 }
 
 // ── Message queries ──────────────────────────────────────────────────────
 
-function useMessageList(host: Host) {
+function useMessageList(host: Host, contextDeps: readonly unknown[]) {
 	return useHostQuery<"listMessages", readonly Message[]>(host, {
 		method: "listMessages",
 		params: undefined,
 		invalidateKey: "messages:invalidate",
+		extraDeps: contextDeps,
 	})
 }
 
 // ── Danmaku queries ───────────────────────────────────────────────────────
 
-function useDanmakuList(host: Host, filter?: DanmakuListFilter) {
+function useDanmakuList(
+	host: Host,
+	contextDeps: readonly unknown[],
+	filter?: DanmakuListFilter,
+) {
 	return useHostQuery<"listDanmaku", readonly Danmaku[]>(host, {
 		method: "listDanmaku",
 		params: { filter },
@@ -123,7 +129,10 @@ function useDanmakuList(host: Host, filter?: DanmakuListFilter) {
 		// The filter object is a fresh literal on every render; a stable
 		// serialization keeps the effect from refetching in a loop while
 		// still refetching when any filter value actually changes.
-		extraDeps: [filter === undefined ? undefined : JSON.stringify(filter)],
+		extraDeps: [
+			...contextDeps,
+			filter === undefined ? undefined : JSON.stringify(filter),
+		],
 	})
 }
 
@@ -284,7 +293,11 @@ export function createPluginQueryAPI<
 	TSchema extends PluginSchema = PluginSchema,
 >(
 	host: Host,
-	ctx: { readonly resolvedTheme: string; readonly palette: string },
+	ctx: {
+		readonly resolvedTheme: string
+		readonly palette: string
+		readonly resId: string
+	},
 ): Pick<
 	WebPluginAPI<TSchema>,
 	| "useFileList"
@@ -295,13 +308,17 @@ export function createPluginQueryAPI<
 	| "usePref"
 	| "useTheme"
 > {
+	// Refetch when the iframe is rebound to another resource without a
+	// remount (createPluginRoot's `remountOnResourceChange: false`). With
+	// the default remount this dep is constant for the mount's lifetime.
+	const contextDeps = [ctx.resId]
 	return {
 		useFileList: () =>
-			useFileList(host) as QueryState<readonly TSchema["file"][]>,
-		useMessageList: () => useMessageList(host),
+			useFileList(host, contextDeps) as QueryState<readonly TSchema["file"][]>,
+		useMessageList: () => useMessageList(host, contextDeps),
 		useCreateMessage: () => useCreateMessage(host),
 		useDanmakuList: (filter?: DanmakuListFilter) =>
-			useDanmakuList(host, filter),
+			useDanmakuList(host, contextDeps, filter),
 		useCreateDanmaku: () => useCreateDanmaku(host),
 		usePref: <T>(key: string, defaultValue: T, codec?: Codec<T>) =>
 			usePref(host, key, defaultValue, codec),

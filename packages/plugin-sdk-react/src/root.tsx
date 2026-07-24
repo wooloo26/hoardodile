@@ -23,6 +23,19 @@ export type PluginRootConfig<TSchema extends PluginSchema = PluginSchema> = {
 	 * source of truth for the plugin schema type.
 	 */
 	readonly provider: Provider<WebPluginAPI<TSchema> | null>
+	/**
+	 * When `true` (default), the whole plugin tree remounts whenever the
+	 * iframe is rebound to another resource — the safe choice: all
+	 * per-resource state resets automatically.
+	 *
+	 * Set to `false` for fine-grained updates (e.g. cheap same-plugin
+	 * navigation): the mounted tree stays alive and only re-renders with
+	 * the new `api`. Queries refetch automatically, but every piece of
+	 * per-resource state becomes the plugin's own responsibility — key
+	 * subtrees and memos by `api.resource.id` and reset any hydration
+	 * flags yourself.
+	 */
+	readonly remountOnResourceChange?: boolean
 }
 
 function ThemeSync({ children }: { readonly children: ReactNode }) {
@@ -50,9 +63,11 @@ export function useVisibility(): boolean {
  * visibility subscription.
  *
  * The supplied component receives no props; it should call `usePluginAPI()`
- * and `useVisibility()` internally as needed. The root always remounts when
- * the resource changes; use `api.resource.id` as a key inside your component
- * if you need finer control.
+ * and `useVisibility()` internally as needed. By default the root remounts
+ * when the resource changes (see
+ * {@link PluginRootConfig.remountOnResourceChange}); even then, use
+ * `api.resource.id` as a key inside your component if you need finer
+ * control.
  */
 export function createPluginRoot<TSchema extends PluginSchema = PluginSchema>(
 	config: PluginRootConfig<TSchema>,
@@ -76,6 +91,7 @@ export function createPluginRoot<TSchema extends PluginSchema = PluginSchema>(
 				...createPluginQueryAPI(host, {
 					resolvedTheme: ctx.resolvedTheme,
 					palette: ctx.palette,
+					resId: ctx.resId,
 				}),
 			}
 			applyTheme(ctx.resolvedTheme, ctx.palette)
@@ -86,7 +102,12 @@ export function createPluginRoot<TSchema extends PluginSchema = PluginSchema>(
 					createElement(
 						ThemeSync,
 						null,
-						createElement(config.render, { key: ctx.resId }),
+						createElement(
+							config.render,
+							config.remountOnResourceChange === false
+								? {}
+								: { key: ctx.resId },
+						),
 					),
 				),
 			)

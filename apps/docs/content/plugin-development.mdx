@@ -54,6 +54,12 @@ Two SDK helpers cover the common reader-style needs:
 - **Anchor jumps** — when the user clicks a comment/danmaku anchor in the host UI, the host pushes the plugin-defined anchor data to the iframe. Declare your anchor shape once on the plugin schema (`anchor` slot) with a matching `decodeAnchor` validator, pass it to `definePluginAPI({ decodeAnchor })`, and subscribe with the returned typed `useAnchorJump(cb)` — the callback receives validated, fully typed anchor data (invalid anchors are dropped at the SDK boundary). Use the same decoder when reading anchors back from message/danmaku lists. Framework-agnostic plugins can use the raw `api.onAnchorJump(cb)`, which returns an unsubscribe function. Never listen for raw `message` events yourself.
 - **Position persistence** — reader positions, resume timestamps, and similar continuously-changing state belong in the per-resource cache (not plugin-wide prefs). `useCacheWriter({ key, value, encode, disabled? })` (`@hoardodile/plugin-sdk-react`) writes `api.setCache` with a debounce and flushes on `pagehide`/unmount; read the initial value synchronously via `api.getCache(key)`.
 
+## Resource switches
+
+When the host rebinds an iframe to another resource (e.g. next/previous in a preview dialog), the default is a full remount: `createPluginRoot` keys the tree by resource id, so every piece of per-resource state resets automatically. This is the recommended style.
+
+Plugins with cheap same-plugin transitions can opt into fine-grained updates via `createPluginRoot({ ..., remountOnResourceChange: false })`: the mounted tree stays alive and re-renders with the new `api`. Queries (`useFileList`/`useMessageList`/`useDanmakuList`) refetch automatically, and pending `useCacheWriter` writes still land on the resource they were issued for. Everything else becomes the plugin's responsibility — key subtrees and memos by `api.resource.id` and reset any hydration flags when it changes.
+
 ## Build tooling
 
 The `hoardodile-plugin-build` CLI ships with `@hoardodile/plugin-sdk-server`:
