@@ -81,7 +81,7 @@ export function CommentList(props: CommentListProps) {
 
 	if (listQuery.isPending && listQuery.data === undefined) {
 		return (
-			<div className="flex flex-col gap-3" data-testid={`${testId}-loading`}>
+			<div className="flex flex-col gap-5" data-testid={`${testId}-loading`}>
 				<CommentCardSkeleton />
 				<CommentCardSkeleton />
 				<CommentCardSkeleton />
@@ -119,7 +119,7 @@ export function CommentList(props: CommentListProps) {
 							replies: totalReplies,
 						})}
 			</p>
-			<div className="flex flex-col gap-3">
+			<div className="flex flex-col gap-5">
 				{rows.map((row) => (
 					<CommentItem
 						key={row.id}
