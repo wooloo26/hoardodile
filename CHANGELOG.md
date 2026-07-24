@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.5](https://github.com/wooloo26/hoardodile/compare/v0.1.4...v0.1.5) (2026-07-24)
+
+### Features
+
+* **backup:** download individual database files for backups and versions ([9ee323b](https://github.com/wooloo26/hoardodile/commit/9ee323bcb0eefcab85dfb8f53592cce3daee0b86))
+* **overview:** note that pinned content redraws on page reload ([5c7c76d](https://github.com/wooloo26/hoardodile/commit/5c7c76d3f2a3df187a2e46c99011f5474ac92f62))
+
+### Bug Fixes
+
+* **doc:** await pending save before entering history compare ([56810d4](https://github.com/wooloo26/hoardodile/commit/56810d46c8065d041a3362bd628cb4db755a74c1))
+* **web:** honor danmaku list filter so cross-file danmaku no longer leaks ([ff26db1](https://github.com/wooloo26/hoardodile/commit/ff26db1d8e385f9694215252b164ecacc57e5c1a))
+
 ## [0.1.4](https://github.com/wooloo26/hoardodile/compare/v0.1.3...v0.1.4) (2026-07-18)
 
 ### Features
