@@ -23,6 +23,8 @@ export const prefKeys = {
 	colorPresets: "colorPicker.presets",
 	overviewPinnedCharacters: "overview.pinned.characters",
 	overviewPinnedResources: "overview.pinned.resources",
+	overviewPinnedSeeds: "overview.pinned.seeds",
+	overviewPinnedRefreshSec: "overview.pinned.refreshSec",
 	dateFormat: "date.format",
 	timeZone: "date.timeZone",
 } as const

@@ -7,7 +7,7 @@ import {
 	Outlet,
 	RouterProvider,
 } from "@tanstack/react-router"
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { pinnedSectionListCodec } from "@/features/overview/pinned/pinnedSectionListCodec"
 import { prefKeys } from "@/lib/keys"
@@ -484,5 +484,103 @@ describe("OverviewPinnedRow", () => {
 			expect(characterHandler).toHaveBeenCalled()
 		})
 		expect(screen.queryByTestId("overview-pinned-row")).not.toBeInTheDocument()
+	})
+})
+
+describe("pinned refresh", () => {
+	function pinnedQueryKeys(): readonly (readonly unknown[])[] {
+		const all = currentQueryClient?.getQueryCache().getAll() ?? []
+		return all
+			.map((query) => query.queryKey)
+			.filter((key) => key.includes("pinned"))
+	}
+
+	function readStoredSeeds(): Record<string, string> {
+		const raw = localStorage.getItem(prefKeys.overviewPinnedSeeds)
+		if (raw === null) return {}
+		const parsed: unknown = JSON.parse(raw)
+		if (
+			typeof parsed !== "object" ||
+			parsed === null ||
+			Array.isArray(parsed)
+		) {
+			return {}
+		}
+		return parsed as Record<string, string>
+	}
+
+	it("keeps a stable query key for random items across remounts", async () => {
+		setPinnedResources([{ id: "res-pin-random", random: true }])
+		const first = await renderSection(<OverviewPinnedRow />)
+		await waitFor(() => expect(resourceHandler).toHaveBeenCalledTimes(1))
+
+		const firstKeys = pinnedQueryKeys()
+		expect(firstKeys).toHaveLength(1)
+		// Without a persisted seed the item id is the stable fallback seed.
+		expect(firstKeys[0]).toContain("res-pin-random")
+
+		first.unmount()
+		currentQueryClient = undefined
+
+		await renderSection(<OverviewPinnedRow />)
+		await waitFor(() => expect(resourceHandler).toHaveBeenCalledTimes(2))
+		expect(pinnedQueryKeys()).toEqual(firstKeys)
+	})
+
+	it("refresh reshuffles the random seed and refetches", async () => {
+		setPinnedResources([{ id: "res-pin-random", random: true }])
+		await renderSection(<OverviewPinnedRow />)
+		await waitFor(() =>
+			expect(resourceHandler.mock.calls.length).toBeGreaterThan(0),
+		)
+
+		const callsBefore = resourceHandler.mock.calls.length
+		fireEvent.click(screen.getByTestId("overview-pinned-refresh"))
+		await waitFor(() =>
+			expect(resourceHandler.mock.calls.length).toBeGreaterThan(callsBefore),
+		)
+
+		const firstSeed = readStoredSeeds()["res-pin-random"]
+		expect(typeof firstSeed).toBe("string")
+		expect(firstSeed).not.toBe("res-pin-random")
+
+		const callsBeforeSecond = resourceHandler.mock.calls.length
+		fireEvent.click(screen.getByTestId("overview-pinned-refresh"))
+		await waitFor(() =>
+			expect(resourceHandler.mock.calls.length).toBeGreaterThan(
+				callsBeforeSecond,
+			),
+		)
+		expect(readStoredSeeds()["res-pin-random"]).not.toBe(firstSeed)
+	})
+
+	it("auto-refreshes on the configured interval", async () => {
+		// One second is below the UI options but keeps the test on real timers.
+		prefSync.set(prefKeys.overviewPinnedRefreshSec, "1")
+		setPinnedResources([{ id: "res-pin-1" }])
+		await renderSection(<OverviewPinnedRow />)
+		await waitFor(() =>
+			expect(resourceHandler.mock.calls.length).toBeGreaterThan(0),
+		)
+
+		const callsBefore = resourceHandler.mock.calls.length
+		await waitFor(
+			() =>
+				expect(resourceHandler.mock.calls.length).toBeGreaterThan(callsBefore),
+			{ timeout: 2500 },
+		)
+	})
+
+	it("shows the interval selector defaulting to off", async () => {
+		setPinnedResources([{ id: "res-pin-1" }])
+		await renderSection(<OverviewPinnedRow />)
+		await waitFor(() => {
+			expect(
+				screen.getByTestId("overview-pinned-refresh-interval"),
+			).toBeInTheDocument()
+		})
+		expect(
+			screen.getByTestId("overview-pinned-refresh-interval"),
+		).toHaveTextContent("Off")
 	})
 })

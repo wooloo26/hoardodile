@@ -354,6 +354,14 @@
 				"itemsCount": "{{current}} / {{max}}",
 				"preview": "Preview",
 				"previewTitle": "Preview filters"
+			},
+			"refresh": {
+				"now": "Refresh",
+				"intervalLabel": "Auto-refresh pinned",
+				"off": "Off",
+				"every30s": "Every 30 seconds",
+				"every60s": "Every minute",
+				"every300s": "Every 5 minutes"
 			}
 		},
 		"sort": {
